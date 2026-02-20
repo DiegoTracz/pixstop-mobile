@@ -1,7 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
     kotlin("android")
+}
+
+// Lê as propriedades do local.properties
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(localPropertiesFile.inputStream())
+    }
 }
 
 android {
@@ -22,6 +32,54 @@ android {
         }
     }
 
+    // ══════════════════════════════════════════════════════════════════════════
+    // 🔧 Product Flavors - Ambientes Local, Staging e Production
+    // ══════════════════════════════════════════════════════════════════════════
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("local") {
+            dimension = "environment"
+            applicationIdSuffix = ".local"
+            versionNameSuffix = "-local"
+
+            // URL da API Local - Usa NGROK_URL do local.properties
+            val ngrokUrl = localProperties.getProperty("NGROK_URL", "")
+            val localApiUrl = if (ngrokUrl.isNotEmpty()) ngrokUrl else "http://10.0.2.2/api"
+            buildConfigField("String", "API_BASE_URL", "\"$localApiUrl\"")
+            buildConfigField("Boolean", "IS_PRODUCTION", "false")
+
+            // Nome do app diferente para local
+            resValue("string", "app_name", "PixStop Local")
+        }
+
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+
+            // URL da API de Staging - Usa NGROK_URL do local.properties se disponível
+            val ngrokUrl = localProperties.getProperty("NGROK_URL", "")
+            val stagingApiUrl = if (ngrokUrl.isNotEmpty()) ngrokUrl else "https://staging.pixstop.com.br/api"
+            buildConfigField("String", "API_BASE_URL", "\"$stagingApiUrl\"")
+            buildConfigField("Boolean", "IS_PRODUCTION", "false")
+
+            // Nome do app diferente para staging
+            resValue("string", "app_name", "PixStop Staging")
+        }
+
+        create("production") {
+            dimension = "environment"
+
+            // URL da API de Produção
+            buildConfigField("String", "API_BASE_URL", "\"https://pixstop.com.br/api\"")
+            buildConfigField("Boolean", "IS_PRODUCTION", "true")
+
+            // Nome do app de produção
+            resValue("string", "app_name", "PixStop")
+        }
+    }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
@@ -35,6 +93,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

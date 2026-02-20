@@ -10,7 +10,7 @@ Aplicativo mobile PixStop para Android e iOS, construído com Kotlin Multiplatfo
 - ✅ Cache offline de dados do usuário
 - ✅ Navegação automática Login ↔ Home
 - ✅ Sidebar com Material Design
-- ✅ URL da API configurável
+- ✅ Ambientes Local, Staging e Produção com URLs separadas
 - ✅ Suporte Android e iOS
 - ✅ Splash Screen com cores do tema
 - ✅ Tema claro/escuro personalizável
@@ -19,74 +19,102 @@ Aplicativo mobile PixStop para Android e iOS, construído com Kotlin Multiplatfo
 
 ```
 ├── androidApp/                    # 📱 Módulo Android (aplicação)
+│   ├── build.gradle.kts           # Product Flavors (local/staging/production)
 │   └── src/main/
 │       ├── AndroidManifest.xml
 │       ├── kotlin/.../MainActivity.kt
-│       └── res/                   # Recursos Android (ícones, etc)
+│       └── res/
 │
 ├── composeApp/                    # 🔄 Módulo compartilhado (KMP)
+│   ├── build.gradle.kts           # BuildKonfig (URLs por ambiente)
 │   └── src/
 │       ├── commonMain/            # Código compartilhado
 │       │   └── kotlin/com/pixstop/mobile/
 │       │       ├── core/
-│       │       │   ├── config/ApiConfig.kt      # 🔧 URLs e endpoints
+│       │       │   ├── config/ApiConfig.kt
 │       │       │   ├── network/HttpClientFactory.kt
 │       │       │   └── storage/TokenManager.kt
 │       │       ├── data/
-│       │       │   ├── model/AuthModels.kt
-│       │       │   └── repository/AuthRepository.kt
 │       │       ├── ui/
-│       │       │   ├── navigation/
-│       │       │   ├── screen/
-│       │       │   └── viewmodel/
 │       │       └── App.kt
-│       ├── androidMain/           # Código específico Android
-│       └── iosMain/               # Código específico iOS
+│       ├── androidMain/
+│       └── iosMain/
 │
-└── iosApp/                        # 🍎 Módulo iOS (Xcode)
+├── iosApp/                        # 🍎 Módulo iOS (Xcode)
+│   └── Configuration/
+│       ├── Config.xcconfig
+│       ├── Config-Staging.xcconfig
+│       └── Config-Production.xcconfig
+│
+└── docs/                          # 📚 Documentação
+    ├── AMBIENTES.md               # Configuração de ambientes deste projeto
+    └── GUIA_AMBIENTES_KMP.md      # Guia para replicar em outros projetos
 ```
 
-## ⚙️ Configuração
+## ⚙️ Configuração Rápida
 
-### 1. Configurar URL da API
+### 1. Configurar URL do Ngrok (dev local)
 
-Edite o arquivo `core/config/ApiConfig.kt` e altere a constante `BASE_URL`:
+Edite o `local.properties` na raiz do projeto:
 
-```kotlin
-private const val BASE_URL = "https://sua-api.com/api"
+```properties
+NGROK_URL=https://sua-url.ngrok-free.app/api
 ```
 
-### 2. Configurar Endpoints
+### 2. Selecionar o ambiente
 
-Se sua API usar rotas diferentes, edite `ApiConfig.kt`:
+No **Android Studio**, selecione o Build Variant no painel lateral:
 
-```kotlin
-object Endpoints {
-    const val LOGIN = "/auth/login"
-    const val LOGOUT = "/auth/logout"
-    const val PROFILE = "/me"
-}
-```
+| Build Variant         | Ambiente   | URL                                    |
+|-----------------------|------------|----------------------------------------|
+| `localDebug`          | Local      | `NGROK_URL` do `local.properties`      |
+| `stagingDebug`        | Staging    | `https://staging.pixstop.com.br/api`   |
+| `productionDebug`     | Produção   | `https://pixstop.com.br/api`           |
+
+> O ambiente é detectado **automaticamente** — não precisa passar flags.
+
+### 3. Alterar URLs dos ambientes
+
+Edite o bloco `baseUrl` em `composeApp/build.gradle.kts` (linhas ~155–160).
+
+## 📚 Documentação
+
+| Documento | Descrição |
+|-----------|-----------|
+| [docs/AMBIENTES.md](docs/AMBIENTES.md) | Configuração completa de ambientes deste projeto |
+| [docs/GUIA_AMBIENTES_KMP.md](docs/GUIA_AMBIENTES_KMP.md) | Guia passo a passo para replicar em outros projetos KMP |
 
 ## 📦 Dependências Principais
 
-- **Ktor** - Cliente HTTP multiplataforma
-- **Kotlinx Serialization** - Serialização JSON
-- **Multiplatform Settings** - Persistência de dados
-- **Navigation Compose** - Navegação entre telas
-- **Compose Multiplatform** - UI compartilhada
+- **Ktor** — Cliente HTTP multiplataforma
+- **Kotlinx Serialization** — Serialização JSON
+- **Multiplatform Settings** — Persistência de dados
+- **Navigation Compose** — Navegação entre telas
+- **Compose Multiplatform** — UI compartilhada
+- **BuildKonfig** — Constantes de build por ambiente (KMP)
 
 ## 🏗️ Build and Run
 
 ### Android
 
 ```shell
-./gradlew :androidApp:assembleDebug
+# Local (ngrok)
+./gradlew :androidApp:assembleLocalDebug
+
+# Staging
+./gradlew :androidApp:assembleStagingDebug
+
+# Produção
+./gradlew :androidApp:assembleProductionRelease
 ```
 
 ### iOS
 
-Abra o diretório `/iosApp` no Xcode e execute.
+```shell
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 -Penvironment=local
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 -Penvironment=staging
+./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 -Penvironment=production
+```
 
 ---
 

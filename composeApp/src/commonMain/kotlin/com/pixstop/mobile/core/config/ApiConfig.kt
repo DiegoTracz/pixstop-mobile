@@ -1,39 +1,84 @@
 package com.pixstop.mobile.core.config
 
+import com.pixstop.mobile.BuildKonfig
+
 /**
  * ╔════════════════════════════════════════════════════════════════════════════╗
- * ║                    CONFIGURAÇÃO DA API - ALTERE AQUI                       ║
+ * ║                    CONFIGURAÇÃO DA API - AMBIENTES                        ║
  * ╠════════════════════════════════════════════════════════════════════════════╣
- * ║  Este arquivo centraliza todas as URLs e configurações de rede do app.     ║
- * ║  Altere os valores abaixo conforme seu ambiente (dev/prod).                ║
+ * ║  As URLs são configuradas automaticamente via BuildKonfig por ambiente.    ║
+ * ║                                                                           ║
+ * ║  Android:                                                                 ║
+ * ║    - Staging:   Build variant "stagingDebug" ou "stagingRelease"           ║
+ * ║    - Produção:  Build variant "productionDebug" ou "productionRelease"     ║
+ * ║                                                                           ║
+ * ║  iOS:                                                                     ║
+ * ║    - Staging:   ./gradlew ... -Penvironment=staging                       ║
+ * ║    - Produção:  ./gradlew ... -Penvironment=production                    ║
+ * ║                                                                           ║
+ * ║  URLs configuradas em: composeApp/build.gradle.kts (seção BuildKonfig)    ║
+ * ║                                                                           ║
+ * ║  Para dev local com ngrok, adicione no local.properties:                  ║
+ * ║    NGROK_URL=https://xxxx.ngrok-free.app/api                              ║
  * ╚════════════════════════════════════════════════════════════════════════════╝
  */
 object ApiConfig {
 
     // ══════════════════════════════════════════════════════════════════════════
-    // 🔧 CONFIGURAÇÃO PRINCIPAL - ALTERE AQUI
+    // 🌍 AMBIENTE ATUAL (definido em tempo de compilação via BuildKonfig)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    enum class Environment {
+        LOCAL,
+        STAGING,
+        PRODUCTION;
+
+        val isLocal: Boolean get() = this == LOCAL
+        val isStaging: Boolean get() = this == STAGING
+        val isProduction: Boolean get() = this == PRODUCTION
+    }
+
+    /**
+     * Ambiente atual, definido em tempo de compilação.
+     */
+    val currentEnvironment: Environment = when (BuildKonfig.ENVIRONMENT) {
+        "local" -> Environment.LOCAL
+        "staging" -> Environment.STAGING
+        else -> Environment.PRODUCTION
+    }
+
+    /** Verifica se está em modo de produção */
+    val isProduction: Boolean get() = BuildKonfig.IS_PRODUCTION
+
+    /** Verifica se está em modo de staging */
+    val isStaging: Boolean get() = currentEnvironment == Environment.STAGING
+
+    /** Verifica se está em modo local (dev) */
+    val isLocal: Boolean get() = currentEnvironment == Environment.LOCAL
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // 🔧 URL BASE (definida automaticamente pelo ambiente)
     // ══════════════════════════════════════════════════════════════════════════
 
     /**
-     * URL base da API Laravel.
+     * URL base da API, configurada automaticamente pelo BuildKonfig.
      *
-     * ⚠️ IMPORTANTE: Altere para a URL do SEU servidor!
-     *
-     * Exemplos por ambiente:
      * ┌─────────────────────┬──────────────────────────────────────────┐
      * │ Ambiente            │ URL                                      │
      * ├─────────────────────┼──────────────────────────────────────────┤
-     * │ Android Emulator    │ "http://10.0.2.2/api"                    │
-     * │ iOS Simulator       │ "http://localhost/api"                   │
-     * │ Laravel Sail        │ "http://localhost:80/api"                │
-     * │ Dispositivo físico  │ "http://192.168.x.x/api" (IP da máquina) │
-     * │ Produção            │ "https://seu-dominio.com/api"            │
+     * │ Local               │ NGROK_URL do local.properties            │
+     * │ Staging             │ https://staging.pixstop.com.br/api       │
+     * │ Produção            │ https://pixstop.com.br/api               │
      * └─────────────────────┴──────────────────────────────────────────┘
+     *
+     * Para dev local com ngrok, adicione no local.properties:
+     *   NGROK_URL=https://xxxx.ngrok-free.app/api
      */
-    private const val BASE_URL = "https://pixstop.com.br/api"
+    var baseUrl: String = BuildKonfig.BASE_URL
+        private set
 
     // ══════════════════════════════════════════════════════════════════════════
-    // 📡 ENDPOINTS DA API - ALTERE SE SUA API TIVER ROTAS DIFERENTES
+    // 📡 ENDPOINTS DA API
     // ══════════════════════════════════════════════════════════════════════════
 
     /**
@@ -51,9 +96,9 @@ object ApiConfig {
         const val PROFILE = "me"
 
         // Adicione novos endpoints aqui conforme necessidade:
-        // const val REGISTER = "/auth/register"
-        // const val FORGOT_PASSWORD = "/auth/forgot-password"
-        // const val PRODUCTS = "/products"
+        // const val REGISTER = "auth/register"
+        // const val FORGOT_PASSWORD = "auth/forgot-password"
+        // const val PRODUCTS = "products"
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -67,28 +112,12 @@ object ApiConfig {
     const val REQUEST_TIMEOUT_MS = 30_000L
 
     // ══════════════════════════════════════════════════════════════════════════
-    // 🔒 CONFIGURAÇÕES INTERNAS - NÃO ALTERE
+    // 🔒 CONFIGURAÇÕES INTERNAS
     // ══════════════════════════════════════════════════════════════════════════
-
-    /** URL base atual (pode ser alterada em runtime via configure()) */
-    var baseUrl: String = BASE_URL
-        private set
 
     /**
      * Configura a URL base da API em runtime.
-     * Útil para alternar entre ambientes sem recompilar.
-     *
-     * Exemplo de uso no MainActivity.kt:
-     * ```kotlin
-     * override fun onCreate(savedInstanceState: Bundle?) {
-     *     super.onCreate(savedInstanceState)
-     *
-     *     // Configura a URL antes de iniciar o app
-     *     ApiConfig.configure("https://api.meuapp.com/api")
-     *
-     *     setContent { App() }
-     * }
-     * ```
+     * Útil para testes ou override manual.
      *
      * @param url URL base da API (ex: "https://api.exemplo.com/api")
      */
@@ -97,9 +126,9 @@ object ApiConfig {
     }
 
     /**
-     * Reseta a URL para o valor padrão definido em BASE_URL.
+     * Reseta a URL para o valor padrão do ambiente atual (definido pelo BuildKonfig).
      */
     fun reset() {
-        baseUrl = BASE_URL
+        baseUrl = BuildKonfig.BASE_URL
     }
 }
