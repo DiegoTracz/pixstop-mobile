@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    ╔════════════════════════════════════════════════════════════════════════════╗
+    ║                    CORES DO APLICATIVO - ALTERE AQUI                       ║
+    ╠════════════════════════════════════════════════════════════════════════════╣
+    ║  Estas cores são usadas pelo sistema Android para a splash screen nativa   ║
+    ║  e elementos do sistema. Mantenha sincronizado com AppColors.kt            ║
+    ╚════════════════════════════════════════════════════════════════════════════╝
+    -->
+
+    <!-- Cor primária do app (mesma de AppColors.Primary) -->
+    <color name="primary">#6200EE</color>
+
+    <!-- Cor sobre a primária (mesma de AppColors.OnPrimary) -->
+    <color name="on_primary">#FFFFFF</color>
+
+    <!-- Cor da splash screen (fundo da tela inicial) -->
+    <color name="splash_background">#6200EE</color>
+</resources>
