@@ -176,21 +176,17 @@ private fun DrawerContent(
         modifier = Modifier.fillMaxHeight()
     ) {
         // Header do Drawer com info do usuário
-        Box(
+        Surface(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
+                .fillMaxWidth(),
+            color = MaterialTheme.colorScheme.primaryContainer
         ) {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.primaryContainer
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Bottom
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Bottom
-                ) {
                     // Avatar
                     Surface(
                         modifier = Modifier.size(64.dp),
@@ -231,7 +227,6 @@ private fun DrawerContent(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                         )
-                    }
                 }
             }
         }

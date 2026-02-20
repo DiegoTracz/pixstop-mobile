@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,9 +21,9 @@ import com.pixstop.mobile.ui.theme.AppBranding
 import com.pixstop.mobile.ui.theme.AppColors
 
 /**
- * Tela de Splash exibida ao iniciar o aplicativo.
+ * Tela de Splash com design minimalista moderno.
  *
- * Mostra o logo/nome do app com a cor primária enquanto carrega os dados iniciais.
+ * Exibe o logo e nome do app em fundo branco limpo.
  *
  * Para personalizar o nome e ícone, edite: ui/theme/AppBranding.kt
  *
@@ -52,19 +53,21 @@ fun SplashScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColors.Primary),
+            .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.alpha(alphaAnim.value)
+            modifier = Modifier
+                .alpha(alphaAnim.value)
+                .padding(horizontal = 48.dp)
         ) {
             // Logo do aplicativo (configurado em AppBranding.kt)
             Surface(
                 modifier = Modifier.size(120.dp),
                 shape = MaterialTheme.shapes.extraLarge,
-                color = AppColors.OnPrimary.copy(alpha = 0.2f)
+                color = AppColors.Primary
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     AppIcon(
@@ -81,18 +84,18 @@ fun SplashScreen(
             // Nome do aplicativo (configurado em AppBranding.kt)
             Text(
                 text = AppBranding.APP_NAME,
-                color = AppColors.OnPrimary,
+                color = AppColors.Primary,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(64.dp))
 
-            // Indicador de carregamento
+            // Indicador de carregamento sutil
             CircularProgressIndicator(
-                color = AppColors.OnPrimary,
-                strokeWidth = 3.dp,
-                modifier = Modifier.size(32.dp)
+                color = AppColors.Primary,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(28.dp)
             )
         }
     }

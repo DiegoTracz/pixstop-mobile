@@ -52,7 +52,23 @@ Basta selecionar o **Build Variant** no painel lateral — o ambiente é detecta
 ./gradlew :androidApp:assembleLocalDebug -PapiUrl=https://outra-url.ngrok-free.app/api
 ```
 
-### iOS
+### iOS — Via Xcode
+
+O ambiente é controlado pela variável `APP_ENVIRONMENT` no Build Settings:
+
+1. No Xcode, selecione o **target `iosApp`** no painel lateral
+2. Vá em **Build Settings** → procure por `APP_ENVIRONMENT`
+3. Altere o valor:
+
+| Valor | Ambiente | URL usada |
+|---|---|---|
+| `local` | Local (padrão Debug) | `NGROK_URL` do `local.properties` |
+| `staging` | Staging | `https://staging.pixstop.com.br/api` |
+| `production` | Produção (padrão Release) | `https://pixstop.com.br/api` |
+
+> ✅ **Debug** usa `local` por padrão. **Release** usa `production` por padrão.
+
+### iOS — Via terminal
 
 ```shell
 # Local

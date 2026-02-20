@@ -152,7 +152,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n\n# Ambiente: local, staging ou production\n# Configure em Build Settings > User-Defined > APP_ENVIRONMENT\nENV=${APP_ENVIRONMENT:-local}\necho \"Building for environment: $ENV\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode -Penvironment=$ENV\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -293,6 +293,7 @@
 		8642FE282C5A0CDCC65985AB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_ENVIRONMENT = local;
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -321,6 +322,7 @@
 		138D2B2C140183ED7A47622C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APP_ENVIRONMENT = production;
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

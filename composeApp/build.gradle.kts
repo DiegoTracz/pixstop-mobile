@@ -32,7 +32,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.compose.material.icons)  // Material Icons (Android only)
+            implementation(libs.compose.material.icons)  // Material Icons (Android)
 
             // Ktor - Android Engine
             implementation(libs.ktor.client.okhttp)

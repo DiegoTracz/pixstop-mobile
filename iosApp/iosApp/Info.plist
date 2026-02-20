@@ -2,7 +2,20 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Nome do app exibido na Home Screen -->
+	<key>CFBundleDisplayName</key>
+	<string>PixStop</string>
+	<key>CFBundleName</key>
+	<string>PixStop</string>
+
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<!-- Launch Screen: cor de fundo enquanto o app carrega -->
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackgroundColor</string>
+	</dict>
 </dict>
 </plist>

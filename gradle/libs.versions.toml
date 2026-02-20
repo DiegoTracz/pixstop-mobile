@@ -17,7 +17,7 @@ ktor = "3.0.3"
 kotlinxSerialization = "1.7.3"
 kotlinxCoroutines = "1.9.0"
 multiplatformSettings = "1.2.0"
-navigationCompose = "2.8.0-alpha10"
+navigationCompose = "2.9.0-beta05"
 buildkonfig = "0.15.2"
 
 [libraries]
