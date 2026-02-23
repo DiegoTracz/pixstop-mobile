@@ -20,7 +20,21 @@ data class ApiResponse<T>(
 
 @Serializable
 data class ApiError(
-    val message: String? = null
+    val message: String? = null,
+    @SerialName("company_code")
+    val companyCode: String? = null
+)
+
+/**
+ * Resposta de erro de validação 422
+ * { "message": "...", "errors": { "field": ["msg"] } }
+ */
+@Serializable
+data class ValidationErrorResponse(
+    val message: String? = null,
+    val errors: Map<String, List<String>>? = null,
+    val success: Boolean? = null,
+    val error: ApiError? = null
 )
 
 /**
@@ -33,19 +47,59 @@ data class LoginRequest(
 )
 
 /**
- * Response do login (Laravel Sanctum)
+ * Request de registro de usuário
  */
 @Serializable
-data class LoginData(
-    val token: String,
-    val type: String? = "Bearer"
+data class RegisterUserRequest(
+    val name: String,
+    val email: String,
+    val password: String,
+    @SerialName("password_confirmation")
+    val passwordConfirmation: String,
+    @SerialName("company_code")
+    val companyCode: String? = null
 )
 
 /**
- * Dados do usuário - Modelo padrão do Laravel
+ * Request de esqueci a senha
+ */
+@Serializable
+data class ForgotPasswordRequest(
+    val email: String
+)
+
+/**
+ * Tenant (empresa) — presente nas respostas de login, registro e perfil.
+ */
+@Serializable
+data class Tenant(
+    val id: String,
+    val name: String,
+    @SerialName("company_code")
+    val companyCode: String? = null,
+    val role: String? = null,
+    val balance: Double? = null,
+    val active: Boolean? = null,
+    @SerialName("is_active")
+    val isActive: Boolean? = null
+)
+
+/**
+ * Response de auth (login e register) — contém token + user + tenant.
  *
- * Adicione mais campos conforme seu modelo User do Laravel:
- * - phone, avatar_url, created_at, etc.
+ * Formato:
+ * { "token": "...", "type": "Bearer", "user": {...}, "tenant": {...} }
+ */
+@Serializable
+data class AuthResponseData(
+    val token: String,
+    val type: String? = "Bearer",
+    val user: User,
+    val tenant: Tenant? = null
+)
+
+/**
+ * Dados do usuário — Modelo padrão do Laravel
  */
 @Serializable
 data class User(
@@ -65,14 +119,15 @@ data class User(
 /**
  * Response do endpoint /me
  *
- * Formato esperado:
- * { "success": true, "data": { "user": {...} } }
- *
- * Se sua API retorna o user diretamente, use User ao invés de ProfileData
+ * Formato:
+ * { "success": true, "data": { "user": {...}, "tenants": [...], "active_tenant": {...} } }
  */
 @Serializable
 data class ProfileData(
-    val user: User
+    val user: User,
+    val tenants: List<Tenant>? = null,
+    @SerialName("active_tenant")
+    val activeTenant: Tenant? = null
 )
 
 /**
@@ -81,5 +136,6 @@ data class ProfileData(
 @Serializable
 data class CachedUserData(
     val user: User,
+    val tenant: Tenant? = null,
     val lastUpdated: Long = 0L
 )

@@ -1,11 +1,11 @@
 package com.pixstop.mobile.ui.screen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,79 +13,61 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.pixstop.mobile.ui.components.AppIcon
-import com.pixstop.mobile.ui.components.AppIconType
-import com.pixstop.mobile.ui.theme.AppBranding
+import com.pixstop.mobile.ui.components.*
+import com.pixstop.mobile.ui.theme.PixColors
+import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.LoginViewModel
 
+/**
+ * Tela de Login — estilo retro 8-bit terminal.
+ * O PixelAuthCard ocupa toda a tela.
+ */
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel = viewModel { LoginViewModel() },
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
-    var passwordVisible by remember { mutableStateOf(false) }
 
-    // Navega para Home quando login é bem sucedido
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
             onLoginSuccess()
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        // Logo do aplicativo (configurado em AppBranding.kt)
-        Surface(
-            modifier = Modifier.size(120.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.primaryContainer
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                AppIcon(
-                    icon = AppBranding.APP_ICON,
-                    contentDescription = "Logo",
-                    modifier = Modifier.size(60.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
+    PixelAuthCard(centerContent = true) {
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Nome do App (configurado em AppBranding.kt)
+        // Branding
         Text(
-            text = AppBranding.APP_NAME,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
+            text = "PixStop",
+            style = PixTypography.pageTitle
         )
 
-        Text(
-            text = AppBranding.LOGIN_SUBTITLE,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Auth header
+        PixelAuthHeader(
+            icon = AppIconType.Lock,
+            title = "LOGIN",
+            subtitle = "Acesse sua conta",
+            themeColor = PixColors.Cyan
         )
 
-        // Campo de Email
-        OutlinedTextField(
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // ── Email ──
+        PixelInput(
             value = uiState.email,
             onValueChange = viewModel::onEmailChange,
-            label = { Text("Email") },
-            placeholder = { Text("seu@email.com") },
-            singleLine = true,
+            label = "E-MAIL",
+            placeholder = "seu@email.com",
+            enabled = !uiState.isLoading,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next
@@ -93,23 +75,24 @@ fun LoginScreen(
             keyboardActions = KeyboardActions(
                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
             ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            enabled = !uiState.isLoading
+            leadingIcon = {
+                AppIcon(
+                    icon = AppIconType.Email,
+                    contentDescription = null,
+                    tint = PixColors.Gray400,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         )
 
-        // Campo de Senha
-        OutlinedTextField(
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // ── Senha ──
+        PixelPasswordInput(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Senha") },
-            placeholder = { Text("••••••••") },
-            singleLine = true,
-            visualTransformation = if (passwordVisible)
-                VisualTransformation.None
-            else
-                PasswordVisualTransformation(),
+            label = "SENHA",
+            enabled = !uiState.isLoading,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
@@ -119,71 +102,84 @@ fun LoginScreen(
                     focusManager.clearFocus()
                     viewModel.login()
                 }
-            ),
-            trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    AppIcon(
-                        icon = if (passwordVisible) AppIconType.VisibilityOff else AppIconType.Visibility,
-                        contentDescription = if (passwordVisible) "Ocultar senha" else "Mostrar senha"
-                    )
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
-            enabled = !uiState.isLoading
+            )
         )
 
-        // Mensagem de erro
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // ── Erro ──
         if (uiState.error != null) {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                ),
+            Spacer(modifier = Modifier.height(8.dp))
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .background(PixColors.PinkAlpha20)
+                    .pixelBorder(PixColors.Pink)
+                    .padding(12.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Column {
                     Text(
                         text = uiState.error!!,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        textAlign = TextAlign.Center
+                        style = PixTypography.errorText
                     )
 
-                    // Botão para continuar offline se houver cache
                     if (uiState.isOfflineMode) {
-                        TextButton(
-                            onClick = viewModel::continueOffline,
-                            modifier = Modifier.padding(top = 8.dp)
-                        ) {
-                            Text("Continuar Offline")
-                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "CONTINUAR OFFLINE",
+                            style = PixTypography.link.copy(
+                                textDecoration = TextDecoration.Underline,
+                                color = PixColors.Yellow
+                            ),
+                            modifier = Modifier.clickable { viewModel.continueOffline() }
+                        )
                     }
                 }
             }
         }
 
-        // Botão de Login
-        Button(
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ── Botão Login ──
+        PixelButton(
+            text = "ENTRAR",
             onClick = viewModel::login,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            enabled = !uiState.isLoading
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !uiState.isLoading,
+            isLoading = uiState.isLoading,
+            loadingText = "ENTRANDO..."
+        )
+
+        // ── Divider ──
+        PixelDivider()
+
+        // ── Link para registro ──
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text("Entrar")
-            }
+            Text(
+                text = "Não tem conta? ",
+                style = PixTypography.bodySecondary
+            )
+            Text(
+                text = "CRIAR CONTA",
+                style = PixTypography.link.copy(
+                    textDecoration = TextDecoration.Underline,
+                    color = PixColors.Green
+                ),
+                modifier = Modifier.clickable(enabled = !uiState.isLoading) {
+                    onNavigateToRegister()
+                }
+            )
         }
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        // Footer
+        Text(
+            text = "© 2026 PixStop",
+            style = PixTypography.footerText
+        )
     }
 }

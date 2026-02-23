@@ -9,12 +9,12 @@
     ╚════════════════════════════════════════════════════════════════════════════╝
     -->
 
-    <!-- Cor primária do app (mesma de AppColors.Primary) -->
-    <color name="primary">#6200EE</color>
+    <!-- Cor primária do app (PixColors.Cyan) -->
+    <color name="primary">#050816</color>
 
-    <!-- Cor sobre a primária (mesma de AppColors.OnPrimary) -->
-    <color name="on_primary">#FFFFFF</color>
+    <!-- Cor sobre a primária -->
+    <color name="on_primary">#00F5D4</color>
 
-    <!-- Cor da splash screen (fundo da tela inicial) -->
-    <color name="splash_background">#6200EE</color>
+    <!-- Cor da splash screen (PixColors.Dark) -->
+    <color name="splash_background">#050816</color>
 </resources>

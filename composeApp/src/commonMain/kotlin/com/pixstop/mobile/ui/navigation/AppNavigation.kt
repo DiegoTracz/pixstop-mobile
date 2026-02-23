@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
+import com.pixstop.mobile.ui.screen.RegisterScreen
 import com.pixstop.mobile.ui.screen.SplashScreen
 
 /**
@@ -26,7 +27,6 @@ fun AppNavigation() {
         composable(Routes.SPLASH) {
             SplashScreen(
                 onSplashFinished = {
-                    // Navega para a tela apropriada baseado no estado de autenticação
                     val destination = if (authRepository.isAuthenticated()) {
                         Routes.HOME
                     } else {
@@ -45,6 +45,23 @@ fun AppNavigation() {
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
+                },
+                onNavigateToRegister = {
+                    navController.navigate(Routes.REGISTER)
+                }
+            )
+        }
+
+        composable(Routes.REGISTER) {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.REGISTER) { inclusive = true }
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack()
                 }
             )
         }

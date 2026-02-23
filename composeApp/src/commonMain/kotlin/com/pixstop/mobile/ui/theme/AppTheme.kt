@@ -1,102 +1,56 @@
 package com.pixstop.mobile.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
 /**
- * Tema claro do aplicativo.
- * As cores são definidas em AppColors.kt
+ * Tema retro 8-bit do PixStop — Dark only.
+ * Cores mapeadas de PixColors para o Material3 color scheme.
  */
-private val LightColorScheme = lightColorScheme(
-    primary = AppColors.Primary,
-    onPrimary = AppColors.OnPrimary,
-    primaryContainer = AppColors.PrimaryContainer,
-    onPrimaryContainer = AppColors.OnPrimaryContainer,
+private val PixStopColorScheme = darkColorScheme(
+    primary = PixColors.Cyan,
+    onPrimary = PixColors.Dark,
+    primaryContainer = PixColors.Gray800,
+    onPrimaryContainer = PixColors.Cyan,
 
-    secondary = AppColors.Secondary,
-    onSecondary = AppColors.OnSecondary,
-    secondaryContainer = AppColors.SecondaryContainer,
-    onSecondaryContainer = AppColors.OnSecondaryContainer,
+    secondary = PixColors.Purple,
+    onSecondary = PixColors.White,
+    secondaryContainer = PixColors.Gray700,
+    onSecondaryContainer = PixColors.Purple,
 
-    tertiary = AppColors.Tertiary,
-    onTertiary = AppColors.OnTertiary,
-    tertiaryContainer = AppColors.TertiaryContainer,
-    onTertiaryContainer = AppColors.OnTertiaryContainer,
+    tertiary = PixColors.Yellow,
+    onTertiary = PixColors.Dark,
+    tertiaryContainer = PixColors.Gray700,
+    onTertiaryContainer = PixColors.Yellow,
 
-    background = AppColors.Background,
-    onBackground = AppColors.OnBackground,
+    background = PixColors.Dark,
+    onBackground = PixColors.Gray100,
 
-    surface = AppColors.Surface,
-    onSurface = AppColors.OnSurface,
-    surfaceVariant = AppColors.SurfaceVariant,
-    onSurfaceVariant = AppColors.OnSurfaceVariant,
+    surface = PixColors.Gray800,
+    onSurface = PixColors.Gray100,
+    surfaceVariant = PixColors.Gray700,
+    onSurfaceVariant = PixColors.Gray300,
 
-    error = AppColors.Error,
-    onError = AppColors.OnError,
-    errorContainer = AppColors.ErrorContainer,
-    onErrorContainer = AppColors.OnErrorContainer,
+    error = PixColors.Pink,
+    onError = PixColors.White,
+    errorContainer = PixColors.PinkAlpha20,
+    onErrorContainer = PixColors.Pink,
 
-    outline = AppColors.Outline,
-    outlineVariant = AppColors.OutlineVariant,
-    scrim = AppColors.Scrim
+    outline = PixColors.Gray600,
+    outlineVariant = PixColors.Gray700,
+    scrim = PixColors.Black
 )
 
 /**
- * Tema escuro do aplicativo.
- * As cores são definidas em AppColors.Dark
- */
-private val DarkColorScheme = darkColorScheme(
-    primary = AppColors.Dark.Primary,
-    onPrimary = AppColors.Dark.OnPrimary,
-    primaryContainer = AppColors.Dark.PrimaryContainer,
-    onPrimaryContainer = AppColors.Dark.OnPrimaryContainer,
-
-    secondary = AppColors.Dark.Secondary,
-    onSecondary = AppColors.Dark.OnSecondary,
-    secondaryContainer = AppColors.Dark.SecondaryContainer,
-    onSecondaryContainer = AppColors.Dark.OnSecondaryContainer,
-
-    tertiary = AppColors.Dark.Tertiary,
-    onTertiary = AppColors.Dark.OnTertiary,
-    tertiaryContainer = AppColors.Dark.TertiaryContainer,
-    onTertiaryContainer = AppColors.Dark.OnTertiaryContainer,
-
-    background = AppColors.Dark.Background,
-    onBackground = AppColors.Dark.OnBackground,
-
-    surface = AppColors.Dark.Surface,
-    onSurface = AppColors.Dark.OnSurface,
-    surfaceVariant = AppColors.Dark.SurfaceVariant,
-    onSurfaceVariant = AppColors.Dark.OnSurfaceVariant,
-
-    error = AppColors.Dark.Error,
-    onError = AppColors.Dark.OnError,
-    errorContainer = AppColors.Dark.ErrorContainer,
-    onErrorContainer = AppColors.Dark.OnErrorContainer,
-
-    outline = AppColors.Dark.Outline,
-    outlineVariant = AppColors.Dark.OutlineVariant,
-    scrim = AppColors.Dark.Scrim
-)
-
-/**
- * Tema principal do aplicativo.
- *
- * @param darkTheme Se true, usa o tema escuro. Por padrão, segue o sistema.
- * @param content Conteúdo do aplicativo.
+ * Tema principal do PixStop — Dark only, retro 8-bit.
  */
 @Composable
 fun AppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = PixStopColorScheme,
         content = content
     )
 }

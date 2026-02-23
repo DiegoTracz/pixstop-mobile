@@ -11,6 +11,10 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 
+	<!-- Permissão de câmera para QR Code Scanner -->
+	<key>NSCameraUsageDescription</key>
+	<string>PixStop precisa acessar a câmera para escanear QR Codes de empresa.</string>
+
 	<!-- Launch Screen: cor de fundo enquanto o app carrega -->
 	<key>UILaunchScreen</key>
 	<dict>

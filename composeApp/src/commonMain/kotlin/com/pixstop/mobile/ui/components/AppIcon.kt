@@ -34,10 +34,12 @@ enum class AppIconType {
 
     // User
     Person,
+    PersonAdd,
     Logout,
 
     // Auth
     Lock,
+    Email,
     Visibility,
     VisibilityOff,
 
@@ -47,10 +49,16 @@ enum class AppIconType {
     Edit,
     Delete,
     Share,
+    QrCodeScanner,
 
     // Status
     Check,
     Close,
     Info,
-    Warning
+    Warning,
+
+    // Navigation extras
+    ChevronDown,
+    ChevronUp,
+    ArrowBack
 }

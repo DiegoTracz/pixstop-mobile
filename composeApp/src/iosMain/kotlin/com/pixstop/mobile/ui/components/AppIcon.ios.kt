@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.unit.dp
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import org.jetbrains.skia.Image as SkiaImage
 import platform.CoreGraphics.CGRectMake
@@ -64,8 +65,9 @@ actual fun AppIcon(
 /**
  * Converte um SF Symbol para ImageBitmap do Compose.
  *
- * Renderiza o símbolo como imagem preta sobre fundo transparente,
- * depois o tinting é aplicado via ColorFilter no Compose.
+ * Renderiza o símbolo respeitando seu aspect ratio original,
+ * centralizado dentro de um canvas quadrado.
+ * O tinting é aplicado via ColorFilter no Compose.
  */
 @OptIn(ExperimentalForeignApi::class)
 private fun sfSymbolToImageBitmap(symbolName: String): ImageBitmap? {
@@ -76,14 +78,31 @@ private fun sfSymbolToImageBitmap(symbolName: String): ImageBitmap? {
         ?: UIImage.systemImageNamed("questionmark.circle", config)
         ?: return null
 
-    // Renderiza o SF Symbol com cor preta sobre fundo transparente
-    val renderSize = 96.0
-    val size = CGSizeMake(renderSize, renderSize)
+    // Pega o tamanho natural do símbolo (respeita aspect ratio)
+    val symbolWidth: Double
+    val symbolHeight: Double
+    symbol.size.useContents {
+        symbolWidth = width
+        symbolHeight = height
+    }
+
+    // Canvas quadrado
+    val canvasSize = 96.0
+    val size = CGSizeMake(canvasSize, canvasSize)
+
+    // Calcula escala para caber no canvas mantendo proporção
+    val scale = minOf(canvasSize / symbolWidth, canvasSize / symbolHeight)
+    val drawWidth = symbolWidth * scale
+    val drawHeight = symbolHeight * scale
+
+    // Centraliza no canvas
+    val drawX = (canvasSize - drawWidth) * 0.5
+    val drawY = (canvasSize - drawHeight) * 0.5
 
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
 
     UIColor.blackColor.setFill()
-    symbol.drawInRect(CGRectMake(0.0, 0.0, renderSize, renderSize))
+    symbol.drawInRect(CGRectMake(drawX, drawY, drawWidth, drawHeight))
 
     val renderedImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
@@ -121,10 +140,12 @@ private fun AppIconType.toSFSymbolName(): String = when (this) {
 
     // User
     AppIconType.Person -> "person.fill"
+    AppIconType.PersonAdd -> "person.badge.plus"
     AppIconType.Logout -> "rectangle.portrait.and.arrow.right"
 
     // Auth
     AppIconType.Lock -> "lock.fill"
+    AppIconType.Email -> "envelope.fill"
     AppIconType.Visibility -> "eye.fill"
     AppIconType.VisibilityOff -> "eye.slash.fill"
 
@@ -134,10 +155,16 @@ private fun AppIconType.toSFSymbolName(): String = when (this) {
     AppIconType.Edit -> "pencil"
     AppIconType.Delete -> "trash.fill"
     AppIconType.Share -> "square.and.arrow.up"
+    AppIconType.QrCodeScanner -> "qrcode.viewfinder"
 
     // Status
     AppIconType.Check -> "checkmark"
     AppIconType.Close -> "xmark"
     AppIconType.Info -> "info.circle.fill"
     AppIconType.Warning -> "exclamationmark.triangle.fill"
+
+    // Navigation extras
+    AppIconType.ChevronDown -> "chevron.down"
+    AppIconType.ChevronUp -> "chevron.up"
+    AppIconType.ArrowBack -> "chevron.left"
 }

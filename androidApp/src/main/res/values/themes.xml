@@ -6,8 +6,8 @@
     ╚════════════════════════════════════════════════════════════════════════════╝
     -->
 
-    <!-- Tema principal do app -->
-    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- Tema principal do app — dark retro 8-bit -->
+    <style name="AppTheme" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@color/primary</item>
         <item name="android:navigationBarColor">@color/primary</item>
         <item name="android:windowBackground">@color/splash_background</item>

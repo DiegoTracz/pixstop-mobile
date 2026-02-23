@@ -1,6 +1,7 @@
 package com.pixstop.mobile.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
@@ -29,10 +30,12 @@ actual fun AppIcon(
 
         // User
         AppIconType.Person -> Icons.Filled.Person
+        AppIconType.PersonAdd -> Icons.Filled.PersonAdd
         AppIconType.Logout -> Icons.AutoMirrored.Filled.Logout
 
         // Auth
         AppIconType.Lock -> Icons.Filled.Lock
+        AppIconType.Email -> Icons.Filled.Email
         AppIconType.Visibility -> Icons.Filled.Visibility
         AppIconType.VisibilityOff -> Icons.Filled.VisibilityOff
 
@@ -42,12 +45,18 @@ actual fun AppIcon(
         AppIconType.Edit -> Icons.Filled.Edit
         AppIconType.Delete -> Icons.Filled.Delete
         AppIconType.Share -> Icons.Filled.Share
+        AppIconType.QrCodeScanner -> Icons.Filled.QrCodeScanner
 
         // Status
         AppIconType.Check -> Icons.Filled.Check
         AppIconType.Close -> Icons.Filled.Close
         AppIconType.Info -> Icons.Filled.Info
         AppIconType.Warning -> Icons.Filled.Warning
+
+        // Navigation extras
+        AppIconType.ChevronDown -> Icons.Filled.KeyboardArrowDown
+        AppIconType.ChevronUp -> Icons.Filled.KeyboardArrowUp
+        AppIconType.ArrowBack -> Icons.AutoMirrored.Filled.ArrowBack
     }
 
     Icon(

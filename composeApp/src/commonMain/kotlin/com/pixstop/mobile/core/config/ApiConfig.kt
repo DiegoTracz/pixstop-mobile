@@ -95,10 +95,11 @@ object ApiConfig {
         /** GET - Dados do perfil do usuário logado. Header: Bearer token */
         const val PROFILE = "me"
 
-        // Adicione novos endpoints aqui conforme necessidade:
-        // const val REGISTER = "auth/register"
-        // const val FORGOT_PASSWORD = "auth/forgot-password"
-        // const val PRODUCTS = "products"
+        /** POST - Registro de novo usuário. Body: { name, email, password, password_confirmation, company_code? } */
+        const val REGISTER_USER = "auth/register/user"
+
+        /** POST - Solicitar reset de senha. Body: { email } */
+        const val FORGOT_PASSWORD = "auth/forgot-password"
     }
 
     // ══════════════════════════════════════════════════════════════════════════
