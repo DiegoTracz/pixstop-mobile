@@ -8,4 +8,7 @@ object Routes {
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val HOME = "home"
+
+    /** Entrar numa empresa: única saída de quem está logado sem nenhuma. */
+    const val JOIN_COMPANY = "join-company"
 }

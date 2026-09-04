@@ -18,6 +18,9 @@ import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.BottomNavItem
 import com.pixstop.mobile.ui.viewmodel.HomeViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import com.pixstop.mobile.ui.viewmodel.SessionViewModel
+import com.pixstop.mobile.ui.components.CompanySwitcherSheet
+import androidx.compose.foundation.clickable
 
 /**
  * Itens do Bottom Navigation
@@ -53,12 +56,33 @@ private val bottomNavItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onLogout: () -> Unit,
+    onJoinCompany: () -> Unit = {},
     viewModel: HomeViewModel = koinViewModel(),
-    onLogout: () -> Unit
+    sessionViewModel: SessionViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val session by sessionViewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    var switcherOpen by remember { mutableStateOf(false) }
+
+    // Seletor de empresas: só faz sentido com mais de um vínculo ativo.
+    if (switcherOpen) {
+        CompanySwitcherSheet(
+            memberships = session.account?.memberships.orEmpty(),
+            isSwitching = session.isSwitching,
+            onSelect = { membership ->
+                sessionViewModel.switchCompany(membership.id)
+                switcherOpen = false
+            },
+            onJoinCompany = {
+                switcherOpen = false
+                onJoinCompany()
+            },
+            onDismiss = { switcherOpen = false },
+        )
+    }
 
     // Navega para login quando faz logout
     LaunchedEffect(uiState.isLoggedOut) {
@@ -91,7 +115,19 @@ fun HomeScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Home") },
+                    title = {
+                        val company = session.company
+                        val canSwitch = session.account?.canSwitchCompany == true
+
+                        Text(
+                            text = company?.name ?: "Pixstop",
+                            modifier = if (canSwitch) {
+                                Modifier.clickable { switcherOpen = true }
+                            } else {
+                                Modifier
+                            },
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = {
                             scope.launch { drawerState.open() }

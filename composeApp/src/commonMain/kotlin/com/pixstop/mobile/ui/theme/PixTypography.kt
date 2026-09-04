@@ -88,6 +88,19 @@ object PixTypography {
             color = PixColors.Cyan.copy(alpha = 0.6f)
         )
 
+    /**
+     * Texto de apoio em sans-serif.
+     *
+     * A fonte pixelada é linda em título e ilegível em texto miúdo; abaixo de
+     * 10sp ela vira ruído. Aqui a legibilidade vence o estilo.
+     */
+    val caption: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = sansFontFamily,
+            fontSize = 12.sp,
+            color = PixColors.Gray300
+        )
+
     val footerText: TextStyle
         @Composable get() = TextStyle(
             fontFamily = pixelFontFamily,
