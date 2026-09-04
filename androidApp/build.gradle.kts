@@ -22,8 +22,8 @@ android {
         applicationId = "com.pixstop.mobile"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (project.findProperty("app.versionCode") as String).toInt()
+        versionName = project.findProperty("app.versionName") as String
     }
 
     packaging {
@@ -50,7 +50,7 @@ android {
             buildConfigField("Boolean", "IS_PRODUCTION", "false")
 
             // Nome do app diferente para local
-            resValue("string", "app_name", "PixStop Local")
+            resValue("string", "app_name", "Pixstop Local")
         }
 
         create("staging") {
@@ -65,7 +65,7 @@ android {
             buildConfigField("Boolean", "IS_PRODUCTION", "false")
 
             // Nome do app diferente para staging
-            resValue("string", "app_name", "PixStop Staging")
+            resValue("string", "app_name", "Pixstop Staging")
         }
 
         create("production") {
@@ -76,7 +76,7 @@ android {
             buildConfigField("Boolean", "IS_PRODUCTION", "true")
 
             // Nome do app de produção
-            resValue("string", "app_name", "PixStop")
+            resValue("string", "app_name", "Pixstop")
         }
     }
 
@@ -104,6 +104,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 dependencies {
+    implementation(libs.koin.android)
     implementation(projects.composeApp)
     implementation(libs.compose.uiTooling)
     implementation(libs.androidx.activity.compose)

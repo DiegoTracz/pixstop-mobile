@@ -44,6 +44,12 @@ kotlin {
 
             // ML Kit - Barcode/QR Code Scanning
             implementation("com.google.mlkit:barcode-scanning:17.3.0")
+
+            // Koin - contexto do Android
+            implementation(libs.koin.android)
+
+            // Token guardado com criptografia do sistema
+            implementation(libs.androidx.security.crypto)
         }
 
         iosMain.dependencies {
@@ -66,6 +72,7 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.client.auth)
 
             // Kotlinx Serialization
             implementation(libs.kotlinx.serialization.json)
@@ -81,9 +88,19 @@ kotlin {
 
             // Navigation Compose
             implementation(libs.navigation.compose)
+
+            // Koin - injeção de dependência
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+
+            // Kermit - logging
+            implementation(libs.kermit)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
         }
     }
 }
@@ -188,5 +205,12 @@ buildkonfig {
         buildConfigField(STRING, "BASE_URL", baseUrl)
         buildConfigField(STRING, "ENVIRONMENT", environment)
         buildConfigField(BOOLEAN, "IS_PRODUCTION", isProduction.toString())
+
+        // Log detalhado e ferramentas de desenvolvimento só fora de produção.
+        buildConfigField(BOOLEAN, "DEBUG", (!isProduction).toString())
+
+        // Versão vinda do gradle.properties, a mesma que o androidApp usa.
+        buildConfigField(STRING, "APP_VERSION_NAME", project.property("app.versionName") as String)
+        buildConfigField(STRING, "APP_BUILD_NUMBER", project.property("app.versionCode") as String)
     }
 }

@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.pixstop.mobile.data.model.User
 import com.pixstop.mobile.data.repository.AuthRepository
-import com.pixstop.mobile.data.repository.Result
+import com.pixstop.mobile.domain.model.DomainError
+import com.pixstop.mobile.domain.model.Outcome
 
 /**
  * Estado da tela Home
@@ -25,7 +26,7 @@ data class HomeUiState(
  * ViewModel para a tela Home
  */
 class HomeViewModel(
-    private val authRepository: AuthRepository = AuthRepository()
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -40,16 +41,16 @@ class HomeViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             when (val result = authRepository.fetchProfile()) {
-                is Result.Success -> {
+                is Outcome.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        user = result.data,
+                        user = result.value,
                         isOfflineMode = false
                     )
                 }
-                is Result.Error -> {
+                is Outcome.Failure -> {
                     // Tenta usar cache
-                    val cachedUser = authRepository.getCachedUser()
+                    val cachedUser = authRepository.cachedUser()
                     if (cachedUser != null) {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
@@ -59,7 +60,7 @@ class HomeViewModel(
                     } else {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            error = result.message
+                            error = result.error.message
                         )
                     }
                 }

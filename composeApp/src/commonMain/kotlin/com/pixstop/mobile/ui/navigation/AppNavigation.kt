@@ -10,6 +10,7 @@ import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
 import com.pixstop.mobile.ui.screen.RegisterScreen
 import com.pixstop.mobile.ui.screen.SplashScreen
+import org.koin.compose.koinInject
 
 /**
  * Componente principal de navegação do app
@@ -17,7 +18,7 @@ import com.pixstop.mobile.ui.screen.SplashScreen
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val authRepository = remember { AuthRepository() }
+    val authRepository: AuthRepository = koinInject()
 
     NavHost(
         navController = navController,

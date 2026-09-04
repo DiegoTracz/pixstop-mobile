@@ -10,7 +10,8 @@ import com.pixstop.mobile.core.config.CompanyCodeParser
 import com.pixstop.mobile.data.model.RegisterUserRequest
 import com.pixstop.mobile.data.model.User
 import com.pixstop.mobile.data.repository.AuthRepository
-import com.pixstop.mobile.data.repository.Result
+import com.pixstop.mobile.domain.model.DomainError
+import com.pixstop.mobile.domain.model.Outcome
 
 /**
  * Estado da tela de registro.
@@ -34,7 +35,7 @@ data class RegisterUiState(
  * ViewModel para a tela de Registro de Usuário.
  */
 class RegisterViewModel(
-    private val authRepository: AuthRepository = AuthRepository()
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -170,18 +171,18 @@ class RegisterViewModel(
             )
 
             when (val result = authRepository.registerUser(request)) {
-                is Result.Success -> {
+                is Outcome.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isRegistered = true,
-                        user = result.data
+                        user = result.value
                     )
                 }
-                is Result.Error -> {
+                is Outcome.Failure -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        generalError = result.message,
-                        fieldErrors = result.fieldErrors
+                        generalError = result.error.message,
+                        fieldErrors = (result.error as? DomainError.Validation)?.fieldErrors ?: emptyMap()
                     )
                 }
             }

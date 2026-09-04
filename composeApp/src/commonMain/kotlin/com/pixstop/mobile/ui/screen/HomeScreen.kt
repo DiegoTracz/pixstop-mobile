@@ -17,6 +17,7 @@ import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.BottomNavItem
 import com.pixstop.mobile.ui.viewmodel.HomeViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Itens do Bottom Navigation
@@ -52,7 +53,7 @@ private val bottomNavItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel { HomeViewModel() },
+    viewModel: HomeViewModel = koinViewModel(),
     onLogout: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()

@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.pixstop.mobile.data.model.User
 import com.pixstop.mobile.data.repository.AuthRepository
-import com.pixstop.mobile.data.repository.Result
+import com.pixstop.mobile.domain.model.DomainError
+import com.pixstop.mobile.domain.model.Outcome
 
 /**
  * Estado da tela de login
@@ -27,7 +28,7 @@ data class LoginUiState(
  * ViewModel para a tela de Login
  */
 class LoginViewModel(
-    private val authRepository: AuthRepository = AuthRepository()
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -40,7 +41,7 @@ class LoginViewModel(
 
     private fun checkExistingSession() {
         if (authRepository.isAuthenticated()) {
-            val cachedUser = authRepository.getCachedUser()
+            val cachedUser = authRepository.cachedUser()
             if (cachedUser != null) {
                 _uiState.value = _uiState.value.copy(
                     isLoggedIn = true,
@@ -50,16 +51,16 @@ class LoginViewModel(
                 // Tem token mas não tem dados em cache, tenta buscar
                 viewModelScope.launch {
                     when (val result = authRepository.fetchProfile()) {
-                        is Result.Success -> {
+                        is Outcome.Success -> {
                             _uiState.value = _uiState.value.copy(
                                 isLoggedIn = true,
-                                user = result.data
+                                user = result.value
                             )
                         }
-                        is Result.Error -> {
+                        is Outcome.Failure -> {
                             // Token inválido ou sem conexão, mantém na tela de login
                             _uiState.value = _uiState.value.copy(
-                                error = result.message
+                                error = result.error.message
                             )
                         }
                     }
@@ -99,19 +100,19 @@ class LoginViewModel(
             _uiState.value = currentState.copy(isLoading = true, error = null)
 
             when (val result = authRepository.login(currentState.email, currentState.password)) {
-                is Result.Success -> {
+                is Outcome.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoggedIn = true,
-                        user = result.data,
+                        user = result.value,
                         error = null
                     )
                 }
-                is Result.Error -> {
+                is Outcome.Failure -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = result.message,
-                        isOfflineMode = result.isOffline
+                        error = result.error.message,
+                        isOfflineMode = (result.error is DomainError.Offline)
                     )
                 }
             }
@@ -126,7 +127,7 @@ class LoginViewModel(
      * Continua com dados offline (quando tem cache válido)
      */
     fun continueOffline() {
-        val cachedUser = authRepository.getCachedUser()
+        val cachedUser = authRepository.cachedUser()
         if (cachedUser != null) {
             _uiState.value = _uiState.value.copy(
                 isLoggedIn = true,

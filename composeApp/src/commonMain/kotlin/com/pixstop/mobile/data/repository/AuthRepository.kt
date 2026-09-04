@@ -1,280 +1,108 @@
 package com.pixstop.mobile.data.repository
 
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import kotlinx.serialization.json.Json
 import com.pixstop.mobile.core.config.ApiConfig
-import com.pixstop.mobile.core.network.HttpClientFactory
+import com.pixstop.mobile.core.logging.AppLogger
+import com.pixstop.mobile.core.network.safeCall
+import com.pixstop.mobile.core.network.safeCallUnit
+import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.core.storage.TokenManager
-import com.pixstop.mobile.data.model.*
+import com.pixstop.mobile.data.model.AuthResponseData
+import com.pixstop.mobile.data.model.CachedUserData
+import com.pixstop.mobile.data.model.ForgotPasswordRequest
+import com.pixstop.mobile.data.model.LoginRequest
+import com.pixstop.mobile.data.model.RegisterUserRequest
+import com.pixstop.mobile.data.model.User
+import com.pixstop.mobile.domain.model.Outcome
+import com.pixstop.mobile.domain.model.map
+import com.pixstop.mobile.domain.model.onFailure
+import com.pixstop.mobile.domain.model.onSuccess
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.auth.authProviders
+import io.ktor.client.plugins.auth.providers.BearerAuthProvider
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+
+private const val TAG = "Auth"
 
 /**
- * Resultado de operação que pode ser sucesso ou erro
- */
-sealed class Result<out T> {
-    data class Success<T>(val data: T) : Result<T>()
-    data class Error(
-        val message: String,
-        val isOffline: Boolean = false,
-        val fieldErrors: Map<String, String> = emptyMap()
-    ) : Result<Nothing>()
-}
-
-/**
- * Repositório de autenticação
+ * Entrada e saída da conta.
+ *
+ * O tratamento de erro vive no `safeCall`; aqui fica só o que é próprio da
+ * autenticação — guardar o token e o cache do perfil, e avisar o cliente HTTP
+ * de que o token mudou.
  */
 class AuthRepository(
-    private val tokenManager: TokenManager = TokenManager()
+    private val client: HttpClient,
+    private val tokens: TokenManager,
+    private val session: SessionStore,
 ) {
-    private var httpClient: HttpClient = HttpClientFactory.create(tokenManager)
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-    }
-
-    /**
-     * Recria o HttpClient (necessário após salvar o token)
-     */
-    private fun refreshHttpClient() {
-        httpClient.close()
-        httpClient = HttpClientFactory.create(tokenManager)
-    }
-
-    /**
-     * Salva dados de autenticação (token + user + tenant) no cache
-     */
-    private fun saveAuthData(authData: AuthResponseData) {
-        tokenManager.saveToken(authData.token)
-        tokenManager.saveUserData(
-            CachedUserData(
-                user = authData.user,
-                tenant = authData.tenant
-            )
-        )
-        refreshHttpClient()
-    }
-
-    /**
-     * Realiza login na API.
-     * Retorna user diretamente (sem chamada extra ao /me).
-     */
-    suspend fun login(email: String, password: String): Result<User> {
-        return try {
-            val response = httpClient.post(ApiConfig.Endpoints.LOGIN) {
+    suspend fun login(email: String, password: String): Outcome<User> =
+        safeCall<AuthResponseData>(TAG) {
+            client.post(ApiConfig.Endpoints.LOGIN) {
                 setBody(LoginRequest(user = email, password = password))
             }
+        }.onSuccess(::persist).map { it.user }
 
-            when (response.status) {
-                HttpStatusCode.OK -> {
-                    val apiResponse = response.body<ApiResponse<AuthResponseData>>()
-                    if (apiResponse.success && apiResponse.data != null) {
-                        saveAuthData(apiResponse.data)
-                        Result.Success(apiResponse.data.user)
-                    } else {
-                        Result.Error(apiResponse.error?.message ?: "Erro ao fazer login")
-                    }
-                }
-                HttpStatusCode.Unauthorized -> {
-                    Result.Error("Credenciais inválidas")
-                }
-                HttpStatusCode.UnprocessableEntity -> {
-                    parseValidationError(response)
-                }
-                else -> {
-                    Result.Error("Erro do servidor: ${response.status.value}")
-                }
-            }
-        } catch (e: Exception) {
-            val cachedData = tokenManager.getUserData()
-            if (cachedData != null && tokenManager.hasToken()) {
-                Result.Error(
-                    message = "Sem conexão. Usando dados offline.",
-                    isOffline = true
-                )
-            } else {
-                Result.Error("Erro de conexão: ${e.message ?: "Verifique sua internet"}")
+    suspend fun registerUser(request: RegisterUserRequest): Outcome<User> =
+        safeCall<AuthResponseData>(TAG) {
+            client.post(ApiConfig.Endpoints.REGISTER_USER) { setBody(request) }
+        }.onSuccess(::persist).map { it.user }
+
+    suspend fun forgotPassword(email: String): Outcome<Unit> =
+        safeCallUnit(TAG) {
+            client.post(ApiConfig.Endpoints.FORGOT_PASSWORD) {
+                setBody(ForgotPasswordRequest(email))
             }
         }
+
+    /**
+     * Busca o perfil e atualiza o cache offline.
+     */
+    suspend fun fetchProfile(): Outcome<User> =
+        safeCall<AuthResponseData>(TAG) {
+            client.get(ApiConfig.Endpoints.PROFILE)
+        }.onSuccess { data ->
+            tokens.saveUserData(CachedUserData(user = data.user, tenant = data.tenant))
+        }.map { it.user }
+
+    /**
+     * Sai da conta.
+     *
+     * O estado local é limpo mesmo que o servidor não responda: quem pediu para
+     * sair não pode continuar dentro porque a rede caiu.
+     */
+    suspend fun logout(): Outcome<Unit> {
+        val result = safeCallUnit(TAG) { client.post(ApiConfig.Endpoints.LOGOUT) }
+
+        clearSession()
+
+        return result.onFailure { AppLogger.w("Logout remoto falhou; sessão local encerrada assim mesmo.", tag = TAG) }
     }
 
-    /**
-     * Registra um novo usuário.
-     * Opcionalmente vincula a uma empresa via company_code.
-     */
-    suspend fun registerUser(request: RegisterUserRequest): Result<User> {
-        return try {
-            val response = httpClient.post(ApiConfig.Endpoints.REGISTER_USER) {
-                setBody(request)
-            }
+    fun isAuthenticated(): Boolean = session.isLoggedIn()
 
-            when (response.status) {
-                HttpStatusCode.Created, HttpStatusCode.OK -> {
-                    val apiResponse = response.body<ApiResponse<AuthResponseData>>()
-                    if (apiResponse.success && apiResponse.data != null) {
-                        saveAuthData(apiResponse.data)
-                        Result.Success(apiResponse.data.user)
-                    } else {
-                        Result.Error(apiResponse.error?.message ?: "Erro ao registrar")
-                    }
-                }
-                HttpStatusCode.UnprocessableEntity -> {
-                    parseValidationError(response)
-                }
-                else -> {
-                    Result.Error("Erro do servidor: ${response.status.value}")
-                }
-            }
-        } catch (e: Exception) {
-            Result.Error("Erro de conexão: ${e.message ?: "Verifique sua internet"}")
-        }
+    fun cachedUser(): User? = tokens.getUserData()?.user
+
+    /**
+     * Guarda o token e limpa o cache do plugin de autenticação.
+     *
+     * Sem essa limpeza o Ktor continuaria usando o token que leu na primeira
+     * chamada — antes do login, quando não havia nenhum.
+     */
+    private fun persist(data: AuthResponseData) {
+        session.save(data.token)
+        tokens.saveUserData(CachedUserData(user = data.user, tenant = data.tenant))
+        clearBearerCache()
     }
 
-    /**
-     * Solicita envio de email para reset de senha.
-     */
-    suspend fun forgotPassword(email: String): Result<String> {
-        return try {
-            val response = httpClient.post(ApiConfig.Endpoints.FORGOT_PASSWORD) {
-                setBody(ForgotPasswordRequest(email = email))
-            }
-
-            when (response.status) {
-                HttpStatusCode.OK -> {
-                    val apiResponse = response.body<ApiResponse<Unit>>()
-                    Result.Success(apiResponse.message ?: "Email enviado com sucesso")
-                }
-                HttpStatusCode.UnprocessableEntity -> {
-                    val body = response.bodyAsText()
-                    try {
-                        val validationError = json.decodeFromString<ValidationErrorResponse>(body)
-                        val message = validationError.errors?.values?.flatten()?.firstOrNull()
-                            ?: validationError.message
-                            ?: "Email não encontrado"
-                        Result.Error(message)
-                    } catch (_: Exception) {
-                        Result.Error("Email não encontrado")
-                    }
-                }
-                else -> Result.Error("Erro do servidor: ${response.status.value}")
-            }
-        } catch (e: Exception) {
-            Result.Error("Erro de conexão: ${e.message ?: "Verifique sua internet"}")
-        }
+    private fun clearSession() {
+        tokens.clearAll()
+        clearBearerCache()
     }
 
-    /**
-     * Busca dados do perfil do usuário
-     */
-    suspend fun fetchProfile(): Result<User> {
-        return try {
-            val response = httpClient.get(ApiConfig.Endpoints.PROFILE)
-
-            if (response.status == HttpStatusCode.OK) {
-                val apiResponse = response.body<ApiResponse<ProfileData>>()
-                if (apiResponse.success && apiResponse.data != null) {
-                    val profileData = apiResponse.data
-
-                    tokenManager.saveUserData(
-                        CachedUserData(
-                            user = profileData.user,
-                            tenant = profileData.activeTenant
-                        )
-                    )
-
-                    Result.Success(profileData.user)
-                } else {
-                    Result.Error(apiResponse.error?.message ?: "Erro ao buscar perfil")
-                }
-            } else if (response.status == HttpStatusCode.Unauthorized) {
-                tokenManager.clearAll()
-                Result.Error("Sessão expirada. Faça login novamente.")
-            } else {
-                Result.Error("Erro do servidor: ${response.status.value}")
-            }
-        } catch (e: Exception) {
-            val cachedData = tokenManager.getUserData()
-            if (cachedData != null) {
-                Result.Success(cachedData.user)
-            } else {
-                Result.Error("Erro de conexão: ${e.message ?: "Verifique sua internet"}")
-            }
-        }
-    }
-
-    /**
-     * Realiza logout
-     */
-    suspend fun logout(): Result<Unit> {
-        return try {
-            httpClient.post(ApiConfig.Endpoints.LOGOUT)
-            tokenManager.clearAll()
-            refreshHttpClient()
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            tokenManager.clearAll()
-            refreshHttpClient()
-            Result.Success(Unit)
-        }
-    }
-
-    /**
-     * Verifica se o usuário está autenticado
-     */
-    fun isAuthenticated(): Boolean {
-        return tokenManager.hasToken()
-    }
-
-    /**
-     * Retorna dados do usuário em cache (para modo offline)
-     */
-    fun getCachedUser(): User? {
-        return tokenManager.getUserData()?.user
-    }
-
-    /**
-     * Retorna o TokenManager para uso em outros repositórios
-     */
-    fun getTokenManager(): TokenManager = tokenManager
-
-    /**
-     * Faz parse de erros de validação (422) da API Laravel
-     */
-    private suspend fun parseValidationError(response: HttpResponse): Result.Error {
-        return try {
-            val body = response.bodyAsText()
-            // Tenta o formato com "errors" map (padrão Laravel)
-            try {
-                val validationError = json.decodeFromString<ValidationErrorResponse>(body)
-                val fieldErrors = mutableMapOf<String, String>()
-                validationError.errors?.forEach { (field, messages) ->
-                    fieldErrors[field] = messages.firstOrNull() ?: ""
-                }
-                val generalMessage = validationError.message
-                    ?: validationError.error?.message
-                    ?: fieldErrors.values.firstOrNull()
-                    ?: "Erro de validação"
-                Result.Error(
-                    message = generalMessage,
-                    fieldErrors = fieldErrors
-                )
-            } catch (_: Exception) {
-                // Tenta o formato { "success": false, "error": { "message": "...", "company_code": "..." } }
-                val apiResponse = json.decodeFromString<ApiResponse<Unit>>(body)
-                val fieldErrors = mutableMapOf<String, String>()
-                apiResponse.error?.companyCode?.let {
-                    fieldErrors["company_code"] = it
-                }
-                Result.Error(
-                    message = apiResponse.error?.message ?: "Erro de validação",
-                    fieldErrors = fieldErrors
-                )
-            }
-        } catch (_: Exception) {
-            Result.Error("Erro de validação")
-        }
+    private fun clearBearerCache() {
+        runCatching { client.authProviders.filterIsInstance<BearerAuthProvider>().forEach { it.clearToken() } }
     }
 }

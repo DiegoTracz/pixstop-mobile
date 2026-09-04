@@ -20,6 +20,7 @@ import com.pixstop.mobile.ui.components.*
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.LoginViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Tela de Login — estilo retro 8-bit terminal.
@@ -27,7 +28,7 @@ import com.pixstop.mobile.ui.viewmodel.LoginViewModel
  */
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = viewModel { LoginViewModel() },
+    viewModel: LoginViewModel = koinViewModel(),
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit = {}
 ) {

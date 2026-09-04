@@ -23,13 +23,14 @@ import com.pixstop.mobile.ui.components.*
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.RegisterViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Tela de registro de usuário — estilo retro 8-bit terminal.
  */
 @Composable
 fun RegisterScreen(
-    viewModel: RegisterViewModel = viewModel { RegisterViewModel() },
+    viewModel: RegisterViewModel = koinViewModel(),
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {

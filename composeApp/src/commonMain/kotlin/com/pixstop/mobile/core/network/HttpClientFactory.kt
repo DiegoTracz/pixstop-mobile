@@ -1,59 +1,76 @@
 package com.pixstop.mobile.core.network
 
-import io.ktor.client.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.json.Json
+import com.pixstop.mobile.BuildKonfig
 import com.pixstop.mobile.core.config.ApiConfig
-import com.pixstop.mobile.core.storage.TokenManager
+import com.pixstop.mobile.core.logging.AppLogger
+import com.pixstop.mobile.core.storage.SessionStore
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BearerTokens
+import io.ktor.client.plugins.auth.providers.bearer
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.accept
+import io.ktor.client.request.url
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 
 /**
- * Factory para criar HttpClient configurado para a API Laravel
+ * O cliente HTTP do app, criado uma vez e injetado por toda parte.
+ *
+ * O token vai pelo plugin `Auth` em vez de um cabeçalho montado à mão: assim
+ * o Ktor sabe reagir a um 401 sozinho — hoje encerrando a sessão, e no futuro
+ * renovando pelo `/auth/refresh` sem que nenhuma tela perceba.
  */
 object HttpClientFactory {
 
-    fun create(tokenManager: TokenManager): HttpClient {
-        return HttpClient {
-            // JSON Serialization
-            install(ContentNegotiation) {
-                json(Json {
-                    ignoreUnknownKeys = true
-                    isLenient = true
-                    encodeDefaults = true
-                    prettyPrint = false
-                })
-            }
+    fun create(session: SessionStore): HttpClient = HttpClient {
+        expectSuccess = false
 
-            // Logging (apenas em debug)
-            install(Logging) {
-                logger = Logger.DEFAULT
-                level = LogLevel.BODY
-            }
+        install(ContentNegotiation) {
+            json(apiJson)
+        }
 
-            // Timeout
-            install(HttpTimeout) {
-                connectTimeoutMillis = ApiConfig.CONNECTION_TIMEOUT_MS
-                requestTimeoutMillis = ApiConfig.REQUEST_TIMEOUT_MS
-                socketTimeoutMillis = ApiConfig.REQUEST_TIMEOUT_MS
-            }
+        install(Auth) {
+            bearer {
+                loadTokens {
+                    session.currentToken()?.let { BearerTokens(it, "") }
+                }
 
-            // Default headers
-            defaultRequest {
-                // Garante que a URL base termina com /
-                val baseUrl = ApiConfig.baseUrl.trimEnd('/') + "/"
-                url(baseUrl)
-                contentType(ContentType.Application.Json)
-                accept(ContentType.Application.Json)
-
-                // Adiciona token se disponível
-                tokenManager.getToken()?.let { token ->
-                    header(HttpHeaders.Authorization, "Bearer $token")
+                // Um 401 significa token vencido ou revogado. Encerrar a sessão
+                // aqui evita que cada tela precise adivinhar o que houve.
+                refreshTokens {
+                    AppLogger.w("Token recusado pelo servidor; encerrando a sessão.", tag = "Http")
+                    session.expire()
+                    null
                 }
             }
+        }
+
+        install(Logging) {
+            logger = object : Logger {
+                override fun log(message: String) = AppLogger.d(message, tag = "Http")
+            }
+            // Corpo completo só em debug: em release ele levaria token e senha
+            // para o log do aparelho.
+            level = if (BuildKonfig.DEBUG) LogLevel.BODY else LogLevel.NONE
+        }
+
+        install(HttpTimeout) {
+            connectTimeoutMillis = ApiConfig.CONNECTION_TIMEOUT_MS
+            requestTimeoutMillis = ApiConfig.REQUEST_TIMEOUT_MS
+            socketTimeoutMillis = ApiConfig.REQUEST_TIMEOUT_MS
+        }
+
+        defaultRequest {
+            url(ApiConfig.baseUrl.trimEnd('/') + "/")
+            contentType(ContentType.Application.Json)
+            accept(ContentType.Application.Json)
         }
     }
 }
