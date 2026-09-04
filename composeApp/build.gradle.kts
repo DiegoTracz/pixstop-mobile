@@ -191,7 +191,9 @@ val ngrokUrl: String = try {
 } catch (_: Exception) { "" }
 
 val baseUrl = customApiUrl ?: when (environment) {
-    "local" -> if (ngrokUrl.isNotEmpty()) ngrokUrl else "http://10.0.2.2/api"
+    // 10.0.2.2:8010 é o Sail da máquina visto de dentro do emulador. Em
+    // aparelho físico, use NGROK_URL no local.properties.
+    "local" -> if (ngrokUrl.isNotEmpty()) ngrokUrl else "http://10.0.2.2:8010/api"
     "staging" -> "https://staging.pixstop.com.br/api"
     else -> "https://pixstop.com.br/api"
 }
