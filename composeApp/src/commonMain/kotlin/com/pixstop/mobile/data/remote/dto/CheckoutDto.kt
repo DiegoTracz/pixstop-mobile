@@ -101,6 +101,7 @@ data class OrderTotalsDto(
 @Serializable
 data class OrderItemDto(
     val id: Long,
+    @SerialName("product_id") val productId: Long? = null,
     @SerialName("product_name") val productName: String,
     val quantity: Int,
     @SerialName("unit_price") val unitPrice: Double = 0.0,

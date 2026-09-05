@@ -61,6 +61,7 @@ fun OrderDto.toDomain() = Order(
 
 fun OrderItemDto.toDomain() = OrderLine(
     id = id,
+    productId = productId,
     productName = productName,
     quantity = quantity,
     unitPrice = unitPrice,

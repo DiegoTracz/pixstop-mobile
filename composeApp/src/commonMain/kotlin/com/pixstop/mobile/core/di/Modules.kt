@@ -16,6 +16,7 @@ import com.pixstop.mobile.data.repository.TeamRepository
 import com.pixstop.mobile.ui.viewmodel.LegalConsentViewModel
 import com.pixstop.mobile.ui.viewmodel.CartViewModel
 import com.pixstop.mobile.ui.viewmodel.CheckoutViewModel
+import com.pixstop.mobile.ui.viewmodel.HomeFeedViewModel
 import com.pixstop.mobile.ui.viewmodel.CompanyViewModel
 import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
 import com.pixstop.mobile.ui.viewmodel.OrderViewModel
@@ -68,6 +69,7 @@ val viewModelModule: Module = module {
     viewModel { ProfileViewModel(get()) }
     viewModel { NotificationsViewModel(get(), get()) }
     viewModel { ShopViewModel(get()) }
+    viewModel { HomeFeedViewModel(get(), get(), get()) }
     viewModel { ProductDetailViewModel(get()) }
     viewModel { CartViewModel(get(), get()) }
     viewModel { CheckoutViewModel(get()) }

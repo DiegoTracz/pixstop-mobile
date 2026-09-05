@@ -172,6 +172,7 @@ fun AppNavigation() {
                 onOpenTeam = { navController.navigate(Routes.TEAM) },
                 onOpenCompany = { navController.navigate(Routes.COMPANY) },
                 onOpenProduct = { navController.navigate(Routes.product(it)) },
+                onOpenOrder = { navController.navigate(Routes.order(it)) },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }

@@ -37,6 +37,7 @@ class ShopRepository(private val client: HttpClient) {
         query: String? = null,
         categoryId: Long? = null,
         perPage: Int = 20,
+        onlyDiscounted: Boolean = false,
     ): Outcome<Page<Product>> =
         safeCallPaged<ProductDto>(TAG) {
             client.get(ApiConfig.Endpoints.SHOP_PRODUCTS) {
@@ -44,6 +45,7 @@ class ShopRepository(private val client: HttpClient) {
                 parameter("per_page", perPage)
                 query?.takeIf { it.isNotBlank() }?.let { parameter("q", it.trim()) }
                 categoryId?.let { parameter("category", it) }
+                if (onlyDiscounted) parameter("promo", 1)
             }
         }.map { result -> Page(result.items.map { it.toDomain() }, result.meta) }
 

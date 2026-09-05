@@ -101,3 +101,11 @@ class TokenManager(private val settings: Settings = Settings()) {
  * Função expect para obter o timestamp atual em milissegundos
  */
 expect fun currentTimeMillis(): Long
+
+/**
+ * Hora local do aparelho, de 0 a 23.
+ *
+ * Serve à saudação da tela de início. O epoch sozinho não bastaria: ele é UTC,
+ * e diria "boa noite" a quem está de manhã em Brasília.
+ */
+expect fun currentHourOfDay(): Int

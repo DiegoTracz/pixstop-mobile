@@ -53,6 +53,10 @@ import com.pixstop.mobile.ui.components.PlayerMenuHeader
 import com.pixstop.mobile.ui.theme.AppBranding
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
+import com.pixstop.mobile.core.storage.currentHourOfDay
+import com.pixstop.mobile.core.text.greetingForHour
+import com.pixstop.mobile.ui.viewmodel.HomeFeedViewModel
+import com.pixstop.mobile.ui.viewmodel.ShopViewModel
 import com.pixstop.mobile.ui.viewmodel.CartViewModel
 import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
 import com.pixstop.mobile.ui.viewmodel.SessionUiState
@@ -90,13 +94,19 @@ fun HomeScreen(
     onOpenPixels: () -> Unit = {},
     onOpenTeam: () -> Unit = {},
     onOpenCompany: () -> Unit = {},
+    onOpenOrder: (Long) -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
     notificationsViewModel: NotificationsViewModel = koinViewModel(),
     cartViewModel: CartViewModel = koinViewModel(),
+    // A vitrine é a mesma da aba Loja: tocar numa categoria no início precisa
+    // abrir a loja já filtrada, e não uma segunda cópia dela.
+    shopViewModel: ShopViewModel = koinViewModel(),
+    homeFeedViewModel: HomeFeedViewModel = koinViewModel(),
 ) {
     val session by sessionViewModel.uiState.collectAsState()
     val notifications by notificationsViewModel.uiState.collectAsState()
     val cart by cartViewModel.uiState.collectAsState()
+    val feed by homeFeedViewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var switcherOpen by remember { mutableStateOf(false) }
@@ -195,6 +205,7 @@ fun HomeScreen(
         ) { paddingValues ->
             when (selectedTab) {
                 "search" -> ShopScreen(
+                    viewModel = shopViewModel,
                     onProductClick = onOpenProduct,
                     modifier = Modifier.padding(paddingValues),
                 )
@@ -213,8 +224,20 @@ fun HomeScreen(
                     modifier = Modifier.padding(paddingValues),
                 )
 
-                else -> HomeContent(
-                    session = session,
+                else -> HomeFeed(
+                    state = feed,
+                    user = session.account?.user,
+                    company = session.company,
+                    greeting = greetingForHour(currentHourOfDay()),
+                    onOpenOrder = onOpenOrder,
+                    onOpenProduct = onOpenProduct,
+                    onOpenCategory = { categoryId ->
+                        shopViewModel.onCategorySelected(categoryId)
+                        selectedTab = "search"
+                    },
+                    onOpenShop = { selectedTab = "search" },
+                    onOpenPixels = onOpenPixels,
+                    onAddToCart = { cartViewModel.add(it) },
                     modifier = Modifier.padding(paddingValues),
                 )
             }
@@ -322,69 +345,6 @@ private fun DrawerAction(
         AppIcon(icon = icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = color)
 
         Text(text = label, color = color)
-    }
-}
-
-/**
- * Início.
- *
- * Ainda é uma saudação: a vitrine, o saldo e os pixels chegam na etapa da loja.
- */
-@Composable
-private fun HomeContent(
-    session: SessionUiState,
-    modifier: Modifier = Modifier,
-) {
-    val user = session.account?.user
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        when {
-            user == null && session.isLoading -> CircularProgressIndicator(color = PixColors.Cyan)
-
-            user != null -> {
-                Box(
-                    modifier = Modifier.size(96.dp).background(PixColors.Cyan),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = user.name.take(2).uppercase(),
-                        style = PixTypography.pageTitle,
-                        color = PixColors.Dark,
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "Olá, ${user.firstName}!",
-                    style = PixTypography.pageTitle,
-                    color = PixColors.Cyan,
-                    textAlign = TextAlign.Center,
-                )
-
-                session.company?.let { company ->
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "${company.pixelAvailable} pixels disponíveis",
-                        style = PixTypography.bodySecondary,
-                    )
-                }
-            }
-
-            else -> Text(
-                text = session.error ?: "Não foi possível carregar a sua conta.",
-                style = PixTypography.errorText,
-                textAlign = TextAlign.Center,
-            )
-        }
     }
 }
 

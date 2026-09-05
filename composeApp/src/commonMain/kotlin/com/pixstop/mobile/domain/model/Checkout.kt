@@ -57,6 +57,8 @@ data class Order(
 
 data class OrderLine(
     val id: Long,
+    /** Ausente em pedidos antigos cujo produto já não existe. */
+    val productId: Long?,
     val productName: String,
     val quantity: Int,
     val unitPrice: Double,

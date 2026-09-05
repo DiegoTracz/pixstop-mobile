@@ -94,7 +94,11 @@ fun PixelTopBar(
 
             IconTarget(
                 icon = AppIconType.Notifications,
-                description = if (unreadCount > 0) "Avisos, $unreadCount não lidos" else "Avisos",
+                description = when (unreadCount) {
+                    0 -> "Avisos"
+                    1 -> "Avisos, 1 não lido"
+                    else -> "Avisos, $unreadCount não lidos"
+                },
                 onClick = onNotificationsClick,
                 badge = unreadCount.takeIf { it > 0 },
             )
@@ -104,7 +108,11 @@ fun PixelTopBar(
             onCartClick?.let { click ->
                 IconTarget(
                     icon = AppIconType.Cart,
-                    description = if (cartCount > 0) "Carrinho, $cartCount itens" else "Carrinho",
+                    description = when (cartCount) {
+                        0 -> "Carrinho"
+                        1 -> "Carrinho, 1 item"
+                        else -> "Carrinho, $cartCount itens"
+                    },
                     onClick = click,
                     badge = cartCount.takeIf { it > 0 },
                 )
