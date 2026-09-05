@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pixstop.mobile.ui.components.*
+import com.pixstop.mobile.ui.theme.AppBranding
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.LoginViewModel
@@ -46,7 +47,7 @@ fun LoginScreen(
 
         // Branding
         Text(
-            text = "PixStop",
+            text = AppBranding.APP_NAME,
             style = PixTypography.pageTitle
         )
 
@@ -179,7 +180,7 @@ fun LoginScreen(
 
         // Footer
         Text(
-            text = "© 2026 PixStop",
+            text = "© 2026 ${AppBranding.APP_NAME}",
             style = PixTypography.footerText
         )
     }

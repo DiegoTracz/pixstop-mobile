@@ -1,6 +1,6 @@
-# PixStop Mobile - Kotlin Multiplatform
+# Pixstop Mobile - Kotlin Multiplatform
 
-Aplicativo mobile PixStop para Android e iOS, construído com Kotlin Multiplatform e Compose Multiplatform.
+Aplicativo mobile Pixstop para Android e iOS, construído com Kotlin Multiplatform e Compose Multiplatform.
 
 ## 🚀 Funcionalidades
 

@@ -12,12 +12,13 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import com.pixstop.mobile.ui.components.gridPattern
 import com.pixstop.mobile.ui.components.scanlines
+import com.pixstop.mobile.ui.theme.AppBranding
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 
 /**
  * Tela de Splash — estilo retro 8-bit.
- * Logo Pixel Art "P", nome PixStop em Press Start 2P, cursor piscando.
+ * Logo Pixel Art "P", nome Pixstop em Press Start 2P, cursor piscando.
  */
 @Composable
 fun SplashScreen(
@@ -71,7 +72,7 @@ fun SplashScreen(
             // Nome do app
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "PixStop",
+                    text = AppBranding.APP_NAME,
                     style = PixTypography.pageTitle
                 )
                 // Cursor piscando (pixel blink)

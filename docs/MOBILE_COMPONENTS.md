@@ -1,6 +1,6 @@
-# PixStop Mobile — Componentes UI
+# Pixstop Mobile — Componentes UI
 
-> Documentação dos componentes retro 8-bit do PixStop Mobile (Kotlin Multiplatform).
+> Documentação dos componentes retro 8-bit do Pixstop Mobile (Kotlin Multiplatform).
 >
 > **Tema:** Dark only · Cyberpunk retro 8-bit · Cantos retos (0dp radius) · Fontes pixel
 >
@@ -41,7 +41,7 @@
 
 **Arquivo:** `ui/theme/PixColors.kt`
 
-Paleta de cores dark-only do PixStop. Todas as cores são constantes — sem light mode.
+Paleta de cores dark-only do Pixstop. Todas as cores são constantes — sem light mode.
 
 | Token | Hex | Uso |
 |---|---|---|
@@ -91,7 +91,7 @@ Duas famílias tipográficas:
 | `pageTitle` | Press Start 2P | 16sp | Cyan | Título principal de página |
 | `authTitle` | Press Start 2P | 14sp | Cyan | Título de auth cards |
 | `sectionTitle` | Press Start 2P | 12sp | Cyan | Títulos de seção |
-| `branding` | Press Start 2P | 11sp | Cyan | Nome "PixStop" |
+| `branding` | Press Start 2P | 11sp | Cyan | Nome "Pixstop" |
 | `buttonText` | Press Start 2P | 10sp | — | Texto de botões |
 | `buttonTextSm` | Press Start 2P | 8sp | — | Texto de botões small |
 | `inputLabel` | Press Start 2P | 8sp | Cyan | Labels de inputs |
@@ -524,7 +524,7 @@ PixelDivider(text = "OU ENTÃO")   // Custom
 
 **Arquivo:** `ui/components/PixelLogo.kt`
 
-Logo pixel art "P" do PixStop desenhado em Canvas. Grid 24×24 com blocos 4×4.
+Logo pixel art "P" do Pixstop desenhado em Canvas. Grid 24×24 com blocos 4×4.
 
 ```kotlin
 @Composable
@@ -685,7 +685,7 @@ Box(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("PixStop", style = PixTypography.pageTitle)
+        Text("Pixstop", style = PixTypography.pageTitle)
         Spacer(modifier = Modifier.height(32.dp))
 
         PixelAuthCard {
@@ -706,7 +706,7 @@ Box(
         }
 
         Spacer(modifier = Modifier.height(32.dp))
-        Text("© 2026 PixStop", style = PixTypography.footerText)
+        Text("© 2026 Pixstop", style = PixTypography.footerText)
     }
 }
 ```

@@ -3,7 +3,7 @@ package com.pixstop.mobile.ui.theme
 import androidx.compose.ui.graphics.Color
 
 /**
- * Paleta de cores retro 8-bit do PixStop.
+ * Paleta de cores retro 8-bit do Pixstop.
  * Fonte: MOBILE_STYLE_GUIDE.md — Dark cyberpunk retro 8-bit com acentos neon.
  * Modo: Dark only (sem light mode).
  */

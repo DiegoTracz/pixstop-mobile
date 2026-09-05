@@ -5,10 +5,10 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 
 /**
- * Tema retro 8-bit do PixStop — Dark only.
+ * Tema retro 8-bit do Pixstop — Dark only.
  * Cores mapeadas de PixColors para o Material3 color scheme.
  */
-private val PixStopColorScheme = darkColorScheme(
+private val PixstopColorScheme = darkColorScheme(
     primary = PixColors.Cyan,
     onPrimary = PixColors.Dark,
     primaryContainer = PixColors.Gray800,
@@ -43,14 +43,14 @@ private val PixStopColorScheme = darkColorScheme(
 )
 
 /**
- * Tema principal do PixStop — Dark only, retro 8-bit.
+ * Tema principal do Pixstop — Dark only, retro 8-bit.
  */
 @Composable
 fun AppTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = PixStopColorScheme,
+        colorScheme = PixstopColorScheme,
         content = content
     )
 }

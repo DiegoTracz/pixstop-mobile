@@ -132,13 +132,23 @@ fun PixelButton(
             modifier = Modifier
                 .offset(x = animatedTranslate, y = animatedTranslate)
                 .drawBehind {
-                    // Pixel shadow
+                    // Sombra pixel: só as duas faixas que sobram fora do botão.
+                    // Um retângulo inteiro atrás funcionaria no Primary, opaco,
+                    // mas no Secondary — de fundo transparente — a sombra
+                    // vazaria para dentro e cobriria o texto.
                     if (animatedShadow > 0.dp) {
                         val shadowPx = animatedShadow.toPx()
+
                         drawRect(
                             color = btnColors.shadow,
-                            topLeft = Offset(shadowPx, shadowPx),
-                            size = Size(this.size.width, this.size.height)
+                            topLeft = Offset(this.size.width, shadowPx),
+                            size = Size(shadowPx, this.size.height)
+                        )
+
+                        drawRect(
+                            color = btnColors.shadow,
+                            topLeft = Offset(shadowPx, this.size.height),
+                            size = Size(this.size.width, shadowPx)
                         )
                     }
                 }

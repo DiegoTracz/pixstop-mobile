@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.ui.theme.PixColors
 
 /**
- * Logo Pixel Art "P" do PixStop.
+ * Logo Pixel Art "P" do Pixstop.
  * Grid 24x24 — blocos 4x4 desenhados com Canvas.
  */
 @Composable

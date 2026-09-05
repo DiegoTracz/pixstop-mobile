@@ -4,9 +4,9 @@
 <dict>
 	<!-- Nome do app exibido na Home Screen -->
 	<key>CFBundleDisplayName</key>
-	<string>PixStop</string>
+	<string>Pixstop</string>
 	<key>CFBundleName</key>
-	<string>PixStop</string>
+	<string>Pixstop</string>
 
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>

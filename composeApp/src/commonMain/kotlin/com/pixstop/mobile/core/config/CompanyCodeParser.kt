@@ -1,7 +1,7 @@
 package com.pixstop.mobile.core.config
 
 /**
- * Utilitário para extrair o código de empresa de URLs do PixStop.
+ * Utilitário para extrair o código de empresa de URLs do Pixstop.
  *
  * Suporta URLs no formato:
  * - https://pixstop.com.br/register/user?code=CONFIALMQYNV

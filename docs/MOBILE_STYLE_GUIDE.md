@@ -1,6 +1,6 @@
-# Guia de Estilo Mobile — PixStop 8-Bit Retro
+# Guia de Estilo Mobile — Pixstop 8-Bit Retro
 
-Guia de design para o aplicativo mobile nativo (Android/Kotlin + iOS/Swift) do PixStop, extraído diretamente do design system web retro 8-bit.
+Guia de design para o aplicativo mobile nativo (Android/Kotlin + iOS/Swift) do Pixstop, extraído diretamente do design system web retro 8-bit.
 
 > **Fonte:** [`resources/css/app.css`](../resources/css/app.css) · [`PIXEL-COMPONENTS.md`](../resources/js/components/pixel/PIXEL-COMPONENTS.md)
 
@@ -24,7 +24,7 @@ Guia de design para o aplicativo mobile nativo (Android/Kotlin + iOS/Swift) do P
 
 ## 1. Identidade Visual
 
-**Nome:** PixStop
+**Nome:** Pixstop
 **Tema:** Dark cyberpunk retro 8-bit com acentos neon
 **Modo:** Dark only (sem light mode no app mobile)
 
@@ -219,7 +219,7 @@ extension Color {
 | Texto de botão           | Press Start 2P | 10              | Regular  | Uppercase, tracking +2 | Varia por variante |
 | Badge                    | Press Start 2P | 6               | Regular  | Uppercase            | Varia por cor   |
 | Texto de erro            | Press Start 2P | 6               | Regular  | Normal               | `pix-pink`      |
-| Branding "PixStop"       | Press Start 2P | 11              | Regular  | Normal               | `pix-cyan`      |
+| Branding "Pixstop"       | Press Start 2P | 11              | Regular  | Normal               | `pix-cyan`      |
 | Footer / copyright       | Press Start 2P | 6               | Regular  | Normal               | `pix-cyan` 40%  |
 | Texto corpo              | Inter          | 14              | Regular  | Normal               | `pix-gray-100`  |
 | Texto secundário         | Inter          | 12              | Regular  | Normal               | `pix-gray-400`  |
@@ -331,7 +331,7 @@ view.layer.shadowOpacity = 1.0
 
 ## 5. Animações
 
-Todas as animações do PixStop seguem o estilo retro com transições abruptas (`step-end`) ou fluidas conforme o contexto.
+Todas as animações do Pixstop seguem o estilo retro com transições abruptas (`step-end`) ou fluidas conforme o contexto.
 
 ### 5.1 Catálogo de Animações
 
@@ -470,7 +470,7 @@ struct FloatAnimation: ViewModifier {
 
 ## 6. Efeitos Visuais Retro
 
-Efeitos que definem a assinatura visual 8-bit do PixStop.
+Efeitos que definem a assinatura visual 8-bit do Pixstop.
 
 ### 6.1 Scanlines (CRT)
 
@@ -570,7 +570,7 @@ imageView.layer.minificationFilter = .nearest
 
 ### 6.4 Pixel Corner Decorations
 
-Pequenos quadrados coloridos nos cantos de containers/cards. Assinatura visual do PixStop.
+Pequenos quadrados coloridos nos cantos de containers/cards. Assinatura visual do Pixstop.
 
 **Especificação:**
 
@@ -1099,7 +1099,7 @@ Se houver muitos itens de navegação:
 |-----------------|-----------------------------------------|
 | Background      | `pix-darker` (`#030510`)               |
 | Largura         | 280dp                                  |
-| Header          | Logo PixStop + nome "PixStop" em `font-pixel` |
+| Header          | Logo Pixstop + nome "Pixstop" em `font-pixel` |
 | Borda direita   | 1dp `pix-gray-700`                     |
 
 **Grupo de itens:**
@@ -1132,7 +1132,7 @@ Se houver muitos itens de navegação:
 - [Press Start 2P — Google Fonts](https://fonts.google.com/specimen/Press+Start+2P)
 - [Inter — Google Fonts](https://fonts.google.com/specimen/Inter)
 
-### Documentação PixStop
+### Documentação Pixstop
 
 - [Componentes Pixel Web](../resources/js/components/pixel/PIXEL-COMPONENTS.md)
 - [CSS Theme Source](../resources/css/app.css)
@@ -1164,8 +1164,8 @@ Se houver muitos itens de navegação:
 - [ ] Criar componente `PixelToast` (sucesso e erro)
 - [ ] Criar componente `PixelDialog`
 - [ ] Criar componente `PixelStepIndicator`
-- [ ] Criar `BottomNavBar` / `Drawer` com estilo PixStop
-- [ ] Criar `TopAppBar` com estilo PixStop
+- [ ] Criar `BottomNavBar` / `Drawer` com estilo Pixstop
+- [ ] Criar `TopAppBar` com estilo Pixstop
 - [ ] Implementar animações (blink, float, glitch, slideUp)
 - [ ] Reproduzir logo "P" pixel-art
 - [ ] Validar cantos retos em todos os componentes pixel

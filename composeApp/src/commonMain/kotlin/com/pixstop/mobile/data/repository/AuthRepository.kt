@@ -10,6 +10,7 @@ import com.pixstop.mobile.data.model.AuthResponseData
 import com.pixstop.mobile.data.model.CachedUserData
 import com.pixstop.mobile.data.model.ForgotPasswordRequest
 import com.pixstop.mobile.data.model.LoginRequest
+import com.pixstop.mobile.data.model.ProfileData
 import com.pixstop.mobile.data.model.RegisterUserRequest
 import com.pixstop.mobile.data.model.User
 import com.pixstop.mobile.domain.model.Outcome
@@ -61,10 +62,10 @@ class AuthRepository(
      * Busca o perfil e atualiza o cache offline.
      */
     suspend fun fetchProfile(): Outcome<User> =
-        safeCall<AuthResponseData>(TAG) {
+        safeCall<ProfileData>(TAG) {
             client.get(ApiConfig.Endpoints.PROFILE)
         }.onSuccess { data ->
-            tokens.saveUserData(CachedUserData(user = data.user, tenant = data.tenant))
+            tokens.saveUserData(CachedUserData(user = data.user, tenant = data.activeTenant))
         }.map { it.user }
 
     /**
