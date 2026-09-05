@@ -5,7 +5,9 @@ import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.core.storage.TokenManager
 import com.pixstop.mobile.data.repository.AccountRepository
 import com.pixstop.mobile.data.repository.AuthRepository
+import com.pixstop.mobile.data.repository.LegalRepository
 import com.pixstop.mobile.ui.viewmodel.HomeViewModel
+import com.pixstop.mobile.ui.viewmodel.LegalConsentViewModel
 import com.pixstop.mobile.ui.viewmodel.LoginViewModel
 import com.pixstop.mobile.ui.viewmodel.RegisterViewModel
 import com.pixstop.mobile.ui.viewmodel.SessionViewModel
@@ -30,6 +32,7 @@ val coreModule: Module = module {
 val dataModule: Module = module {
     single { AuthRepository(get(), get(), get()) }
     single { AccountRepository(get()) }
+    single { LegalRepository(get()) }
 }
 
 /** ViewModels, criados a cada tela. */
@@ -37,7 +40,8 @@ val viewModelModule: Module = module {
     viewModel { LoginViewModel(get()) }
     viewModel { RegisterViewModel(get()) }
     viewModel { HomeViewModel(get()) }
-    viewModel { SessionViewModel(get(), get()) }
+    viewModel { SessionViewModel(get(), get(), get()) }
+    viewModel { LegalConsentViewModel(get()) }
 }
 
 /** Tudo que o `startKoin` precisa carregar. */

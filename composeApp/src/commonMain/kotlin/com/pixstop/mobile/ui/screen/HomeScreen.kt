@@ -16,6 +16,7 @@ import com.pixstop.mobile.ui.components.AppBottomNavigation
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.BottomNavItem
+import com.pixstop.mobile.ui.theme.AppBranding
 import com.pixstop.mobile.ui.viewmodel.HomeViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import com.pixstop.mobile.ui.viewmodel.SessionViewModel
@@ -119,14 +120,25 @@ fun HomeScreen(
                         val company = session.company
                         val canSwitch = session.account?.canSwitchCompany == true
 
-                        Text(
-                            text = company?.name ?: "Pixstop",
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = if (canSwitch) {
                                 Modifier.clickable { switcherOpen = true }
                             } else {
                                 Modifier
                             },
-                        )
+                        ) {
+                            Text(text = company?.name ?: AppBranding.APP_NAME)
+
+                            // Sem a seta o título não se anuncia como clicável.
+                            if (canSwitch) {
+                                AppIcon(
+                                    icon = AppIconType.ChevronDown,
+                                    contentDescription = "Trocar de empresa",
+                                    modifier = Modifier.padding(start = 4.dp).size(20.dp),
+                                )
+                            }
+                        }
                     },
                     navigationIcon = {
                         IconButton(onClick = {

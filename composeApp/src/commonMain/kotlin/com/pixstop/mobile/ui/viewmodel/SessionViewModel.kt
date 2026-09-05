@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.pixstop.mobile.core.logging.AppLogger
 import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.data.repository.AccountRepository
+import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.domain.model.Account
 import com.pixstop.mobile.domain.model.DomainError
 import com.pixstop.mobile.domain.model.Outcome
@@ -36,6 +37,7 @@ data class SessionUiState(
 class SessionViewModel(
     private val accounts: AccountRepository,
     private val session: SessionStore,
+    private val auth: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SessionUiState())
@@ -109,6 +111,17 @@ class SessionViewModel(
                     _uiState.value = _uiState.value.copy(isSwitching = false, error = result.error.message)
                 }
             }
+        }
+    }
+
+    /**
+     * Encerra a sessão. O estado local cai mesmo se o servidor não responder —
+     * quem pediu para sair não pode continuar dentro porque a rede caiu.
+     */
+    fun logout() {
+        viewModelScope.launch {
+            auth.logout()
+            _uiState.value = SessionUiState(loggedOut = true)
         }
     }
 

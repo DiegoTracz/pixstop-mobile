@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
+import com.pixstop.mobile.ui.screen.LegalConsentScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
 import com.pixstop.mobile.ui.screen.RegisterScreen
 import com.pixstop.mobile.ui.screen.SplashScreen
@@ -40,10 +41,17 @@ fun AppNavigation() {
         }
     }
 
-    // Logado e sem empresa: não há o que fazer no app além de entrar em uma.
-    LaunchedEffect(session.needsCompany) {
-        if (session.needsCompany) {
-            navController.navigate(Routes.JOIN_COMPANY) {
+    // A ordem importa. Sem aceitar os documentos o servidor recusa toda rota de
+    // negócio com `consent_required`, então o aceite vem antes de escolher
+    // empresa — do contrário a pessoa entraria numa e só encontraria erro.
+    LaunchedEffect(session.needsConsent, session.needsCompany) {
+        when {
+            session.needsConsent -> navController.navigate(Routes.LEGAL_CONSENT) {
+                // Sem pilha atrás: a tela de aceite não tem como ser evitada.
+                popUpTo(0) { inclusive = true }
+            }
+
+            session.needsCompany -> navController.navigate(Routes.JOIN_COMPANY) {
                 popUpTo(Routes.HOME) { inclusive = true }
             }
         }
@@ -88,6 +96,20 @@ fun AppNavigation() {
                     }
                 },
                 onNavigateToLogin = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.LEGAL_CONSENT) {
+            LegalConsentScreen(
+                onAccepted = {
+                    // O `/me` precisa voltar sem pendência antes de seguir,
+                    // senão o guarda acima mandaria a pessoa de volta.
+                    sessionViewModel.refresh()
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onLogout = sessionViewModel::logout,
             )
         }
 

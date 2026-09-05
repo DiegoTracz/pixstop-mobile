@@ -9,6 +9,9 @@ object Routes {
     const val REGISTER = "register"
     const val HOME = "home"
 
+    /** Aceite dos documentos legais: bloqueia o app enquanto faltar. */
+    const val LEGAL_CONSENT = "legal-consent"
+
     /** Entrar numa empresa: única saída de quem está logado sem nenhuma. */
     const val JOIN_COMPANY = "join-company"
 }
