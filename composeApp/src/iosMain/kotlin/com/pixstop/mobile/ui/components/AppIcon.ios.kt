@@ -163,6 +163,12 @@ private fun AppIconType.toSFSymbolName(): String = when (this) {
     AppIconType.Info -> "info.circle.fill"
     AppIconType.Warning -> "exclamationmark.triangle.fill"
 
+    AppIconType.Remove -> "minus"
+
+    // Loja
+    AppIconType.Cart -> "cart"
+    AppIconType.CartAdd -> "cart.badge.plus"
+
     // Navigation extras
     AppIconType.ChevronDown -> "chevron.down"
     AppIconType.ChevronUp -> "chevron.up"

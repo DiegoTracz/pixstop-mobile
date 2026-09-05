@@ -12,9 +12,12 @@ import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
 import com.pixstop.mobile.ui.screen.LegalConsentScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
+import com.pixstop.mobile.ui.screen.CartScreen
 import com.pixstop.mobile.ui.screen.NotificationsScreen
+import com.pixstop.mobile.ui.screen.ProductDetailScreen
 import com.pixstop.mobile.ui.screen.RegisterScreen
 import com.pixstop.mobile.ui.screen.SplashScreen
+import com.pixstop.mobile.ui.viewmodel.CartViewModel
 import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
 import com.pixstop.mobile.ui.viewmodel.SessionViewModel
 import org.koin.compose.koinInject
@@ -35,7 +38,22 @@ fun AppNavigation() {
     // Uma instância só: o badge da barra superior e a lista de avisos mostram
     // a mesma contagem, e marcar como lido tem de valer para os dois.
     val notificationsViewModel: NotificationsViewModel = koinViewModel()
+    // O carrinho também é um só: o contador da barra superior e a tela do
+    // carrinho têm de contar a mesma coisa.
+    val cartViewModel: CartViewModel = koinViewModel()
     val session by sessionViewModel.uiState.collectAsState()
+
+    // O carrinho e os avisos são da empresa ativa. Trocar de empresa — ou
+    // entrar na primeira, logo depois do login — muda os dois, então eles
+    // recarregam junto em vez de cada tela lembrar de fazer isso.
+    LaunchedEffect(session.company?.id) {
+        if (session.company != null) {
+            cartViewModel.refresh()
+            notificationsViewModel.refresh()
+        } else {
+            cartViewModel.clear()
+        }
+    }
 
     // Token recusado pelo servidor: volta ao login de onde quer que esteja.
     LaunchedEffect(session.loggedOut) {
@@ -139,13 +157,39 @@ fun AppNavigation() {
             HomeScreen(
                 sessionViewModel = sessionViewModel,
                 notificationsViewModel = notificationsViewModel,
+                cartViewModel = cartViewModel,
                 onJoinCompany = { navController.navigate(Routes.JOIN_COMPANY) },
                 onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
+                onOpenCart = { navController.navigate(Routes.CART) },
+                onOpenProduct = { navController.navigate(Routes.product(it)) },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
+            )
+        }
+
+        composable("${Routes.PRODUCT}/{id}") { entry ->
+            ProductDetailScreen(
+                productId = entry.arguments?.getString("id")?.toLongOrNull() ?: 0L,
+                cartViewModel = cartViewModel,
+                onBack = { navController.popBackStack() },
+                onOpenCart = {
+                    navController.navigate(Routes.CART) {
+                        // Sair do produto para o carrinho: voltar dali leva de
+                        // volta à vitrine, não ao produto que já foi resolvido.
+                        popUpTo("${Routes.PRODUCT}/{id}") { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(Routes.CART) {
+            CartScreen(
+                viewModel = cartViewModel,
+                onBack = { navController.popBackStack() },
+                onCheckout = { },
             )
         }
 

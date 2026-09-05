@@ -44,6 +44,8 @@ fun PixelTopBar(
     onMenuClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     unreadCount: Int = 0,
+    onCartClick: (() -> Unit)? = null,
+    cartCount: Int = 0,
 ) {
     Column(
         modifier = modifier
@@ -96,6 +98,17 @@ fun PixelTopBar(
                 onClick = onNotificationsClick,
                 badge = unreadCount.takeIf { it > 0 },
             )
+
+            // O carrinho fica aqui, e não na barra inferior, porque a reserva
+            // vence em minutos: precisa estar visível de qualquer tela.
+            onCartClick?.let { click ->
+                IconTarget(
+                    icon = AppIconType.Cart,
+                    description = if (cartCount > 0) "Carrinho, $cartCount itens" else "Carrinho",
+                    onClick = click,
+                    badge = cartCount.takeIf { it > 0 },
+                )
+            }
         }
 
         Box(

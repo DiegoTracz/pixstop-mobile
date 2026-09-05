@@ -2,6 +2,7 @@ package com.pixstop.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.data.repository.NotificationRepository
 import com.pixstop.mobile.domain.model.AppNotification
 import com.pixstop.mobile.domain.model.Outcome
@@ -46,13 +47,21 @@ data class NotificationsUiState(
  * A contagem sai do rodapé da listagem, que o servidor manda junto — o badge
  * não custa uma chamada própria.
  */
-class NotificationsViewModel(private val notifications: NotificationRepository) : ViewModel() {
+class NotificationsViewModel(
+    private val notifications: NotificationRepository,
+    private val session: SessionStore,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationsUiState())
     val uiState: StateFlow<NotificationsUiState> = _uiState.asStateFlow()
 
     init {
-        refresh()
+        // Este ViewModel nasce junto com a navegação, que existe antes do
+        // login. Buscar sem token daria um 401 — que o cliente HTTP trata como
+        // sessão vencida e usaria para derrubar quem acabou de entrar.
+        if (session.isLoggedIn()) {
+            refresh()
+        }
     }
 
     fun refresh() {

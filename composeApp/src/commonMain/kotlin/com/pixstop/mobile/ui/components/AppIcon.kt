@@ -50,6 +50,11 @@ enum class AppIconType {
     Delete,
     Share,
     QrCodeScanner,
+    Remove,
+
+    // Loja
+    Cart,
+    CartAdd,
 
     // Status
     Check,

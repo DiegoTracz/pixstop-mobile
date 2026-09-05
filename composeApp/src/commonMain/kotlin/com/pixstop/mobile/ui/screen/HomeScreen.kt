@@ -53,6 +53,7 @@ import com.pixstop.mobile.ui.components.PlayerMenuHeader
 import com.pixstop.mobile.ui.theme.AppBranding
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
+import com.pixstop.mobile.ui.viewmodel.CartViewModel
 import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
 import com.pixstop.mobile.ui.viewmodel.SessionUiState
 import com.pixstop.mobile.ui.viewmodel.SessionViewModel
@@ -83,11 +84,15 @@ fun HomeScreen(
     onLogout: () -> Unit,
     onJoinCompany: () -> Unit = {},
     onOpenNotifications: () -> Unit = {},
+    onOpenCart: () -> Unit = {},
+    onOpenProduct: (Long) -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
     notificationsViewModel: NotificationsViewModel = koinViewModel(),
+    cartViewModel: CartViewModel = koinViewModel(),
 ) {
     val session by sessionViewModel.uiState.collectAsState()
     val notifications by notificationsViewModel.uiState.collectAsState()
+    val cart by cartViewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var switcherOpen by remember { mutableStateOf(false) }
@@ -150,6 +155,8 @@ fun HomeScreen(
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onNotificationsClick = onOpenNotifications,
                     unreadCount = notifications.unread,
+                    onCartClick = onOpenCart,
+                    cartCount = cart.itemCount,
                 )
             },
             bottomBar = {
@@ -161,9 +168,8 @@ fun HomeScreen(
             },
         ) { paddingValues ->
             when (selectedTab) {
-                "search" -> PlaceholderContent(
-                    title = "Loja",
-                    icon = AppIconType.Search,
+                "search" -> ShopScreen(
+                    onProductClick = onOpenProduct,
                     modifier = Modifier.padding(paddingValues),
                 )
 

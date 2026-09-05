@@ -9,6 +9,14 @@ object Routes {
     const val REGISTER = "register"
     const val HOME = "home"
 
+    /** Detalhe do produto, alcançado pela vitrine. */
+    const val PRODUCT = "product"
+
+    fun product(id: Long) = "product/$id"
+
+    /** Carrinho, alcançado pelo ícone da barra superior. */
+    const val CART = "cart"
+
     /** Caixa de avisos, alcançada pelo sino da barra superior. */
     const val NOTIFICATIONS = "notifications"
 
