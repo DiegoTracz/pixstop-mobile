@@ -86,6 +86,7 @@ fun HomeScreen(
     onOpenNotifications: () -> Unit = {},
     onOpenCart: () -> Unit = {},
     onOpenProduct: (Long) -> Unit = {},
+    onOpenOrders: () -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
     notificationsViewModel: NotificationsViewModel = koinViewModel(),
     cartViewModel: CartViewModel = koinViewModel(),
@@ -122,6 +123,10 @@ fun HomeScreen(
                     user = session.account?.user,
                     company = session.company,
                     canSwitchCompany = session.account?.canSwitchCompany == true,
+                    onOrders = {
+                        scope.launch { drawerState.close() }
+                        onOpenOrders()
+                    },
                     onSettings = {
                         scope.launch { drawerState.close() }
                         selectedTab = "profile"
@@ -201,6 +206,7 @@ private fun DrawerContent(
     user: AccountUser?,
     company: ActiveCompany?,
     canSwitchCompany: Boolean,
+    onOrders: () -> Unit,
     onSettings: () -> Unit,
     onSwitchCompany: () -> Unit,
     onJoinCompany: () -> Unit,
@@ -233,6 +239,8 @@ private fun DrawerContent(
                 onClick = onSwitchCompany,
             )
         }
+
+        DrawerAction(icon = AppIconType.Cart, label = "Meus pedidos", onClick = onOrders)
 
         DrawerAction(icon = AppIconType.PersonAdd, label = "Entrar em outra empresa", onClick = onJoinCompany)
 

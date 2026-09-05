@@ -13,6 +13,9 @@ import com.pixstop.mobile.ui.screen.JoinCompanyScreen
 import com.pixstop.mobile.ui.screen.LegalConsentScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
 import com.pixstop.mobile.ui.screen.CartScreen
+import com.pixstop.mobile.ui.screen.CheckoutScreen
+import com.pixstop.mobile.ui.screen.OrderScreen
+import com.pixstop.mobile.ui.screen.OrdersScreen
 import com.pixstop.mobile.ui.screen.NotificationsScreen
 import com.pixstop.mobile.ui.screen.ProductDetailScreen
 import com.pixstop.mobile.ui.screen.RegisterScreen
@@ -161,6 +164,7 @@ fun AppNavigation() {
                 onJoinCompany = { navController.navigate(Routes.JOIN_COMPANY) },
                 onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 onOpenCart = { navController.navigate(Routes.CART) },
+                onOpenOrders = { navController.navigate(Routes.ORDERS) },
                 onOpenProduct = { navController.navigate(Routes.product(it)) },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
@@ -189,7 +193,38 @@ fun AppNavigation() {
             CartScreen(
                 viewModel = cartViewModel,
                 onBack = { navController.popBackStack() },
-                onCheckout = { },
+                onCheckout = { navController.navigate(Routes.CHECKOUT) },
+            )
+        }
+
+        composable(Routes.CHECKOUT) {
+            CheckoutScreen(
+                onBack = { navController.popBackStack() },
+                onOrderPlaced = { orderId ->
+                    // O pedido feito esvazia o carrinho no servidor; a tela
+                    // precisa saber disso antes que alguém volte para ela.
+                    cartViewModel.refresh()
+
+                    navController.navigate(Routes.order(orderId)) {
+                        // Fechado o pedido, voltar não pode cair no carrinho
+                        // nem no fechamento: os dois já não existem mais.
+                        popUpTo(Routes.HOME)
+                    }
+                },
+            )
+        }
+
+        composable("${Routes.ORDER}/{id}") { entry ->
+            OrderScreen(
+                orderId = entry.arguments?.getString("id")?.toLongOrNull() ?: 0L,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.ORDERS) {
+            OrdersScreen(
+                onBack = { navController.popBackStack() },
+                onOrderClick = { navController.navigate(Routes.order(it)) },
             )
         }
 

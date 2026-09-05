@@ -8,11 +8,15 @@ import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.data.repository.LegalRepository
 import com.pixstop.mobile.data.repository.CartRepository
 import com.pixstop.mobile.data.repository.NotificationRepository
+import com.pixstop.mobile.data.repository.OrderRepository
 import com.pixstop.mobile.data.repository.ProfileRepository
 import com.pixstop.mobile.data.repository.ShopRepository
 import com.pixstop.mobile.ui.viewmodel.LegalConsentViewModel
 import com.pixstop.mobile.ui.viewmodel.CartViewModel
+import com.pixstop.mobile.ui.viewmodel.CheckoutViewModel
 import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
+import com.pixstop.mobile.ui.viewmodel.OrderViewModel
+import com.pixstop.mobile.ui.viewmodel.OrdersViewModel
 import com.pixstop.mobile.ui.viewmodel.ProductDetailViewModel
 import com.pixstop.mobile.ui.viewmodel.ProfileViewModel
 import com.pixstop.mobile.ui.viewmodel.ShopViewModel
@@ -45,6 +49,7 @@ val dataModule: Module = module {
     single { NotificationRepository(get()) }
     single { ShopRepository(get()) }
     single { CartRepository(get()) }
+    single { OrderRepository(get()) }
 }
 
 /** ViewModels, criados a cada tela. */
@@ -58,6 +63,9 @@ val viewModelModule: Module = module {
     viewModel { ShopViewModel(get()) }
     viewModel { ProductDetailViewModel(get()) }
     viewModel { CartViewModel(get(), get()) }
+    viewModel { CheckoutViewModel(get()) }
+    viewModel { OrderViewModel(get()) }
+    viewModel { OrdersViewModel(get()) }
 }
 
 /** Tudo que o `startKoin` precisa carregar. */

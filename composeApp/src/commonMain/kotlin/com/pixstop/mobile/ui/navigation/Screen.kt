@@ -17,6 +17,17 @@ object Routes {
     /** Carrinho, alcançado pelo ícone da barra superior. */
     const val CART = "cart"
 
+    /** Fechamento do pedido, alcançado pelo carrinho. */
+    const val CHECKOUT = "checkout"
+
+    /** Desfecho de um pedido. */
+    const val ORDER = "order"
+
+    fun order(id: Long) = "order/$id"
+
+    /** Histórico de pedidos. */
+    const val ORDERS = "orders"
+
     /** Caixa de avisos, alcançada pelo sino da barra superior. */
     const val NOTIFICATIONS = "notifications"
 
