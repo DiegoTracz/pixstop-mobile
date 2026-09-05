@@ -13,6 +13,7 @@ import com.pixstop.mobile.ui.screen.JoinCompanyScreen
 import com.pixstop.mobile.ui.screen.LegalConsentScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
 import com.pixstop.mobile.ui.screen.CartScreen
+import com.pixstop.mobile.ui.screen.CompanyScreen
 import com.pixstop.mobile.ui.screen.CheckoutScreen
 import com.pixstop.mobile.ui.screen.OrderScreen
 import com.pixstop.mobile.ui.screen.OrdersScreen
@@ -169,6 +170,7 @@ fun AppNavigation() {
                 onOpenOrders = { navController.navigate(Routes.ORDERS) },
                 onOpenPixels = { navController.navigate(Routes.PIXELS) },
                 onOpenTeam = { navController.navigate(Routes.TEAM) },
+                onOpenCompany = { navController.navigate(Routes.COMPANY) },
                 onOpenProduct = { navController.navigate(Routes.product(it)) },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
@@ -231,6 +233,10 @@ fun AppNavigation() {
 
         composable(Routes.TEAM) {
             TeamScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.COMPANY) {
+            CompanyScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.ORDERS) {

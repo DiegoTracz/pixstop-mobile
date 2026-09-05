@@ -34,6 +34,9 @@ object Routes {
     /** Área do gestor: verba do time e distribuição. */
     const val TEAM = "team"
 
+    /** Painel do administrador da empresa. */
+    const val COMPANY = "company"
+
     /** Caixa de avisos, alcançada pelo sino da barra superior. */
     const val NOTIFICATIONS = "notifications"
 

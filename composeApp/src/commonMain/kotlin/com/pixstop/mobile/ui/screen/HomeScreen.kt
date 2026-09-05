@@ -89,6 +89,7 @@ fun HomeScreen(
     onOpenOrders: () -> Unit = {},
     onOpenPixels: () -> Unit = {},
     onOpenTeam: () -> Unit = {},
+    onOpenCompany: () -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
     notificationsViewModel: NotificationsViewModel = koinViewModel(),
     cartViewModel: CartViewModel = koinViewModel(),
@@ -135,6 +136,13 @@ fun HomeScreen(
                     onTeam = {
                         scope.launch { drawerState.close() }
                         onOpenTeam()
+                    },
+                    // O painel da empresa é do admin; o servidor recusa os
+                    // demais, e esconder aqui evita oferecer o que não abre.
+                    isCompanyAdmin = session.company?.role?.isAdmin == true,
+                    onCompany = {
+                        scope.launch { drawerState.close() }
+                        onOpenCompany()
                     },
                     onOrders = {
                         scope.launch { drawerState.close() }
@@ -220,6 +228,8 @@ private fun DrawerContent(
     company: ActiveCompany?,
     canSwitchCompany: Boolean,
     isManager: Boolean,
+    isCompanyAdmin: Boolean,
+    onCompany: () -> Unit,
     onPixels: () -> Unit,
     onTeam: () -> Unit,
     onOrders: () -> Unit,
@@ -262,6 +272,10 @@ private fun DrawerContent(
 
         if (isManager) {
             DrawerAction(icon = AppIconType.Person, label = "Meu time", onClick = onTeam)
+        }
+
+        if (isCompanyAdmin) {
+            DrawerAction(icon = AppIconType.Settings, label = "Empresa", onClick = onCompany)
         }
 
         DrawerAction(icon = AppIconType.PersonAdd, label = "Entrar em outra empresa", onClick = onJoinCompany)

@@ -7,6 +7,7 @@ import com.pixstop.mobile.data.repository.AccountRepository
 import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.data.repository.LegalRepository
 import com.pixstop.mobile.data.repository.CartRepository
+import com.pixstop.mobile.data.repository.CompanyRepository
 import com.pixstop.mobile.data.repository.NotificationRepository
 import com.pixstop.mobile.data.repository.OrderRepository
 import com.pixstop.mobile.data.repository.ProfileRepository
@@ -15,6 +16,7 @@ import com.pixstop.mobile.data.repository.TeamRepository
 import com.pixstop.mobile.ui.viewmodel.LegalConsentViewModel
 import com.pixstop.mobile.ui.viewmodel.CartViewModel
 import com.pixstop.mobile.ui.viewmodel.CheckoutViewModel
+import com.pixstop.mobile.ui.viewmodel.CompanyViewModel
 import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
 import com.pixstop.mobile.ui.viewmodel.OrderViewModel
 import com.pixstop.mobile.ui.viewmodel.OrdersViewModel
@@ -54,6 +56,7 @@ val dataModule: Module = module {
     single { CartRepository(get()) }
     single { OrderRepository(get()) }
     single { TeamRepository(get()) }
+    single { CompanyRepository(get()) }
 }
 
 /** ViewModels, criados a cada tela. */
@@ -72,6 +75,7 @@ val viewModelModule: Module = module {
     viewModel { OrdersViewModel(get()) }
     viewModel { PixelHistoryViewModel(get(), get()) }
     viewModel { TeamViewModel(get()) }
+    viewModel { CompanyViewModel(get()) }
 }
 
 /** Tudo que o `startKoin` precisa carregar. */
