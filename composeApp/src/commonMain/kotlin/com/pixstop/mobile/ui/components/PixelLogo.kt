@@ -12,49 +12,73 @@ import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.ui.theme.PixColors
 
 /**
- * Logo Pixel Art "P" do Pixstop.
- * Grid 24x24 — blocos 4x4 desenhados com Canvas.
+ * Símbolo da marca: o "P" em pixel art com a sombra sólida deslocada.
+ *
+ * A sombra é a mesma assinatura dos botões do sistema, e é o que distingue
+ * este "P" de um "P" qualquer. O desenho é o mesmo do favicon e do ícone do
+ * site — dois "P" diferentes na mesma marca fariam o app e o site parecerem
+ * produtos distintos.
  */
 @Composable
 fun PixelLogo(
     modifier: Modifier = Modifier,
     size: Dp = 96.dp,
     color: Color = PixColors.Cyan,
-    accentAlpha: Float = 0.6f
+    shadowColor: Color = PixColors.CyanShadow,
 ) {
     Canvas(modifier = modifier.size(size)) {
-        val canvasSize = this.size.minDimension
-        val scale = canvasSize / 24f
-        val blockSize = 4f * scale
+        val cell = this.size.minDimension / GRID
 
-        fun drawBlock(x: Float, y: Float, alpha: Float = 1f) {
+        fun block(x: Int, y: Int, blockColor: Color) {
             drawRect(
-                color = color.copy(alpha = alpha),
-                topLeft = Offset(x * scale, y * scale),
-                size = Size(blockSize, blockSize)
+                color = blockColor,
+                topLeft = Offset(x * cell, y * cell),
+                size = Size(cell, cell),
             )
         }
 
-        // Row y=2: blocos x=4, x=8, x=12
-        drawBlock(4f, 2f)
-        drawBlock(8f, 2f)
-        drawBlock(12f, 2f)
+        val left = (GRID - GLYPH[0].length - 1) / 2
+        val top = (GRID - GLYPH.size - 1) / 2
 
-        // Row y=6: blocos x=4, x=12
-        drawBlock(4f, 6f)
-        drawBlock(12f, 6f)
+        // A sombra vai primeiro: o símbolo passa por cima dela.
+        GLYPH.forEachIndexed { row, line ->
+            line.forEachIndexed { column, cellChar ->
+                if (cellChar == 'X') {
+                    block(left + column + 1, top + row + 1, shadowColor)
+                }
+            }
+        }
 
-        // Row y=10: blocos x=4, x=8, x=12
-        drawBlock(4f, 10f)
-        drawBlock(8f, 10f)
-        drawBlock(12f, 10f)
-
-        // Row y=14: bloco x=4
-        drawBlock(4f, 14f)
-
-        // Row y=18: bloco x=4 + accent x=16
-        drawBlock(4f, 18f)
-        drawBlock(16f, 18f, alpha = accentAlpha)
+        GLYPH.forEachIndexed { row, line ->
+            line.forEachIndexed { column, cellChar ->
+                if (cellChar == 'X') {
+                    block(left + column, top + row, color)
+                }
+            }
+        }
     }
 }
 
+/** Lado da grade. O mesmo do `brand:mark` no servidor. */
+private const val GRID = 16
+
+/**
+ * O "P" numa grade de 12×10.
+ *
+ * Desenhado à mão em vez de tirado da fonte: a fonte pixelada tem espessura
+ * fina demais para sobreviver aos tamanhos pequenos.
+ */
+private val GLYPH = listOf(
+    "XXXXXXXXX.",
+    "XXXXXXXXXX",
+    "XXX.....XX",
+    "XXX......X",
+    "XXX.....XX",
+    "XXXXXXXXXX",
+    "XXXXXXXXX.",
+    "XXX.......",
+    "XXX.......",
+    "XXX.......",
+    "XXX.......",
+    "XXX.......",
+)

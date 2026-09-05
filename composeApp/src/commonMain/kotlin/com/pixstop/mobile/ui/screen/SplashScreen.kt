@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import com.pixstop.mobile.ui.components.PixelLogo
 import com.pixstop.mobile.ui.components.gridPattern
 import com.pixstop.mobile.ui.components.scanlines
 import com.pixstop.mobile.ui.theme.AppBranding
@@ -68,6 +69,11 @@ fun SplashScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.alpha(alphaAnim)
         ) {
+
+            // Símbolo da marca — o mesmo desenho do ícone e do favicon.
+            PixelLogo(size = 96.dp)
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Nome do app
             Row(verticalAlignment = Alignment.CenterVertically) {

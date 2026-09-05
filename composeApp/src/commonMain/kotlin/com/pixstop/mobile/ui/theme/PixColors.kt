@@ -33,6 +33,9 @@ object PixColors {
     val Gray900    = Color(0xFF0A0F1A)
 
     // Transparências úteis
+    /** Sombra do símbolo da marca — o mesmo teal do favicon. */
+    val CyanShadow   = Color(0xFF0A7D6E)
+
     /** Amarelo a 50%, como a borda da caixa de saldo na web. */
     val YellowDim    = Color(0x80FFD700)
 
