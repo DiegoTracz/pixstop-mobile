@@ -14,6 +14,21 @@ val localProperties = Properties().apply {
     }
 }
 
+// Credenciais de assinatura.
+//
+// O arquivo fica fora do repositório — quem tem a chave assina, quem não tem
+// compila mesmo assim. Sem ele o release sai com a chave de debug, que serve
+// para testar mas a loja recusa; o modelo está em keystore.properties.example.
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) {
+        load(file.inputStream())
+    }
+}
+
+val hasSigningKey = keystoreProperties.getProperty("storeFile")
+    ?.let { rootProject.file(it).exists() } == true
+
 android {
     namespace = "com.pixstop.mobile.android"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -101,9 +116,32 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hasSigningKey) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            // R8 encolhe e ofusca. Ligado só no release: no debug atrapalharia
+            // a leitura de qualquer pilha de erro.
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+
+            if (hasSigningKey) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

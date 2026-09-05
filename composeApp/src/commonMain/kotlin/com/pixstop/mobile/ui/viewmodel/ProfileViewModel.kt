@@ -16,6 +16,12 @@ data class ProfileUiState(
     val profileMessage: String? = null,
     val profileError: String? = null,
 
+    val deletePassword: String = "",
+    val isDeleteOpen: Boolean = false,
+    val isDeleting: Boolean = false,
+    val deleteError: String? = null,
+    val isDeleted: Boolean = false,
+
     val currentPassword: String = "",
     val newPassword: String = "",
     val confirmation: String = "",
@@ -37,6 +43,9 @@ data class ProfileUiState(
             currentPassword.isNotBlank() &&
             newPassword.length >= MIN_PASSWORD &&
             passwordsMatch
+
+    /** Excluir a conta exige a senha: é o que separa o pedido do acidente. */
+    val canDelete: Boolean get() = !isDeleting && deletePassword.isNotBlank()
 
     companion object {
         const val MIN_PASSWORD = 8
@@ -110,6 +119,41 @@ class ProfileViewModel(private val profiles: ProfileRepository) : ViewModel() {
                     isSavingProfile = false,
                     profileError = result.error.message,
                 )
+            }
+        }
+    }
+
+    fun openDelete() {
+        _uiState.value = _uiState.value.copy(isDeleteOpen = true, deletePassword = "", deleteError = null)
+    }
+
+    fun dismissDelete() {
+        _uiState.value = _uiState.value.copy(isDeleteOpen = false, deletePassword = "", deleteError = null)
+    }
+
+    fun onDeletePasswordChange(value: String) {
+        _uiState.value = _uiState.value.copy(deletePassword = value, deleteError = null)
+    }
+
+    /**
+     * Exclui a conta.
+     *
+     * O servidor recusa quem é o último administrador de uma empresa, e a
+     * recusa vem com o nome dela — a tela só precisa mostrar a frase.
+     */
+    fun deleteAccount() {
+        val state = _uiState.value
+
+        if (!state.canDelete) {
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = state.copy(isDeleting = true, deleteError = null)
+
+            _uiState.value = when (val result = profiles.deleteAccount(state.deletePassword)) {
+                is Outcome.Success -> _uiState.value.copy(isDeleting = false, isDeleted = true)
+                is Outcome.Failure -> _uiState.value.copy(isDeleting = false, deleteError = result.error.message)
             }
         }
     }

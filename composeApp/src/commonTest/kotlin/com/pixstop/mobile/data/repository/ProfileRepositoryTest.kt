@@ -67,9 +67,32 @@ class ProfileRepositoryTest {
     }
 
     @Test
+    fun `excluir a conta exige a senha`() {
+        assertFalse(ProfileUiState().canDelete, "sem senha nao ha pedido, ha acidente")
+        assertFalse(ProfileUiState(deletePassword = "   ").canDelete)
+        assertTrue(ProfileUiState(deletePassword = "minha-senha").canDelete)
+        assertFalse(ProfileUiState(deletePassword = "minha-senha", isDeleting = true).canDelete)
+    }
+
+    @Test
+    fun `exclusao envia a senha no corpo`() = runTest {
+        val api = FakeApi()
+
+        val result = ProfileRepository(api.clientReturning(DELETE_BODY)).deleteAccount("minha-senha")
+
+        assertIs<Outcome.Success<Int>>(result)
+        assertEquals(90, result.value)
+        assertTrue(api.lastBody.contains("password"), api.lastBody)
+    }
+
+    @Test
     fun `perfil sem nome ou email nao libera o botao`() {
         assertFalse(ProfileUiState(name = "", email = "a@b.com").canSaveProfile)
         assertFalse(ProfileUiState(name = "Carlos", email = "   ").canSaveProfile)
         assertTrue(ProfileUiState(name = "Carlos", email = "a@b.com").canSaveProfile)
+    }
+
+    private companion object {
+        const val DELETE_BODY = """{"success":true,"data":{"purge_after_days":90}}"""
     }
 }

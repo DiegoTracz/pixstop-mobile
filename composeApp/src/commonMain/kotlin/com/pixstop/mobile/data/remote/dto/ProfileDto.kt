@@ -28,3 +28,17 @@ data class UpdatePasswordRequest(
     val password: String,
     @SerialName("password_confirmation") val passwordConfirmation: String,
 )
+
+/**
+ * Exclusão de conta pedida pela própria pessoa.
+ *
+ * A senha vai junto porque é o que separa "pedi para excluir" de "alguém
+ * pegou meu celular destravado".
+ */
+@Serializable
+data class DeleteAccountRequest(val password: String)
+
+@Serializable
+data class DeleteAccountResultDto(
+    @SerialName("purge_after_days") val purgeAfterDays: Int = 0,
+)

@@ -201,6 +201,12 @@ fun HomeScreen(
 
                 "profile" -> ProfileScreen(
                     user = session.account?.user,
+                    // Conta excluída: o token já não vale, e ficar na Home
+                    // levaria a um 401 na próxima tela.
+                    onAccountDeleted = {
+                        sessionViewModel.logout()
+                        onLogout()
+                    },
                     // O nome aparece em outras telas; sem recarregar a conta
                     // elas continuariam mostrando o antigo.
                     onProfileSaved = sessionViewModel::refresh,
