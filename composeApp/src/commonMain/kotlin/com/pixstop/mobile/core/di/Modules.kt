@@ -1,6 +1,7 @@
 package com.pixstop.mobile.core.di
 
 import com.pixstop.mobile.core.network.HttpClientFactory
+import com.pixstop.mobile.core.notification.NotificationEventBus
 import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.core.storage.TokenManager
 import com.pixstop.mobile.data.repository.AccountRepository
@@ -47,6 +48,9 @@ val coreModule: Module = module {
     single { TokenManager(settings = Settings(), secure = get(named(SECURE_SETTINGS))) }
     single { SessionStore(get()) }
     single<HttpClient> { HttpClientFactory.create(get()) }
+    // Um só barramento: quem publica um alvo e quem navega até ele nunca se
+    // encontram, mas precisam do mesmo canal.
+    single { NotificationEventBus() }
 }
 
 /** Repositórios: a fronteira entre a API e o resto do app. */

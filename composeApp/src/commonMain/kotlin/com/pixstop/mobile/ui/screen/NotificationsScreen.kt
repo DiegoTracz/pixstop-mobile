@@ -26,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.AppNotification
+import com.pixstop.mobile.domain.notification.NotificationRouter
+import com.pixstop.mobile.domain.notification.NotificationTarget
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelButtonVariant
@@ -40,11 +42,14 @@ import org.koin.compose.viewmodel.koinViewModel
  * Caixa de avisos.
  *
  * Tocar num aviso o marca como lido na hora e desfaz se o servidor recusar —
- * quem controla isso é o ViewModel.
+ * quem controla isso é o ViewModel. Quando o aviso aponta para uma tela, o
+ * toque também leva até ela: um "pedido pago" que não abre o pedido faz a
+ * pessoa procurar sozinha o que o aviso já sabia.
  */
 @Composable
 fun NotificationsScreen(
     onBack: () -> Unit,
+    onOpenTarget: (NotificationTarget) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: NotificationsViewModel = koinViewModel(),
 ) {
@@ -100,7 +105,14 @@ fun NotificationsScreen(
                 items(state.items, key = { it.id }) { notification ->
                     NotificationRow(
                         notification = notification,
-                        onClick = { viewModel.markRead(notification.id) },
+                        // Marcar lido é inofensivo no que já está lido, e o
+                        // alvo continua valendo — o pedido não desaparece
+                        // porque o aviso dele foi visto ontem.
+                        onClick = {
+                            viewModel.markRead(notification.id)
+                            NotificationRouter.resolve(notification)?.let(onOpenTarget)
+                        },
+                        target = NotificationRouter.resolve(notification),
                     )
                 }
 
@@ -121,13 +133,17 @@ fun NotificationsScreen(
 }
 
 @Composable
-private fun NotificationRow(notification: AppNotification, onClick: () -> Unit) {
+private fun NotificationRow(
+    notification: AppNotification,
+    target: NotificationTarget?,
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .border(2.dp, if (notification.read) PixColors.Gray700 else PixColors.Cyan)
             .background(if (notification.read) PixColors.Dark else PixColors.CyanAlpha10)
-            .clickable(enabled = !notification.read, onClick = onClick)
+            .clickable(enabled = !notification.read || target != null, onClick = onClick)
             .padding(14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {

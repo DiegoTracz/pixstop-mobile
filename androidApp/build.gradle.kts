@@ -74,6 +74,10 @@ android {
             // Nome do app diferente para local
             resValue("string", "app_name", "Pixstop Local")
 
+            // Esquema dos deep links, um por ambiente: os três apps podem
+            // conviver no mesmo aparelho sem disputar `pixstop://`.
+            manifestPlaceholders["deepLinkScheme"] = "pixstop-local"
+
             // A API local fala HTTP puro; o Android bloqueia isso desde a API 28.
             // A permissão fica restrita a este flavor e aos endereços do
             // arquivo network_security_config.
@@ -95,6 +99,8 @@ android {
             // Nome do app diferente para staging
             resValue("string", "app_name", "Pixstop Staging")
 
+            manifestPlaceholders["deepLinkScheme"] = "pixstop-staging"
+
             // Staging pode apontar para um túnel HTTP durante o desenvolvimento.
             manifestPlaceholders["usesCleartextTraffic"] = "true"
             manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security_config"
@@ -109,6 +115,8 @@ android {
 
             // Nome do app de produção
             resValue("string", "app_name", "Pixstop")
+
+            manifestPlaceholders["deepLinkScheme"] = "pixstop"
 
             // Produção nunca fala HTTP puro.
             manifestPlaceholders["usesCleartextTraffic"] = "false"

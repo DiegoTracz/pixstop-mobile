@@ -16,11 +16,25 @@
         android:theme="@style/AppTheme">
         <activity
             android:exported="true"
+            android:launchMode="singleTask"
             android:name=".MainActivity"
             android:theme="@style/Theme.App.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+                Deep link dos avisos: pixstop://order/12, pixstop://pixels,
+                pixstop://company, pixstop://notifications. O esquema muda por
+                ambiente para que o app de homologação instalado ao lado do de
+                produção não dispute os mesmos links.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="${deepLinkScheme}" />
             </intent-filter>
         </activity>
     </application>

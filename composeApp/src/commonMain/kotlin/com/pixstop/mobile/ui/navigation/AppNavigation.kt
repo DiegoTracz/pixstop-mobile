@@ -7,8 +7,11 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.pixstop.mobile.core.notification.NotificationEventBus
 import com.pixstop.mobile.data.repository.AppConfigRepository
 import com.pixstop.mobile.domain.access.Destination
+import com.pixstop.mobile.domain.access.RoleHelper
+import com.pixstop.mobile.domain.notification.NotificationTarget
 import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
@@ -51,6 +54,34 @@ fun AppNavigation() {
     val cartViewModel: CartViewModel = koinViewModel()
     val session by sessionViewModel.uiState.collectAsState()
     val appConfig: AppConfigRepository = koinInject()
+    val notificationEvents: NotificationEventBus = koinInject()
+
+    /**
+     * Leva a um alvo de aviso, se o papel de agora ainda o alcança.
+     *
+     * Um aviso não é autorização: quem deixou de administrar a empresa não
+     * chega ao painel dela por um aviso de semana passada. A mesma matriz que
+     * monta as barras decide aqui.
+     */
+    fun openTarget(target: NotificationTarget) {
+        if (!RoleHelper.canOpen(target.destination, session.company)) {
+            return
+        }
+
+        val route = when (target) {
+            is NotificationTarget.Order -> Routes.order(target.id)
+            NotificationTarget.Orders -> Routes.ORDERS
+            NotificationTarget.Pixels -> Routes.PIXELS
+            NotificationTarget.Company -> Routes.COMPANY
+            NotificationTarget.Notifications -> Routes.NOTIFICATIONS
+        }
+
+        navController.navigate(route) {
+            // Voltar de um destino aberto por aviso cai no início, não numa
+            // pilha do que a pessoa estava fazendo antes de o link chegar.
+            launchSingleTop = true
+        }
+    }
 
     // Revalida as regras do servidor no arranque. A rota é pública e o app já
     // tem padrões embutidos, então isto nunca segura a primeira tela.
@@ -67,6 +98,25 @@ fun AppNavigation() {
             notificationsViewModel.refresh()
         } else {
             cartViewModel.clear()
+        }
+    }
+
+    // Um deep link ou um push pode chegar antes de a pessoa estar dentro: o
+    // barramento guarda o alvo e ele só é atendido quando há sessão e empresa,
+    // depois do login e do aceite dos documentos.
+    val canNavigate = session.company != null &&
+        !session.needsConsent && !session.needsCompany
+
+    // A empresa entra na chave porque `openTarget` decide pelo papel de agora:
+    // quem troca de empresa não pode continuar sendo julgado pela anterior.
+    LaunchedEffect(canNavigate, session.company?.id) {
+        if (!canNavigate) {
+            return@LaunchedEffect
+        }
+
+        notificationEvents.targets.collect { target ->
+            openTarget(target)
+            notificationEvents.consume()
         }
     }
 
@@ -265,6 +315,7 @@ fun AppNavigation() {
             NotificationsScreen(
                 viewModel = notificationsViewModel,
                 onBack = { navController.popBackStack() },
+                onOpenTarget = ::openTarget,
             )
         }
     }
