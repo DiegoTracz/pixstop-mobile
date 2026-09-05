@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Splash nativa do Android 12+.
+
+        Sem estes três atributos o sistema desenha o círculo branco padrão e
+        cola o ícone do launcher dentro dele — que é um PNG quadrado opaco, e
+        aparecia como um retângulo escuro emoldurado de branco.
+
+        O ícone da splash é recortado num círculo, então o desenho tem fundo
+        transparente e o texto ocupa só a área central que sobrevive ao corte.
+    -->
+    <style name="Theme.App.Starting" parent="AppTheme">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+    </style>
+</resources>

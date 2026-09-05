@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Ícone adaptativo. O launcher aplica a máscara da fabricante — círculo,
+    quadrado arredondado, gota — e sem esta declaração ele recortaria o PNG
+    quadrado inteiro, deixando a moldura que aparecia na splash.
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/splash_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>
