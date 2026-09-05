@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.AccountUser
+import com.pixstop.mobile.domain.access.Destination
+import com.pixstop.mobile.domain.access.RoleHelper
 import com.pixstop.mobile.domain.model.ActiveCompany
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
@@ -65,16 +68,28 @@ import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Destinos da barra inferior.
+ * Como cada destino se apresenta na barra inferior.
  *
- * Só lugares para onde se vai, e todos existem para todo papel. Avisos saiu
- * daqui para o sino da barra superior: é uma caixa de entrada, não um destino.
+ * Quais destinos aparecem é decisão da matriz de acesso, não desta lista: uma
+ * aba escrita à mão sobreviveria a um plano que desligou a funcionalidade dela
+ * e levaria a uma tela em branco.
  */
-private val bottomNavItems = listOf(
-    BottomNavItem(route = "home", label = "Início", icon = AppIconType.Home),
-    BottomNavItem(route = "search", label = "Loja", icon = AppIconType.Search),
-    BottomNavItem(route = "profile", label = "Perfil", icon = AppIconType.Person),
-)
+private fun bottomNavItems(destinations: List<Destination>) = destinations.map { destination ->
+    when (destination) {
+        Destination.Shop -> BottomNavItem(route = destination.name, label = "Loja", icon = AppIconType.Search)
+        Destination.Profile -> BottomNavItem(route = destination.name, label = "Perfil", icon = AppIconType.Person)
+        else -> BottomNavItem(route = destination.name, label = "Início", icon = AppIconType.Home)
+    }
+}
+
+/** Rótulo e ícone de cada item do menu lateral. */
+private fun drawerLabel(destination: Destination): Pair<String, AppIconType> = when (destination) {
+    Destination.Orders -> "Meus pedidos" to AppIconType.Cart
+    Destination.Pixels -> "Meus pixels" to AppIconType.Check
+    Destination.Team -> "Meu time" to AppIconType.Person
+    Destination.Company -> "Empresa" to AppIconType.Settings
+    else -> destination.name to AppIconType.Info
+}
 
 /**
  * Tela principal, com menu lateral, barra superior e barra inferior.
@@ -90,10 +105,7 @@ fun HomeScreen(
     onOpenNotifications: () -> Unit = {},
     onOpenCart: () -> Unit = {},
     onOpenProduct: (Long) -> Unit = {},
-    onOpenOrders: () -> Unit = {},
-    onOpenPixels: () -> Unit = {},
-    onOpenTeam: () -> Unit = {},
-    onOpenCompany: () -> Unit = {},
+    onDestination: (Destination) -> Unit = {},
     onOpenOrder: (Long) -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
     notificationsViewModel: NotificationsViewModel = koinViewModel(),
@@ -110,7 +122,16 @@ fun HomeScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var switcherOpen by remember { mutableStateOf(false) }
-    var selectedTab by remember { mutableStateOf("home") }
+    val destinations = RoleHelper.bottomBar(session.company)
+    var selectedTab by remember { mutableStateOf(Destination.Home.name) }
+
+    // Um plano que desliga a loja tira a aba dela; quem estava nela precisa
+    // sair, senão ficaria olhando uma tela que já não existe.
+    LaunchedEffect(destinations) {
+        if (destinations.none { it.name == selectedTab }) {
+            selectedTab = destinations.firstOrNull()?.name ?: Destination.Home.name
+        }
+    }
 
     if (switcherOpen) {
         CompanySwitcherSheet(
@@ -136,31 +157,14 @@ fun HomeScreen(
                     user = session.account?.user,
                     company = session.company,
                     canSwitchCompany = session.account?.canSwitchCompany == true,
-                    // A área do gestor só existe para quem gere um time; o
-                    // `/me` é quem diz isso.
-                    isManager = session.company?.isManager == true,
-                    onPixels = {
+                    destinations = RoleHelper.drawer(session.company),
+                    onDestination = { destination ->
                         scope.launch { drawerState.close() }
-                        onOpenPixels()
-                    },
-                    onTeam = {
-                        scope.launch { drawerState.close() }
-                        onOpenTeam()
-                    },
-                    // O painel da empresa é do admin; o servidor recusa os
-                    // demais, e esconder aqui evita oferecer o que não abre.
-                    isCompanyAdmin = session.company?.role?.isAdmin == true,
-                    onCompany = {
-                        scope.launch { drawerState.close() }
-                        onOpenCompany()
-                    },
-                    onOrders = {
-                        scope.launch { drawerState.close() }
-                        onOpenOrders()
+                        onDestination(destination)
                     },
                     onSettings = {
                         scope.launch { drawerState.close() }
-                        selectedTab = "profile"
+                        selectedTab = Destination.Profile.name
                     },
                     onSwitchCompany = {
                         scope.launch { drawerState.close() }
@@ -191,26 +195,27 @@ fun HomeScreen(
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onNotificationsClick = onOpenNotifications,
                     unreadCount = notifications.unread,
-                    onCartClick = onOpenCart,
+                    // Sem a loja no plano não há carrinho a mostrar.
+                    onCartClick = onOpenCart.takeIf { RoleHelper.canOpen(Destination.Cart, session.company) },
                     cartCount = cart.itemCount,
                 )
             },
             bottomBar = {
                 PixelBottomNav(
-                    items = bottomNavItems,
+                    items = bottomNavItems(destinations),
                     selectedRoute = selectedTab,
                     onItemSelected = { selectedTab = it },
                 )
             },
         ) { paddingValues ->
             when (selectedTab) {
-                "search" -> ShopScreen(
+                Destination.Shop.name -> ShopScreen(
                     viewModel = shopViewModel,
                     onProductClick = onOpenProduct,
                     modifier = Modifier.padding(paddingValues),
                 )
 
-                "profile" -> ProfileScreen(
+                Destination.Profile.name -> ProfileScreen(
                     user = session.account?.user,
                     // Conta excluída: o token já não vale, e ficar na Home
                     // levaria a um 401 na próxima tela.
@@ -233,10 +238,10 @@ fun HomeScreen(
                     onOpenProduct = onOpenProduct,
                     onOpenCategory = { categoryId ->
                         shopViewModel.onCategorySelected(categoryId)
-                        selectedTab = "search"
+                        selectedTab = Destination.Shop.name
                     },
-                    onOpenShop = { selectedTab = "search" },
-                    onOpenPixels = onOpenPixels,
+                    onOpenShop = { selectedTab = Destination.Shop.name },
+                    onOpenPixels = { onDestination(Destination.Pixels) },
                     onAddToCart = { cartViewModel.add(it) },
                     modifier = Modifier.padding(paddingValues),
                 )
@@ -256,12 +261,8 @@ private fun DrawerContent(
     user: AccountUser?,
     company: ActiveCompany?,
     canSwitchCompany: Boolean,
-    isManager: Boolean,
-    isCompanyAdmin: Boolean,
-    onCompany: () -> Unit,
-    onPixels: () -> Unit,
-    onTeam: () -> Unit,
-    onOrders: () -> Unit,
+    destinations: List<Destination>,
+    onDestination: (Destination) -> Unit,
     onSettings: () -> Unit,
     onSwitchCompany: () -> Unit,
     onJoinCompany: () -> Unit,
@@ -295,16 +296,10 @@ private fun DrawerContent(
             )
         }
 
-        DrawerAction(icon = AppIconType.Cart, label = "Meus pedidos", onClick = onOrders)
+        destinations.forEach { destination ->
+            val (label, icon) = drawerLabel(destination)
 
-        DrawerAction(icon = AppIconType.Check, label = "Meus pixels", onClick = onPixels)
-
-        if (isManager) {
-            DrawerAction(icon = AppIconType.Person, label = "Meu time", onClick = onTeam)
-        }
-
-        if (isCompanyAdmin) {
-            DrawerAction(icon = AppIconType.Settings, label = "Empresa", onClick = onCompany)
+            DrawerAction(icon = icon, label = label, onClick = { onDestination(destination) })
         }
 
         DrawerAction(icon = AppIconType.PersonAdd, label = "Entrar em outra empresa", onClick = onJoinCompany)

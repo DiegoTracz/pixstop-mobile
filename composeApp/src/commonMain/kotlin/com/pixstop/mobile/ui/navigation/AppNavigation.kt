@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.pixstop.mobile.data.repository.AppConfigRepository
+import com.pixstop.mobile.domain.access.Destination
 import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
@@ -175,12 +176,17 @@ fun AppNavigation() {
                 onJoinCompany = { navController.navigate(Routes.JOIN_COMPANY) },
                 onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 onOpenCart = { navController.navigate(Routes.CART) },
-                onOpenOrders = { navController.navigate(Routes.ORDERS) },
-                onOpenPixels = { navController.navigate(Routes.PIXELS) },
-                onOpenTeam = { navController.navigate(Routes.TEAM) },
-                onOpenCompany = { navController.navigate(Routes.COMPANY) },
-                onOpenProduct = { navController.navigate(Routes.product(it)) },
-                onOpenOrder = { navController.navigate(Routes.order(it)) },
+                // A tela não conhece rotas: ela diz para onde a pessoa quer
+                // ir, e a navegação sabe onde isso fica.
+                onDestination = { destination ->
+                    when (destination) {
+                        Destination.Orders -> navController.navigate(Routes.ORDERS)
+                        Destination.Pixels -> navController.navigate(Routes.PIXELS)
+                        Destination.Team -> navController.navigate(Routes.TEAM)
+                        Destination.Company -> navController.navigate(Routes.COMPANY)
+                        else -> Unit
+                    }
+                },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
