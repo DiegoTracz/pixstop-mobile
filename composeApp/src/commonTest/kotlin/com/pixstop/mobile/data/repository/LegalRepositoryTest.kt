@@ -1,22 +1,9 @@
 package com.pixstop.mobile.data.repository
 
-import com.pixstop.mobile.core.network.apiJson
 import com.pixstop.mobile.domain.model.LegalDocument
 import com.pixstop.mobile.domain.model.Outcome
+import com.pixstop.mobile.support.FakeApi
 import com.pixstop.mobile.ui.viewmodel.LegalConsentUiState
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respond
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.HttpRequestData
-import io.ktor.content.TextContent
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.contentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.headersOf
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -40,28 +27,11 @@ class LegalRepositoryTest {
         ]}
     """.trimIndent()
 
-    private var lastRequest: HttpRequestData? = null
-
-    private fun client(body: String) = HttpClient(
-        MockEngine { request ->
-            lastRequest = request
-            respond(body, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
-        },
-    ) {
-        // Mesma configuração do cliente real: sem o ContentNegotiation e o
-        // content-type padrão o corpo do POST nem chega a ser serializado, e o
-        // teste passaria a medir outra coisa.
-        install(ContentNegotiation) { json(apiJson) }
-
-        defaultRequest {
-            url("https://exemplo.test/api/")
-            contentType(ContentType.Application.Json)
-        }
-    }
+    private val api = FakeApi()
 
     @Test
     fun `lista os documentos em vigor com o que ja foi aceito`() = runTest {
-        val result = LegalRepository(client(documentsBody)).documents()
+        val result = LegalRepository(api.clientReturning(documentsBody)).documents()
 
         assertIs<Outcome.Success<List<LegalDocument>>>(result)
         assertEquals(2, result.value.size)
@@ -74,11 +44,11 @@ class LegalRepositoryTest {
     fun `aceite envia os documentos nomeados`() = runTest {
         val body = """{"success":true,"data":{"recorded":1,"pending":0}}"""
 
-        val result = LegalRepository(client(body)).accept(listOf(1L))
+        val result = LegalRepository(api.clientReturning(body)).accept(listOf(1L))
 
         assertIs<Outcome.Success<*>>(result)
 
-        val sent = (lastRequest?.body as? TextContent)?.text.orEmpty()
+        val sent = api.lastBody
         assertTrue(sent.contains("document_ids"), "corpo enviado: $sent")
         assertTrue(sent.contains("1"), "corpo enviado: $sent")
     }

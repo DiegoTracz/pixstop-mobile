@@ -32,13 +32,17 @@ fun PixelDivider(
                 .height(2.dp)
                 .background(PixColors.Gray700)
         )
-        Text(
-            text = text,
-            style = PixTypography.badgeText.copy(color = PixColors.Gray500),
-            modifier = Modifier
-                .background(PixColors.Gray900)
-                .padding(horizontal = 8.dp)
-        )
+        // Sem rótulo a linha é só um separador; um Text vazio deixaria uma
+        // falha escura no meio dela.
+        if (text.isNotBlank()) {
+            Text(
+                text = text,
+                style = PixTypography.badgeText.copy(color = PixColors.Gray500),
+                modifier = Modifier
+                    .background(PixColors.Gray900)
+                    .padding(horizontal = 8.dp)
+            )
+        }
         Box(
             modifier = Modifier
                 .weight(1f)

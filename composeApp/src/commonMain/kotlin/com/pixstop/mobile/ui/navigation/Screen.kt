@@ -9,6 +9,9 @@ object Routes {
     const val REGISTER = "register"
     const val HOME = "home"
 
+    /** Caixa de avisos, alcançada pelo sino da barra superior. */
+    const val NOTIFICATIONS = "notifications"
+
     /** Aceite dos documentos legais: bloqueia o app enquanto faltar. */
     const val LEGAL_CONSENT = "legal-consent"
 

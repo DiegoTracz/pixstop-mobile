@@ -33,6 +33,9 @@ object PixColors {
     val Gray900    = Color(0xFF0A0F1A)
 
     // Transparências úteis
+    /** Amarelo a 50%, como a borda da caixa de saldo na web. */
+    val YellowDim    = Color(0x80FFD700)
+
     val CyanAlpha10  = Color(0x1A00F5D4)
     val CyanAlpha20  = Color(0x3300F5D4)
     val CyanAlpha40  = Color(0x6600F5D4)

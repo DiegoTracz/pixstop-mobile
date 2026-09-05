@@ -1,74 +1,98 @@
 package com.pixstop.mobile.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.launch
-import com.pixstop.mobile.data.model.User
-import com.pixstop.mobile.ui.components.AppBottomNavigation
+import com.pixstop.mobile.domain.model.AccountUser
+import com.pixstop.mobile.domain.model.ActiveCompany
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.BottomNavItem
-import com.pixstop.mobile.ui.theme.AppBranding
-import com.pixstop.mobile.ui.viewmodel.HomeViewModel
-import org.koin.compose.viewmodel.koinViewModel
-import com.pixstop.mobile.ui.viewmodel.SessionViewModel
 import com.pixstop.mobile.ui.components.CompanySwitcherSheet
-import androidx.compose.foundation.clickable
+import com.pixstop.mobile.ui.components.PixelBottomNav
+import com.pixstop.mobile.ui.components.PixelTopBar
+import com.pixstop.mobile.ui.components.PlayerHud
+import com.pixstop.mobile.ui.components.PlayerMenuHeader
+import com.pixstop.mobile.ui.theme.AppBranding
+import com.pixstop.mobile.ui.theme.PixColors
+import com.pixstop.mobile.ui.theme.PixTypography
+import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
+import com.pixstop.mobile.ui.viewmodel.SessionUiState
+import com.pixstop.mobile.ui.viewmodel.SessionViewModel
+import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Itens do Bottom Navigation
- * Customize esta lista para adicionar/remover abas
+ * Destinos da barra inferior.
+ *
+ * Só lugares para onde se vai, e todos existem para todo papel. Avisos saiu
+ * daqui para o sino da barra superior: é uma caixa de entrada, não um destino.
  */
 private val bottomNavItems = listOf(
-    BottomNavItem(
-        route = "home",
-        label = "Início",
-        icon = AppIconType.Home
-    ),
-    BottomNavItem(
-        route = "search",
-        label = "Buscar",
-        icon = AppIconType.Search,
-    ),
-    BottomNavItem(
-        route = "notifications",
-        label = "Alertas",
-        icon = AppIconType.Notifications,
-        badge = null  // Altere para um número para mostrar badge
-    ),
-    BottomNavItem(
-        route = "profile",
-        label = "Perfil",
-        icon = AppIconType.Person
-    )
+    BottomNavItem(route = "home", label = "Início", icon = AppIconType.Home),
+    BottomNavItem(route = "search", label = "Loja", icon = AppIconType.Search),
+    BottomNavItem(route = "profile", label = "Perfil", icon = AppIconType.Person),
 )
 
 /**
- * Tela Home com Navigation Drawer (Sidebar)
+ * Tela principal, com menu lateral, barra superior e barra inferior.
+ *
+ * Todo o estado da conta vem do `SessionViewModel` — o mesmo que a navegação
+ * consulta. Guardar uma segunda cópia aqui já fez a Home mostrar o nome antigo
+ * depois de alterá-lo no perfil.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
     onJoinCompany: () -> Unit = {},
-    viewModel: HomeViewModel = koinViewModel(),
+    onOpenNotifications: () -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
+    notificationsViewModel: NotificationsViewModel = koinViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
     val session by sessionViewModel.uiState.collectAsState()
+    val notifications by notificationsViewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var switcherOpen by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableStateOf("home") }
 
-    // Seletor de empresas: só faz sentido com mais de um vínculo ativo.
     if (switcherOpen) {
         CompanySwitcherSheet(
             memberships = session.account?.memberships.orEmpty(),
@@ -85,128 +109,75 @@ fun HomeScreen(
         )
     }
 
-    // Navega para login quando faz logout
-    LaunchedEffect(uiState.isLoggedOut) {
-        if (uiState.isLoggedOut) {
-            onLogout()
-        }
-    }
-
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet(
-                modifier = Modifier.width(300.dp)
-            ) {
+            ModalDrawerSheet(modifier = Modifier.width(300.dp)) {
                 DrawerContent(
-                    user = uiState.user,
+                    user = session.account?.user,
+                    company = session.company,
+                    canSwitchCompany = session.account?.canSwitchCompany == true,
+                    onSettings = {
+                        scope.launch { drawerState.close() }
+                        selectedTab = "profile"
+                    },
+                    onSwitchCompany = {
+                        scope.launch { drawerState.close() }
+                        switcherOpen = true
+                    },
+                    onJoinCompany = {
+                        scope.launch { drawerState.close() }
+                        onJoinCompany()
+                    },
                     onLogout = {
                         scope.launch {
                             drawerState.close()
-                            viewModel.logout()
+                            sessionViewModel.logout()
+                            onLogout()
                         }
-                    }
+                    },
                 )
             }
-        }
+        },
     ) {
-        // Estado da aba selecionada no Bottom Navigation
-        var selectedTab by remember { mutableStateOf("home") }
-
         Scaffold(
+            containerColor = PixColors.Dark,
             topBar = {
-                TopAppBar(
-                    title = {
-                        val company = session.company
-                        val canSwitch = session.account?.canSwitchCompany == true
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = if (canSwitch) {
-                                Modifier.clickable { switcherOpen = true }
-                            } else {
-                                Modifier
-                            },
-                        ) {
-                            Text(text = company?.name ?: AppBranding.APP_NAME)
-
-                            // Sem a seta o título não se anuncia como clicável.
-                            if (canSwitch) {
-                                AppIcon(
-                                    icon = AppIconType.ChevronDown,
-                                    contentDescription = "Trocar de empresa",
-                                    modifier = Modifier.padding(start = 4.dp).size(20.dp),
-                                )
-                            }
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch { drawerState.open() }
-                        }) {
-                            AppIcon(
-                                icon = AppIconType.Menu,
-                                contentDescription = "Abrir menu"
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    actions = {
-                        // Indicador de modo offline
-                        if (uiState.isOfflineMode) {
-                            Badge(
-                                containerColor = MaterialTheme.colorScheme.tertiary,
-                                contentColor = MaterialTheme.colorScheme.onTertiary,
-                                modifier = Modifier.padding(end = 8.dp)
-                            ) {
-                                Text("Offline", modifier = Modifier.padding(horizontal = 4.dp))
-                            }
-                        }
-                    }
+                PixelTopBar(
+                    title = session.company?.name ?: AppBranding.APP_NAME,
+                    canSwitch = session.account?.canSwitchCompany == true,
+                    onTitleClick = { switcherOpen = true },
+                    onMenuClick = { scope.launch { drawerState.open() } },
+                    onNotificationsClick = onOpenNotifications,
+                    unreadCount = notifications.unread,
                 )
             },
             bottomBar = {
-                AppBottomNavigation(
+                PixelBottomNav(
                     items = bottomNavItems,
                     selectedRoute = selectedTab,
-                    onItemSelected = { route ->
-                        selectedTab = route
-                        // TODO: Navegue para a tela correspondente ou mude o conteúdo
-                        // Exemplo: navController.navigate(route)
-                    }
+                    onItemSelected = { selectedTab = it },
                 )
-            }
+            },
         ) { paddingValues ->
-            // Conteúdo baseado na aba selecionada
             when (selectedTab) {
-                "home" -> HomeContent(
-                    uiState = uiState,
-                    onRefresh = viewModel::refreshProfile,
-                    modifier = Modifier.padding(paddingValues)
-                )
                 "search" -> PlaceholderContent(
-                    title = "Buscar",
+                    title = "Loja",
                     icon = AppIconType.Search,
-                    modifier = Modifier.padding(paddingValues)
+                    modifier = Modifier.padding(paddingValues),
                 )
-                "notifications" -> PlaceholderContent(
-                    title = "Notificações",
-                    icon = AppIconType.Notifications,
-                    modifier = Modifier.padding(paddingValues)
+
+                "profile" -> ProfileScreen(
+                    user = session.account?.user,
+                    // O nome aparece em outras telas; sem recarregar a conta
+                    // elas continuariam mostrando o antigo.
+                    onProfileSaved = sessionViewModel::refresh,
+                    modifier = Modifier.padding(paddingValues),
                 )
-                "profile" -> PlaceholderContent(
-                    title = "Perfil",
-                    icon = AppIconType.Person,
-                    modifier = Modifier.padding(paddingValues)
-                )
+
                 else -> HomeContent(
-                    uiState = uiState,
-                    onRefresh = viewModel::refreshProfile,
-                    modifier = Modifier.padding(paddingValues)
+                    session = session,
+                    modifier = Modifier.padding(paddingValues),
                 )
             }
         }
@@ -214,270 +185,189 @@ fun HomeScreen(
 }
 
 /**
- * Conteúdo do Drawer (Sidebar) - Padrão Material Design
+ * Menu lateral, no formato do PLAYER MENU da web.
+ *
+ * Traz o mesmo painel — retrato, nome, empresa e saldo — e as mesmas ações,
+ * para quem usa os dois reconhecer o lugar sem reaprender.
  */
 @Composable
 private fun DrawerContent(
-    user: User?,
-    onLogout: () -> Unit
+    user: AccountUser?,
+    company: ActiveCompany?,
+    canSwitchCompany: Boolean,
+    onSettings: () -> Unit,
+    onSwitchCompany: () -> Unit,
+    onJoinCompany: () -> Unit,
+    onLogout: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier.fillMaxHeight()
-    ) {
-        // Header do Drawer com info do usuário
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primaryContainer
+    Column(modifier = Modifier.fillMaxHeight().background(PixColors.Gray900)) {
+        Column(modifier = Modifier.statusBarsPadding()) {
+            PlayerMenuHeader(title = "PLAYER MENU")
+
+            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(PixColors.Cyan))
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Bottom
-            ) {
-                    // Avatar
-                    Surface(
-                        modifier = Modifier.size(64.dp),
-                        shape = MaterialTheme.shapes.extraLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (user != null) {
-                                Text(
-                                    text = user.name.take(2).uppercase(),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            } else {
-                                AppIcon(
-                                    icon = AppIconType.Person,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(32.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Nome do usuário
-                    Text(
-                        text = user?.name ?: "Usuário",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-
-                    // Email
-                    if (user?.email != null) {
-                        Text(
-                            text = user.email,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                        )
-                }
+            if (user != null) {
+                PlayerHud(user = user, company = company, showEmail = true)
+            } else {
+                Text(text = "Carregando…", style = PixTypography.bodyMuted)
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        HorizontalDivider(color = PixColors.Gray700, thickness = 2.dp)
 
-        // Itens do menu
-        // Adicione mais itens aqui conforme necessidade:
-        // NavigationDrawerItem(
-        //     icon = { Icon(Icons.Default.Home, contentDescription = null) },
-        //     label = { Text("Início") },
-        //     selected = true,
-        //     onClick = { },
-        //     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-        // )
+        if (canSwitchCompany) {
+            DrawerAction(
+                icon = AppIconType.ChevronDown,
+                label = "Trocar de empresa",
+                onClick = onSwitchCompany,
+            )
+        }
+
+        DrawerAction(icon = AppIconType.PersonAdd, label = "Entrar em outra empresa", onClick = onJoinCompany)
+
+        DrawerAction(icon = AppIconType.Settings, label = "Configurações", onClick = onSettings)
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Divider antes do logout
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+        HorizontalDivider(color = PixColors.Gray700, thickness = 2.dp)
 
-        // Botão de Logout
-        NavigationDrawerItem(
-            icon = {
-                AppIcon(
-                    icon = AppIconType.Logout,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error
-                )
-            },
-            label = {
-                Text(
-                    text = "Sair",
-                    color = MaterialTheme.colorScheme.error
-                )
-            },
-            selected = false,
+        DrawerAction(
+            icon = AppIconType.Logout,
+            label = "Sair do Jogo",
+            color = PixColors.Pink,
             onClick = onLogout,
-            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
+@Composable
+private fun DrawerAction(
+    icon: AppIconType,
+    label: String,
+    onClick: () -> Unit,
+    color: Color = PixColors.Gray100,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            // 48dp de alvo de toque, como o Material pede.
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AppIcon(icon = icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = color)
+
+        Text(text = label, color = color)
+    }
+}
+
 /**
- * Conteúdo principal da Home
+ * Início.
+ *
+ * Ainda é uma saudação: a vitrine, o saldo e os pixels chegam na etapa da loja.
  */
 @Composable
 private fun HomeContent(
-    uiState: com.pixstop.mobile.ui.viewmodel.HomeUiState,
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier
+    session: SessionUiState,
+    modifier: Modifier = Modifier,
 ) {
+    val user = session.account?.user
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(24.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         when {
-            uiState.isLoading -> {
-                CircularProgressIndicator()
-            }
+            user == null && session.isLoading -> CircularProgressIndicator(color = PixColors.Cyan)
 
-            uiState.user != null -> {
-                val user = uiState.user
-
-                // Avatar
-                Surface(
-                    modifier = Modifier.size(100.dp),
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.primaryContainer
+            user != null -> {
+                Box(
+                    modifier = Modifier.size(96.dp).background(PixColors.Cyan),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = user.name.take(2).uppercase(),
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "Olá, ${user.name}!",
-                    style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center
-                )
-
-                Text(
-                    text = user.email,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Card informativo
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    Text(
+                        text = user.name.take(2).uppercase(),
+                        style = PixTypography.pageTitle,
+                        color = PixColors.Dark,
                     )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "🎉 Login realizado com sucesso!",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = "Use o menu lateral para navegar ou sair do app.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Botão de refresh
-                OutlinedButton(
-                    onClick = onRefresh,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Atualizar Dados")
-                }
-            }
-
-            uiState.error != null -> {
                 Text(
-                    text = uiState.error,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center
+                    text = "Olá, ${user.firstName}!",
+                    style = PixTypography.pageTitle,
+                    color = PixColors.Cyan,
+                    textAlign = TextAlign.Center,
                 )
 
-                Button(
-                    onClick = onRefresh,
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text("Tentar Novamente")
+                session.company?.let { company ->
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "${company.pixelAvailable} pixels disponíveis",
+                        style = PixTypography.bodySecondary,
+                    )
                 }
             }
+
+            else -> Text(
+                text = session.error ?: "Não foi possível carregar a sua conta.",
+                style = PixTypography.errorText,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }
 
 /**
- * Conteúdo placeholder para telas não implementadas
- * Substitua por telas reais conforme desenvolve o app
+ * Espaço reservado para as telas que ainda não existem.
  */
 @Composable
 private fun PlaceholderContent(
     title: String,
     icon: AppIconType,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier = modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
-        Surface(
-            modifier = Modifier.size(80.dp),
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.primaryContainer
+        Box(
+            modifier = Modifier.size(72.dp).background(PixColors.Gray800),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                AppIcon(
-                    icon = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
+            AppIcon(
+                icon = icon,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = PixColors.Cyan,
+            )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        Text(text = title, style = PixTypography.sectionTitle, color = PixColors.Cyan)
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Esta tela ainda não foi implementada.\nSubstitua PlaceholderContent pela sua tela.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            text = "Em construção.",
+            style = PixTypography.bodyMuted,
+            textAlign = TextAlign.Center,
         )
     }
 }

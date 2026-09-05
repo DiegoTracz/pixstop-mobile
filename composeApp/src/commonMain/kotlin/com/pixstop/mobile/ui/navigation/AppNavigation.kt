@@ -12,8 +12,10 @@ import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
 import com.pixstop.mobile.ui.screen.LegalConsentScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
+import com.pixstop.mobile.ui.screen.NotificationsScreen
 import com.pixstop.mobile.ui.screen.RegisterScreen
 import com.pixstop.mobile.ui.screen.SplashScreen
+import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
 import com.pixstop.mobile.ui.viewmodel.SessionViewModel
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -30,6 +32,9 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val authRepository: AuthRepository = koinInject()
     val sessionViewModel: SessionViewModel = koinViewModel()
+    // Uma instância só: o badge da barra superior e a lista de avisos mostram
+    // a mesma contagem, e marcar como lido tem de valer para os dois.
+    val notificationsViewModel: NotificationsViewModel = koinViewModel()
     val session by sessionViewModel.uiState.collectAsState()
 
     // Token recusado pelo servidor: volta ao login de onde quer que esteja.
@@ -133,12 +138,21 @@ fun AppNavigation() {
         composable(Routes.HOME) {
             HomeScreen(
                 sessionViewModel = sessionViewModel,
+                notificationsViewModel = notificationsViewModel,
                 onJoinCompany = { navController.navigate(Routes.JOIN_COMPANY) },
+                onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
+            )
+        }
+
+        composable(Routes.NOTIFICATIONS) {
+            NotificationsScreen(
+                viewModel = notificationsViewModel,
+                onBack = { navController.popBackStack() },
             )
         }
     }
