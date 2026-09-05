@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.pixstop.mobile.data.repository.AppConfigRepository
 import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
@@ -48,6 +49,13 @@ fun AppNavigation() {
     // carrinho têm de contar a mesma coisa.
     val cartViewModel: CartViewModel = koinViewModel()
     val session by sessionViewModel.uiState.collectAsState()
+    val appConfig: AppConfigRepository = koinInject()
+
+    // Revalida as regras do servidor no arranque. A rota é pública e o app já
+    // tem padrões embutidos, então isto nunca segura a primeira tela.
+    LaunchedEffect(Unit) {
+        appConfig.refresh()
+    }
 
     // O carrinho e os avisos são da empresa ativa. Trocar de empresa — ou
     // entrar na primeira, logo depois do login — muda os dois, então eles

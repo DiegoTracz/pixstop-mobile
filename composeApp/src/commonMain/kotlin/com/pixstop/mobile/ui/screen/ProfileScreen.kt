@@ -156,7 +156,7 @@ fun ProfileScreen(
 
         Text(
             text = "Sua conta sai do ar na hora. Os dados são apagados em definitivo " +
-                "depois do prazo de arrependimento, e até lá dá para voltar atrás.",
+                "depois de ${state.purgeAfterDays} dias, e até lá dá para voltar atrás.",
             style = PixTypography.bodySecondary,
         )
 

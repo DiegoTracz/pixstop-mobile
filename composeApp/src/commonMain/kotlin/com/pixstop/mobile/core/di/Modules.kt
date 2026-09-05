@@ -4,6 +4,7 @@ import com.pixstop.mobile.core.network.HttpClientFactory
 import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.core.storage.TokenManager
 import com.pixstop.mobile.data.repository.AccountRepository
+import com.pixstop.mobile.data.repository.AppConfigRepository
 import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.data.repository.LegalRepository
 import com.pixstop.mobile.data.repository.CartRepository
@@ -50,6 +51,7 @@ val coreModule: Module = module {
 val dataModule: Module = module {
     single { AuthRepository(get(), get(), get()) }
     single { AccountRepository(get()) }
+    single { AppConfigRepository(get()) }
     single { LegalRepository(get()) }
     single { ProfileRepository(get()) }
     single { NotificationRepository(get()) }
@@ -66,7 +68,7 @@ val viewModelModule: Module = module {
     viewModel { RegisterViewModel(get()) }
     viewModel { SessionViewModel(get(), get(), get()) }
     viewModel { LegalConsentViewModel(get()) }
-    viewModel { ProfileViewModel(get()) }
+    viewModel { ProfileViewModel(get(), get()) }
     viewModel { NotificationsViewModel(get(), get()) }
     viewModel { ShopViewModel(get()) }
     viewModel { HomeFeedViewModel(get(), get(), get()) }

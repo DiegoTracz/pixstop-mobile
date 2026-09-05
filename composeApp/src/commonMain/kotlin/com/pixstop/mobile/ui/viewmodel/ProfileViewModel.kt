@@ -2,11 +2,14 @@ package com.pixstop.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pixstop.mobile.data.repository.AppConfigRepository
 import com.pixstop.mobile.data.repository.ProfileRepository
+import com.pixstop.mobile.domain.model.AppConfig
 import com.pixstop.mobile.domain.model.Outcome
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 data class ProfileUiState(
@@ -15,6 +18,9 @@ data class ProfileUiState(
     val isSavingProfile: Boolean = false,
     val profileMessage: String? = null,
     val profileError: String? = null,
+
+    /** Dias até o expurgo definitivo, como o servidor publica. */
+    val purgeAfterDays: Int = AppConfig.Defaults.accountPurgeAfterDays,
 
     val deletePassword: String = "",
     val isDeleteOpen: Boolean = false,
@@ -58,10 +64,23 @@ data class ProfileUiState(
  * As duas metades são independentes de propósito: falhar ao trocar a senha não
  * pode apagar o nome que a pessoa acabou de digitar.
  */
-class ProfileViewModel(private val profiles: ProfileRepository) : ViewModel() {
+class ProfileViewModel(
+    private val profiles: ProfileRepository,
+    appConfig: AppConfigRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+
+    init {
+        // O prazo de arrependimento é do servidor. Escrevê-lo na tela deixaria
+        // a promessa errada no dia em que a configuração mudasse.
+        viewModelScope.launch {
+            appConfig.config.collectLatest { config ->
+                _uiState.value = _uiState.value.copy(purgeAfterDays = config.accountPurgeAfterDays)
+            }
+        }
+    }
 
     /** Preenche com o que o `/me` já trouxe, sem uma chamada a mais. */
     fun start(name: String, email: String) {
