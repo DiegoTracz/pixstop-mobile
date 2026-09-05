@@ -8,10 +8,18 @@ import kotlinx.serialization.json.Json
 import com.pixstop.mobile.data.model.CachedUserData
 
 /**
- * Gerenciador de token de autenticação e cache de dados do usuário.
- * Usa multiplatform-settings para persistência cross-platform.
+ * Token de autenticação e cache do perfil.
+ *
+ * São dois armazenamentos de propósito. O token é credencial e vai no
+ * `secure` — cifrado pelo sistema, fora do alcance de outro aplicativo e de um
+ * backup em texto claro. O cache do perfil é conveniência e fica no comum:
+ * nome e e-mail já aparecem na tela, e pagar criptografia por eles seria custo
+ * sem ganho.
  */
-class TokenManager(private val settings: Settings = Settings()) {
+class TokenManager(
+    private val settings: Settings,
+    private val secure: Settings,
+) {
 
     companion object {
         private const val KEY_TOKEN = "auth_token"
@@ -23,18 +31,25 @@ class TokenManager(private val settings: Settings = Settings()) {
         encodeDefaults = true
     }
 
-    /**
-     * Salva o token de autenticação
-     */
     fun saveToken(token: String) {
-        settings[KEY_TOKEN] = token
+        secure[KEY_TOKEN] = token
     }
 
     /**
-     * Recupera o token salvo
+     * Recupera o token, trazendo para o armazenamento cifrado o que ficou no
+     * comum.
+     *
+     * A migração acontece na leitura porque é o único momento garantido: sem
+     * ela, a atualização do aplicativo deslogaria todo mundo que já estava
+     * dentro — o token continuaria lá, no lugar antigo, e ninguém iria buscá-lo.
      */
     fun getToken(): String? {
-        return settings.getStringOrNull(KEY_TOKEN)
+        secure.getStringOrNull(KEY_TOKEN)?.let { return it }
+
+        return settings.getStringOrNull(KEY_TOKEN)?.also { legacy ->
+            secure[KEY_TOKEN] = legacy
+            settings.remove(KEY_TOKEN)
+        }
     }
 
     /**
@@ -45,9 +60,11 @@ class TokenManager(private val settings: Settings = Settings()) {
     }
 
     /**
-     * Remove o token (logout)
+     * Apaga o token dos dois lugares: quem sai da conta não pode deixar uma
+     * credencial esquecida no armazenamento antigo.
      */
     fun clearToken() {
+        secure.remove(KEY_TOKEN)
         settings.remove(KEY_TOKEN)
     }
 

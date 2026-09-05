@@ -30,9 +30,11 @@ import com.pixstop.mobile.ui.viewmodel.ShopViewModel
 import com.pixstop.mobile.ui.viewmodel.LoginViewModel
 import com.pixstop.mobile.ui.viewmodel.RegisterViewModel
 import com.pixstop.mobile.ui.viewmodel.SessionViewModel
+import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
@@ -42,7 +44,7 @@ import org.koin.dsl.module
  * app — em especial o `HttpClient`, que antes era recriado a cada login.
  */
 val coreModule: Module = module {
-    single { TokenManager() }
+    single { TokenManager(settings = Settings(), secure = get(named(SECURE_SETTINGS))) }
     single { SessionStore(get()) }
     single<HttpClient> { HttpClientFactory.create(get()) }
 }
@@ -83,4 +85,4 @@ val viewModelModule: Module = module {
 }
 
 /** Tudo que o `startKoin` precisa carregar. */
-val appModules: List<Module> = listOf(coreModule, dataModule, viewModelModule)
+val appModules: List<Module> = listOf(platformModule, coreModule, dataModule, viewModelModule)
