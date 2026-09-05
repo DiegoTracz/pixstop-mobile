@@ -53,6 +53,7 @@ enum class AppIconType {
     Remove,
 
     // Loja
+    Store,
     Cart,
     CartAdd,
 

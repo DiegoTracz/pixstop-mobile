@@ -166,6 +166,7 @@ private fun AppIconType.toSFSymbolName(): String = when (this) {
     AppIconType.Remove -> "minus"
 
     // Loja
+    AppIconType.Store -> "storefront.fill"
     AppIconType.Cart -> "cart"
     AppIconType.CartAdd -> "cart.badge.plus"
 

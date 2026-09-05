@@ -76,7 +76,9 @@ import org.koin.compose.viewmodel.koinViewModel
  */
 private fun bottomNavItems(destinations: List<Destination>) = destinations.map { destination ->
     when (destination) {
-        Destination.Shop -> BottomNavItem(route = destination.name, label = "Loja", icon = AppIconType.Search)
+        // Vitrine, e não lupa: a aba diz "Loja", e uma lupa prometeria
+        // busca. É o mesmo ícone da barra da web.
+        Destination.Shop -> BottomNavItem(route = destination.name, label = "Loja", icon = AppIconType.Store)
         Destination.Profile -> BottomNavItem(route = destination.name, label = "Perfil", icon = AppIconType.Person)
         else -> BottomNavItem(route = destination.name, label = "Início", icon = AppIconType.Home)
     }

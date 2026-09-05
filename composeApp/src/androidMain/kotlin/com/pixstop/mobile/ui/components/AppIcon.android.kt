@@ -49,6 +49,7 @@ actual fun AppIcon(
         AppIconType.Remove -> Icons.Filled.Remove
 
         // Loja
+        AppIconType.Store -> Icons.Filled.Storefront
         AppIconType.Cart -> Icons.Filled.ShoppingCart
         AppIconType.CartAdd -> Icons.Filled.AddShoppingCart
 
