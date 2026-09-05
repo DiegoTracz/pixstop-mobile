@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
-import com.pixstop.mobile.ui.components.PixelLogo
 import com.pixstop.mobile.ui.components.gridPattern
 import com.pixstop.mobile.ui.components.scanlines
 import com.pixstop.mobile.ui.theme.AppBranding
@@ -19,7 +18,9 @@ import com.pixstop.mobile.ui.theme.PixTypography
 
 /**
  * Tela de Splash — estilo retro 8-bit.
- * Logo Pixel Art "P", nome Pixstop em Press Start 2P, cursor piscando.
+ *
+ * O logotipo é a palavra inteira, em Press Start 2P, com o cursor piscando. O
+ * símbolo do "P" serve ao favicon e aos ícones, onde a palavra não caberia.
  */
 @Composable
 fun SplashScreen(
@@ -69,11 +70,6 @@ fun SplashScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.alpha(alphaAnim)
         ) {
-
-            // Símbolo da marca — o mesmo desenho do ícone e do favicon.
-            PixelLogo(size = 96.dp)
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             // Nome do app
             Row(verticalAlignment = Alignment.CenterVertically) {

@@ -18,6 +18,9 @@ import com.pixstop.mobile.ui.theme.PixColors
  * este "P" de um "P" qualquer. O desenho é o mesmo do favicon e do ícone do
  * site — dois "P" diferentes na mesma marca fariam o app e o site parecerem
  * produtos distintos.
+ *
+ * O logotipo do aplicativo é a palavra inteira; este símbolo existe para onde
+ * ela não cabe.
  */
 @Composable
 fun PixelLogo(
