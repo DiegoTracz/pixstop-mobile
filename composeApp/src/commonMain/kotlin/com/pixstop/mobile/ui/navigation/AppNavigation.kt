@@ -16,6 +16,8 @@ import com.pixstop.mobile.ui.screen.CartScreen
 import com.pixstop.mobile.ui.screen.CheckoutScreen
 import com.pixstop.mobile.ui.screen.OrderScreen
 import com.pixstop.mobile.ui.screen.OrdersScreen
+import com.pixstop.mobile.ui.screen.PixelHistoryScreen
+import com.pixstop.mobile.ui.screen.TeamScreen
 import com.pixstop.mobile.ui.screen.NotificationsScreen
 import com.pixstop.mobile.ui.screen.ProductDetailScreen
 import com.pixstop.mobile.ui.screen.RegisterScreen
@@ -165,6 +167,8 @@ fun AppNavigation() {
                 onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 onOpenCart = { navController.navigate(Routes.CART) },
                 onOpenOrders = { navController.navigate(Routes.ORDERS) },
+                onOpenPixels = { navController.navigate(Routes.PIXELS) },
+                onOpenTeam = { navController.navigate(Routes.TEAM) },
                 onOpenProduct = { navController.navigate(Routes.product(it)) },
                 onLogout = {
                     navController.navigate(Routes.LOGIN) {
@@ -219,6 +223,14 @@ fun AppNavigation() {
                 orderId = entry.arguments?.getString("id")?.toLongOrNull() ?: 0L,
                 onBack = { navController.popBackStack() },
             )
+        }
+
+        composable(Routes.PIXELS) {
+            PixelHistoryScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.TEAM) {
+            TeamScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.ORDERS) {

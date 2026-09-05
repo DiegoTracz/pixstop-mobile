@@ -28,6 +28,12 @@ object Routes {
     /** Histórico de pedidos. */
     const val ORDERS = "orders"
 
+    /** Carteira e extrato de pixels. */
+    const val PIXELS = "pixels"
+
+    /** Área do gestor: verba do time e distribuição. */
+    const val TEAM = "team"
+
     /** Caixa de avisos, alcançada pelo sino da barra superior. */
     const val NOTIFICATIONS = "notifications"
 

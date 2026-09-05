@@ -87,6 +87,8 @@ fun HomeScreen(
     onOpenCart: () -> Unit = {},
     onOpenProduct: (Long) -> Unit = {},
     onOpenOrders: () -> Unit = {},
+    onOpenPixels: () -> Unit = {},
+    onOpenTeam: () -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
     notificationsViewModel: NotificationsViewModel = koinViewModel(),
     cartViewModel: CartViewModel = koinViewModel(),
@@ -123,6 +125,17 @@ fun HomeScreen(
                     user = session.account?.user,
                     company = session.company,
                     canSwitchCompany = session.account?.canSwitchCompany == true,
+                    // A área do gestor só existe para quem gere um time; o
+                    // `/me` é quem diz isso.
+                    isManager = session.company?.isManager == true,
+                    onPixels = {
+                        scope.launch { drawerState.close() }
+                        onOpenPixels()
+                    },
+                    onTeam = {
+                        scope.launch { drawerState.close() }
+                        onOpenTeam()
+                    },
                     onOrders = {
                         scope.launch { drawerState.close() }
                         onOpenOrders()
@@ -206,6 +219,9 @@ private fun DrawerContent(
     user: AccountUser?,
     company: ActiveCompany?,
     canSwitchCompany: Boolean,
+    isManager: Boolean,
+    onPixels: () -> Unit,
+    onTeam: () -> Unit,
     onOrders: () -> Unit,
     onSettings: () -> Unit,
     onSwitchCompany: () -> Unit,
@@ -241,6 +257,12 @@ private fun DrawerContent(
         }
 
         DrawerAction(icon = AppIconType.Cart, label = "Meus pedidos", onClick = onOrders)
+
+        DrawerAction(icon = AppIconType.Check, label = "Meus pixels", onClick = onPixels)
+
+        if (isManager) {
+            DrawerAction(icon = AppIconType.Person, label = "Meu time", onClick = onTeam)
+        }
 
         DrawerAction(icon = AppIconType.PersonAdd, label = "Entrar em outra empresa", onClick = onJoinCompany)
 
