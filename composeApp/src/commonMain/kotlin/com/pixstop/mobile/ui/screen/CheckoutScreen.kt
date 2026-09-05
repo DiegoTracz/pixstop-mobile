@@ -3,6 +3,7 @@ package com.pixstop.mobile.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.checkout.PaymentMethod
+import com.pixstop.mobile.domain.model.SavedCard
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
@@ -93,6 +95,36 @@ fun CheckoutScreen(
                                 style = PixTypography.caption,
                                 color = PixColors.Gray400,
                             )
+                        }
+                    }
+
+                    if (state.method == PaymentMethod.Card) {
+                        Section(title = "Qual cartão") {
+                            state.savedCards.forEach { card ->
+                                CardOption(
+                                    card = card,
+                                    selected = state.savedCardId == card.id,
+                                    onClick = { viewModel.onSavedCardChange(card.id) },
+                                )
+                            }
+
+                            Text(
+                                text = "Só dá para usar um cartão já guardado. " +
+                                    "Para cadastrar um novo, use o site por enquanto.",
+                                style = PixTypography.caption,
+                                color = PixColors.Gray400,
+                            )
+                        }
+
+                        if (state.canChooseInstallments) {
+                            Section(title = "Parcelas") {
+                                InstallmentsPicker(
+                                    value = state.installments,
+                                    max = state.maxInstallments,
+                                    total = totals.charged,
+                                    onChange = viewModel::onInstallmentsChange,
+                                )
+                            }
                         }
                     }
 
@@ -263,6 +295,74 @@ private fun MethodOption(
         )
 
         Text(text = label, color = if (selected) PixColors.Cyan else PixColors.Gray100)
+    }
+}
+
+@Composable
+private fun CardOption(card: SavedCard, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(2.dp, if (selected) PixColors.Cyan else PixColors.Gray600)
+            .background(if (selected) PixColors.CyanAlpha10 else PixColors.Darker)
+            .clickable(onClick = onClick)
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(18.dp)
+                .border(2.dp, if (selected) PixColors.Cyan else PixColors.Gray500)
+                .background(if (selected) PixColors.Cyan else PixColors.Transparent),
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = "${card.brand ?: "Cartão"} •••• ${card.lastFour}",
+                color = if (selected) PixColors.Cyan else PixColors.Gray100,
+            )
+
+            card.expires?.let {
+                Text(text = "Vence em $it", style = PixTypography.caption, color = PixColors.Gray400)
+            }
+        }
+    }
+}
+
+/**
+ * Parcelamento.
+ *
+ * Mostra o valor de cada parcela porque é isso que a pessoa decide — o número
+ * de vezes sozinho não diz nada sobre o que vai cair na fatura.
+ */
+@Composable
+private fun InstallmentsPicker(value: Int, max: Int, total: Double, onChange: (Int) -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        (1..max).forEach { times ->
+            val selected = times == value
+
+            Column(
+                modifier = Modifier
+                    .border(2.dp, if (selected) PixColors.Cyan else PixColors.Gray600)
+                    .background(if (selected) PixColors.CyanAlpha10 else PixColors.Darker)
+                    .clickable { onChange(times) }
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(text = "${times}x", color = if (selected) PixColors.Cyan else PixColors.Gray100)
+
+                Text(
+                    text = formatMoney(total / times),
+                    style = PixTypography.caption,
+                    color = PixColors.Gray400,
+                )
+            }
+        }
     }
 }
 

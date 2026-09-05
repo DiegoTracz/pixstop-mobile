@@ -34,7 +34,13 @@ class OrderRepository(private val client: HttpClient) {
     suspend fun checkout(): Outcome<Checkout> =
         safeCall<CheckoutDto>(TAG) { client.get(ApiConfig.Endpoints.CHECKOUT) }.map { it.toDomain() }
 
-    suspend fun place(method: PaymentMethod, pixels: Int, balance: Double): Outcome<Order> =
+    suspend fun place(
+        method: PaymentMethod,
+        pixels: Int,
+        balance: Double,
+        savedCardId: Long? = null,
+        installments: Int? = null,
+    ): Outcome<Order> =
         safeCall<OrderDto>(TAG) {
             client.post(ApiConfig.Endpoints.ORDERS) {
                 setBody(
@@ -42,6 +48,10 @@ class OrderRepository(private val client: HttpClient) {
                         paymentMethod = method.apiValue,
                         pixels = pixels.takeIf { it > 0 },
                         balance = balance.takeIf { it > 0 },
+                        // Só fazem sentido no cartão; mandá-los no PIX faria o
+                        // servidor guardar parcelas de um pagamento à vista.
+                        savedCardId = savedCardId.takeIf { method == PaymentMethod.Card },
+                        installments = installments?.takeIf { method == PaymentMethod.Card && it > 1 },
                     ),
                 )
             }

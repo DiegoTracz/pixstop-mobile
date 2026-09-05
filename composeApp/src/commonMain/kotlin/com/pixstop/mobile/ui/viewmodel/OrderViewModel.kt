@@ -2,6 +2,8 @@ package com.pixstop.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pixstop.mobile.core.storage.currentTimeMillis
+import com.pixstop.mobile.data.repository.AppConfigRepository
 import com.pixstop.mobile.data.repository.OrderRepository
 import com.pixstop.mobile.domain.model.Order
 import com.pixstop.mobile.domain.model.OrderStatus
@@ -17,7 +19,28 @@ data class OrderUiState(
     val order: Order? = null,
     val isLoading: Boolean = true,
     val error: String? = null,
-)
+    val now: Long = 0,
+    val pixExpirationMinutes: Int = 30,
+) {
+    /**
+     * Segundos que faltam para o PIX vencer.
+     *
+     * O teto existe pelo mesmo motivo do carrinho: o relógio do aparelho não é
+     * o do servidor, e alguns minutos de adiantamento fariam a tela prometer
+     * mais tempo do que o gateway vai aceitar.
+     */
+    val secondsLeft: Long?
+        get() {
+            val expiresAt = order?.pix?.expiresAt ?: return null
+            if (now == 0L) {
+                return null
+            }
+
+            return ((expiresAt - now) / 1_000L).coerceIn(0, pixExpirationMinutes * 60L)
+        }
+
+    val isExpired: Boolean get() = secondsLeft == 0L
+}
 
 /**
  * Um pedido e, quando ele espera PIX, a consulta periódica do desfecho.
@@ -26,12 +49,16 @@ data class OrderUiState(
  * não pode depender de um webhook que talvez demore — o servidor pergunta ao
  * gateway e confirma na hora.
  */
-class OrderViewModel(private val orders: OrderRepository) : ViewModel() {
+class OrderViewModel(
+    private val orders: OrderRepository,
+    private val config: AppConfigRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OrderUiState())
     val uiState: StateFlow<OrderUiState> = _uiState.asStateFlow()
 
     private var pollingJob: Job? = null
+    private var tickingJob: Job? = null
 
     fun load(id: Long) {
         viewModelScope.launch {
@@ -39,7 +66,12 @@ class OrderViewModel(private val orders: OrderRepository) : ViewModel() {
 
             when (val result = orders.order(id)) {
                 is Outcome.Success -> {
-                    _uiState.value = OrderUiState(order = result.value, isLoading = false)
+                    _uiState.value = OrderUiState(
+                        order = result.value,
+                        isLoading = false,
+                        now = currentTimeMillis(),
+                        pixExpirationMinutes = config.config.value.pixExpirationMinutes,
+                    )
                     startPollingIfWaiting(result.value)
                 }
 
@@ -54,10 +86,13 @@ class OrderViewModel(private val orders: OrderRepository) : ViewModel() {
      */
     private fun startPollingIfWaiting(order: Order) {
         pollingJob?.cancel()
+        tickingJob?.cancel()
 
         if (!order.isPending || order.pix == null) {
             return
         }
+
+        startTicking()
 
         pollingJob = viewModelScope.launch {
             while (true) {
@@ -75,8 +110,22 @@ class OrderViewModel(private val orders: OrderRepository) : ViewModel() {
         }
     }
 
+    /**
+     * Move o relógio do contador de segundo em segundo, só enquanto há PIX
+     * esperando pagamento.
+     */
+    private fun startTicking() {
+        tickingJob = viewModelScope.launch {
+            while (true) {
+                delay(1_000)
+                _uiState.value = _uiState.value.copy(now = currentTimeMillis())
+            }
+        }
+    }
+
     override fun onCleared() {
         pollingJob?.cancel()
+        tickingJob?.cancel()
         super.onCleared()
     }
 

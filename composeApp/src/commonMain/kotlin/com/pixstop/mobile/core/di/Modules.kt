@@ -80,8 +80,8 @@ val viewModelModule: Module = module {
     viewModel { HomeFeedViewModel(get(), get(), get()) }
     viewModel { ProductDetailViewModel(get()) }
     viewModel { CartViewModel(get(), get()) }
-    viewModel { CheckoutViewModel(get()) }
-    viewModel { OrderViewModel(get()) }
+    viewModel { CheckoutViewModel(get(), get()) }
+    viewModel { OrderViewModel(get(), get()) }
     viewModel { OrdersViewModel(get()) }
     viewModel { PixelHistoryViewModel(get(), get()) }
     viewModel { TeamViewModel(get()) }

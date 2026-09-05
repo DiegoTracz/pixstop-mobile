@@ -19,9 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.Order
@@ -31,6 +35,7 @@ import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelCoin
+import com.pixstop.mobile.ui.components.decodeBase64Image
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
@@ -85,7 +90,12 @@ fun OrderScreen(
                     // não pode ficar dizendo que aguarda.
                     if (order.isPending) {
                         order.pix?.let { pix ->
-                            PixBlock(code = pix.code, onCopy = { clipboard.setText(AnnotatedString(pix.code)) })
+                            PixBlock(
+                                code = pix.code,
+                                qrCodeBase64 = pix.qrCodeBase64,
+                                secondsLeft = state.secondsLeft,
+                                onCopy = { clipboard.setText(AnnotatedString(pix.code)) },
+                            )
                         }
                     }
 
@@ -125,6 +135,13 @@ fun OrderScreen(
 
                         if (order.money > 0) {
                             Line("Dinheiro", formatMoney(order.money))
+                        }
+
+                        // A taxa foi mostrada no fechamento e faz parte do que
+                        // a pessoa aceitou pagar; some dela aqui seria esconder
+                        // a diferença entre o preço do produto e o cobrado.
+                        if (order.cardFee > 0) {
+                            Line("Taxa do cartão", formatMoney(order.cardFee), PixColors.Gray300)
                         }
 
                         Line("Produtos", formatMoney(order.productsTotal))
@@ -208,7 +225,15 @@ private fun StatusHeader(order: Order) {
  * tem como apontar a câmera para a própria tela.
  */
 @Composable
-private fun PixBlock(code: String, onCopy: () -> Unit) {
+private fun PixBlock(
+    code: String,
+    qrCodeBase64: String?,
+    secondsLeft: Long?,
+    onCopy: () -> Unit,
+) {
+    // Decodifica uma vez, não a cada segundo do contador.
+    val qrCode = remember(qrCodeBase64) { decodeBase64Image(qrCodeBase64) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -216,14 +241,53 @@ private fun PixBlock(code: String, onCopy: () -> Unit) {
             .background(PixColors.Darker)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(text = "Pague com PIX", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+        Text(
+            text = "Pague com PIX",
+            style = PixTypography.sectionTitle,
+            color = PixColors.Cyan,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        if (secondsLeft != null) {
+            Text(
+                text = if (secondsLeft > 0) "Expira em ${formatCountdown(secondsLeft)}" else "Este PIX expirou.",
+                style = PixTypography.caption,
+                color = if (secondsLeft > 0) PixColors.Yellow else PixColors.Pink,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(2.dp, if (secondsLeft > 0) PixColors.Yellow else PixColors.Pink)
+                    .padding(8.dp),
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        if (qrCode != null) {
+            // O fundo branco não é enfeite: o leitor do banco precisa do
+            // contraste, e o app inteiro é escuro.
+            Image(
+                bitmap = qrCode,
+                contentDescription = "QR code do PIX",
+                filterQuality = FilterQuality.None,
+                modifier = Modifier
+                    .background(PixColors.White)
+                    .padding(12.dp)
+                    .size(200.dp),
+            )
+        }
 
         Text(
-            text = "Copie o código e cole no aplicativo do seu banco. " +
-                "A confirmação aparece aqui automaticamente.",
+            text = if (qrCode != null) {
+                "Aponte a câmera do seu banco para o código, ou copie e cole. " +
+                    "A confirmação aparece aqui automaticamente."
+            } else {
+                "Copie o código e cole no aplicativo do seu banco. " +
+                    "A confirmação aparece aqui automaticamente."
+            },
             style = PixTypography.caption,
             color = PixColors.Gray400,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Text(
@@ -247,6 +311,7 @@ private fun PixBlock(code: String, onCopy: () -> Unit) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
         ) {
             CircularProgressIndicator(modifier = Modifier.size(14.dp), color = PixColors.Yellow, strokeWidth = 2.dp)
 

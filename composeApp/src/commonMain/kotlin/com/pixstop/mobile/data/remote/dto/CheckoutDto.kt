@@ -70,6 +70,9 @@ data class OrderStoreRequest(
     @SerialName("payment_method") val paymentMethod: String,
     val pixels: Int? = null,
     val balance: Double? = null,
+    /** Cartão já guardado; o app ainda não tokeniza cartão novo. */
+    @SerialName("saved_card_id") val savedCardId: Long? = null,
+    val installments: Int? = null,
 )
 
 @Serializable
