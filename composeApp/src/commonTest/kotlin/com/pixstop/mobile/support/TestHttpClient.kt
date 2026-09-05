@@ -32,13 +32,25 @@ class FakeApi(status: HttpStatusCode = HttpStatusCode.OK) {
     var lastRequest: HttpRequestData? = null
         private set
 
+    /**
+     * Corpo da próxima resposta, quando o teste precisa de duas diferentes no
+     * mesmo cliente — carregar o fechamento e depois criar o pedido, por
+     * exemplo. Nulo mantém o corpo dado na construção.
+     */
+    var nextBody: String? = null
+
+    /** Esquece a última chamada, para o teste poder afirmar que não houve outra. */
+    fun forget() {
+        lastRequest = null
+    }
+
     /** O corpo enviado na última chamada, para conferir o que o app mandou. */
     val lastBody: String get() = (lastRequest?.body as? TextContent)?.text.orEmpty()
 
     fun clientReturning(body: String): HttpClient = HttpClient(
         MockEngine { request ->
             lastRequest = request
-            respond(body, status, headersOf(HttpHeaders.ContentType, "application/json"))
+            respond(nextBody ?: body, status, headersOf(HttpHeaders.ContentType, "application/json"))
         },
     ) {
         install(ContentNegotiation) { json(apiJson) }

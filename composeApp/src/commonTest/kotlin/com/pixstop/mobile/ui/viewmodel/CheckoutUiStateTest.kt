@@ -43,12 +43,51 @@ class CheckoutUiStateTest {
     private val padrao = SavedCard(id = 7, lastFour = "9999", brand = "master", isDefault = true, expires = null)
 
     @Test
-    fun `sem cartao guardado a forma cartao nem aparece`() {
-        // O app ainda não tokeniza cartão novo. Oferecer "Cartão" sem ter o que
-        // enviar daria 422 depois da escolha — foi exatamente o que existia.
-        val state = CheckoutUiState(checkout = checkout(cards = emptyList()))
+    fun `sem cartao guardado e sem chave publica a forma cartao nem aparece`() {
+        // Sem nenhum dos dois não há o que enviar, e a forma daria 422 depois
+        // de a pessoa já ter escolhido — foi exatamente o que existia.
+        val state = CheckoutUiState(checkout = checkout(cards = emptyList(), publicKey = false))
 
         assertFalse(state.availableMethods.contains(PaymentMethod.Card))
+    }
+
+    @Test
+    fun `so a chave publica ja permite pagar com cartao novo`() {
+        val state = CheckoutUiState(checkout = checkout(cards = emptyList(), publicKey = true))
+
+        assertContains(state.availableMethods, PaymentMethod.Card)
+        assertEquals(listOf(CardMode.New), state.cardModes)
+    }
+
+    @Test
+    fun `sem chave publica so resta o cartao guardado`() {
+        // A empresa recebe, mas este aparelho não tem como tokenizar: oferecer
+        // "novo cartão" seria um formulário que não leva a lugar nenhum.
+        val state = CheckoutUiState(checkout = checkout(cards = listOf(cartao), publicKey = false))
+
+        assertEquals(listOf(CardMode.Saved), state.cardModes)
+    }
+
+    @Test
+    fun `com os dois caminhos a pessoa escolhe`() {
+        val state = CheckoutUiState(checkout = checkout(cards = listOf(cartao), publicKey = true))
+
+        assertEquals(listOf(CardMode.Saved, CardMode.New), state.cardModes)
+    }
+
+    @Test
+    fun `cartao novo nao trava o botao antes de tentar`() {
+        // Os erros do formulário aparecem no envio, campo a campo. Segurar o
+        // botão até o último dígito esconderia o que falta preencher.
+        val state = CheckoutUiState(
+            checkout = checkout(cards = emptyList(), publicKey = true),
+            method = PaymentMethod.Card,
+            cardMode = CardMode.New,
+            savedCardId = null,
+        )
+
+        assertTrue(state.canPlace)
+        assertTrue(state.usingNewCard)
     }
 
     @Test

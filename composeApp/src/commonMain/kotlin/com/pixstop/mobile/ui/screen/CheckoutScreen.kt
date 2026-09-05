@@ -25,9 +25,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.checkout.PaymentMethod
 import com.pixstop.mobile.domain.model.SavedCard
+import com.pixstop.mobile.ui.components.CardForm
+import com.pixstop.mobile.ui.viewmodel.CardMode
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
@@ -100,20 +103,44 @@ fun CheckoutScreen(
 
                     if (state.method == PaymentMethod.Card) {
                         Section(title = "Qual cartão") {
-                            state.savedCards.forEach { card ->
-                                CardOption(
-                                    card = card,
-                                    selected = state.savedCardId == card.id,
-                                    onClick = { viewModel.onSavedCardChange(card.id) },
-                                )
+                            // A escolha entre guardado e novo só aparece
+                            // havendo os dois: com um só, ela seria uma
+                            // pergunta de resposta única.
+                            if (state.cardModes.size > 1) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    state.cardModes.forEach { mode ->
+                                        ModeChip(
+                                            label = mode.label,
+                                            selected = state.cardMode == mode,
+                                            onClick = { viewModel.onCardModeChange(mode) },
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                }
                             }
 
-                            Text(
-                                text = "Só dá para usar um cartão já guardado. " +
-                                    "Para cadastrar um novo, use o site por enquanto.",
-                                style = PixTypography.caption,
-                                color = PixColors.Gray400,
-                            )
+                            if (state.cardMode == CardMode.Saved) {
+                                state.savedCards.forEach { card ->
+                                    CardOption(
+                                        card = card,
+                                        selected = state.savedCardId == card.id,
+                                        onClick = { viewModel.onSavedCardChange(card.id) },
+                                    )
+                                }
+                            } else {
+                                CardForm(
+                                    card = state.card,
+                                    errors = state.cardErrors,
+                                    onChange = viewModel::onCardChange,
+                                    enabled = !state.isPlacing,
+                                )
+
+                                Toggle(
+                                    label = "Guardar este cartão para a próxima compra",
+                                    checked = state.saveCard,
+                                    onToggle = { viewModel.onSaveCardChange(!state.saveCard) },
+                                )
+                            }
                         }
 
                         if (state.canChooseInstallments) {
@@ -296,6 +323,25 @@ private fun MethodOption(
 
         Text(text = label, color = if (selected) PixColors.Cyan else PixColors.Gray100)
     }
+}
+
+@Composable
+private fun ModeChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = label,
+        color = if (selected) PixColors.Cyan else PixColors.Gray300,
+        modifier = modifier
+            .border(2.dp, if (selected) PixColors.Cyan else PixColors.Gray600)
+            .background(if (selected) PixColors.CyanAlpha10 else PixColors.Darker)
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Composable

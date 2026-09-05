@@ -28,7 +28,10 @@ fun CheckoutDto.toDomain() = Checkout(
     gatewayAvailable = checkout.gatewayAvailable,
     // Sem chave pública não há como tokenizar o cartão no aparelho, mesmo com
     // o gateway conectado — oferecer a opção só levaria a um erro no envio.
-    cardTokenizationAvailable = checkout.gatewayAvailable && !checkout.mpPublicKey.isNullOrBlank(),
+    // Mesma regra do site: em ambiente de demonstração o token nasce local, e
+    // é por isso que o formulário aparece mesmo sem chave pública.
+    cardTokenizationAvailable = checkout.gatewayAvailable &&
+        (checkout.isSandbox || !checkout.mpPublicKey.isNullOrBlank()),
     savedCards = savedCards.map { it.toDomain() },
     itemCount = items.sumOf { it.quantity },
 )

@@ -1,9 +1,11 @@
 package com.pixstop.mobile.core.di
 
+import com.pixstop.mobile.core.network.GatewayClientFactory
 import com.pixstop.mobile.core.network.HttpClientFactory
 import com.pixstop.mobile.core.notification.NotificationEventBus
 import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.core.storage.TokenManager
+import com.pixstop.mobile.data.payment.CardTokenizer
 import com.pixstop.mobile.data.repository.AccountRepository
 import com.pixstop.mobile.data.repository.AppConfigRepository
 import com.pixstop.mobile.data.repository.AuthRepository
@@ -38,6 +40,9 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
+/** Qualificador do cliente que fala com o gateway de pagamento. */
+const val GATEWAY_CLIENT = "gateway-client"
+
 /**
  * Infraestrutura: armazenamento, sessão e cliente HTTP.
  *
@@ -48,6 +53,9 @@ val coreModule: Module = module {
     single { TokenManager(settings = Settings(), secure = get(named(SECURE_SETTINGS))) }
     single { SessionStore(get()) }
     single<HttpClient> { HttpClientFactory.create(get()) }
+    // Cliente à parte para o gateway: sem o nosso token e sem log de corpo,
+    // porque o corpo é o cartão.
+    single(named(GATEWAY_CLIENT)) { GatewayClientFactory.create() }
     // Um só barramento: quem publica um alvo e quem navega até ele nunca se
     // encontram, mas precisam do mesmo canal.
     single { NotificationEventBus() }
@@ -66,6 +74,7 @@ val dataModule: Module = module {
     single { OrderRepository(get()) }
     single { TeamRepository(get()) }
     single { CompanyRepository(get()) }
+    single { CardTokenizer(get(named(GATEWAY_CLIENT)), get()) }
 }
 
 /** ViewModels, criados a cada tela. */
@@ -80,7 +89,7 @@ val viewModelModule: Module = module {
     viewModel { HomeFeedViewModel(get(), get(), get()) }
     viewModel { ProductDetailViewModel(get()) }
     viewModel { CartViewModel(get(), get()) }
-    viewModel { CheckoutViewModel(get(), get()) }
+    viewModel { CheckoutViewModel(get(), get(), get()) }
     viewModel { OrderViewModel(get(), get()) }
     viewModel { OrdersViewModel(get()) }
     viewModel { PixelHistoryViewModel(get(), get()) }

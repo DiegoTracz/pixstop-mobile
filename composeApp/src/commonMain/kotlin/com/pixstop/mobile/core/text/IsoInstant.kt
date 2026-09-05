@@ -42,6 +42,40 @@ object IsoInstant {
     }
 
     /**
+     * O ano e o mês de um instante, em UTC.
+     *
+     * É o caminho de volta do [daysFromCivil], e existe para conferir a
+     * validade de um cartão sem uma biblioteca de data e hora.
+     *
+     * @return o par `ano to mês`, com o mês de 1 a 12.
+     */
+    fun yearMonthOf(epochMillis: Long): Pair<Int, Int> {
+        // Divisão que arredonda para baixo: antes de 1970 os milissegundos são
+        // negativos, e o truncamento do Kotlin daria um dia a mais.
+        val days = if (epochMillis >= 0) epochMillis / 86_400_000L else (epochMillis - 86_399_999L) / 86_400_000L
+
+        return civilFromDays(days)
+    }
+
+    /**
+     * Ano e mês a partir dos dias desde 1970-01-01.
+     *
+     * `civil_from_days` de Howard Hinnant, o inverso exato do algoritmo abaixo.
+     */
+    private fun civilFromDays(days: Long): Pair<Int, Int> {
+        val shifted = days + 719_468L
+        val era = (if (shifted >= 0) shifted else shifted - 146_096L) / 146_097L
+        val dayOfEra = shifted - era * 146_097L
+        val yearOfEra = (dayOfEra - dayOfEra / 1_460 + dayOfEra / 36_524 - dayOfEra / 146_096) / 365
+        val year = yearOfEra + era * 400
+        val dayOfYear = dayOfEra - (365 * yearOfEra + yearOfEra / 4 - yearOfEra / 100)
+        val monthProxy = (5 * dayOfYear + 2) / 153
+        val month = if (monthProxy < 10) monthProxy + 3 else monthProxy - 9
+
+        return (if (month <= 2) year + 1 else year).toInt() to month.toInt()
+    }
+
+    /**
      * Dias desde 1970-01-01 no calendário gregoriano.
      *
      * É o algoritmo `days_from_civil` de Howard Hinnant, que acerta anos

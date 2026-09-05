@@ -40,18 +40,29 @@ class OrderRepository(private val client: HttpClient) {
         balance: Double,
         savedCardId: Long? = null,
         installments: Int? = null,
+        cardToken: String? = null,
+        documentType: String? = null,
+        documentNumber: String? = null,
+        saveCard: Boolean? = null,
     ): Outcome<Order> =
         safeCall<OrderDto>(TAG) {
+            val payingByCard = method == PaymentMethod.Card
+
             client.post(ApiConfig.Endpoints.ORDERS) {
                 setBody(
                     OrderStoreRequest(
                         paymentMethod = method.apiValue,
                         pixels = pixels.takeIf { it > 0 },
                         balance = balance.takeIf { it > 0 },
-                        // Só fazem sentido no cartão; mandá-los no PIX faria o
-                        // servidor guardar parcelas de um pagamento à vista.
-                        savedCardId = savedCardId.takeIf { method == PaymentMethod.Card },
-                        installments = installments?.takeIf { method == PaymentMethod.Card && it > 1 },
+                        // Tudo de cartão só sai quando o método é cartão;
+                        // mandá-los no PIX faria o servidor guardar parcelas de
+                        // um pagamento à vista.
+                        savedCardId = savedCardId.takeIf { payingByCard },
+                        installments = installments?.takeIf { payingByCard && it > 1 },
+                        cardToken = cardToken?.takeIf { payingByCard },
+                        documentType = documentType?.takeIf { payingByCard && cardToken != null },
+                        documentNumber = documentNumber?.takeIf { payingByCard && cardToken != null },
+                        saveCard = saveCard?.takeIf { payingByCard && cardToken != null },
                     ),
                 )
             }

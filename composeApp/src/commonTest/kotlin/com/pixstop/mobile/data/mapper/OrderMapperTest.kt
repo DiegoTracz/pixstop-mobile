@@ -74,16 +74,23 @@ class OrderMapperTest {
     }
 
     @Test
-    fun `cartao so e oferecido com gateway e chave publica`() {
-        fun checkout(gateway: Boolean, key: String?) = apiJson.decodeFromString<CheckoutDto>(
-            """{"items":[],"totals":{"products":6},"wallet":{"pixels":0,"balance":0},
-                "checkout":{"gateway_available":$gateway,"mp_public_key":${key?.let { "\"$it\"" } ?: "null"}},
+    fun `cartao so e oferecido com gateway e com o que tokenizar`() {
+        fun checkout(gateway: Boolean, key: String?, sandbox: Boolean = false) =
+            apiJson.decodeFromString<CheckoutDto>(
+                """{"items":[],"totals":{"products":6},"wallet":{"pixels":0,"balance":0},
+                "checkout":{"gateway_available":$gateway,"is_sandbox":$sandbox,
+                 "mp_public_key":${key?.let { "\"$it\"" } ?: "null"}},
                 "saved_cards":[]}""",
-        ).toDomain()
+            ).toDomain()
 
         assertFalse(checkout(gateway = false, key = "APP_USR-x").cardTokenizationAvailable)
         assertFalse(checkout(gateway = true, key = "").cardTokenizationAvailable, "chave vazia não tokeniza")
         assertFalse(checkout(gateway = true, key = null).cardTokenizationAvailable)
         assertTrue(checkout(gateway = true, key = "APP_USR-x").cardTokenizationAvailable)
+
+        // Em demonstração o token nasce no aparelho, como no site: sem isso o
+        // formulário de cartão nunca apareceria em desenvolvimento.
+        assertTrue(checkout(gateway = true, key = null, sandbox = true).cardTokenizationAvailable)
+        assertFalse(checkout(gateway = false, key = null, sandbox = true).cardTokenizationAvailable)
     }
 }
