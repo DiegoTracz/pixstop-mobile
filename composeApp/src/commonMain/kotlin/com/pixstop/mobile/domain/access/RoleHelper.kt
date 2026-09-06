@@ -31,7 +31,7 @@ object RoleHelper {
      * O que entra no menu lateral, na ordem em que aparece.
      */
     fun drawer(company: ActiveCompany?): List<Destination> =
-        listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Team, Destination.Company)
+        listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Team, Destination.Staff, Destination.Company)
             .filter { canOpen(it, company) }
 
     fun canOpen(destination: Destination, company: ActiveCompany?): Boolean {
@@ -53,6 +53,9 @@ object RoleHelper {
             // Gerir um departamento não vem do papel: quem é `user` na empresa
             // pode gerir um time, e o administrador pode não gerir nenhum.
             Destination.Team -> company.isManager
+            // O balcão é novo: só aparece quando o servidor diz que o segmento
+            // o tem — num servidor antigo, sem lista de módulos, não existe.
+            Destination.Staff -> "checkin" in company.modules && (company.isStaff || company.role.isAdmin)
             Destination.Company -> company.role.isAdmin
             else -> true
         }

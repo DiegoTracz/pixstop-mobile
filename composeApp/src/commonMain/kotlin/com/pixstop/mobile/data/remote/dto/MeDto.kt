@@ -24,6 +24,7 @@ data class UserDto(
     val email: String,
     @SerialName("avatar_url") val avatarUrl: String? = null,
     @SerialName("is_admin_master") val isAdminMaster: Boolean = false,
+    @SerialName("member_code") val memberCode: String? = null,
 )
 
 /** O vínculo da pessoa com uma empresa, como aparece na lista de troca. */
@@ -66,6 +67,7 @@ data class ActiveTenantDto(
     val modules: List<String>? = null,
     @SerialName("member_noun") val memberNoun: MemberNounDto? = null,
     val kind: String? = null,
+    @SerialName("is_staff") val isStaff: Boolean = false,
     /** Progressão por XP; ausente ou desligada vira `null` no domínio. */
     val progression: ProgressionDto? = null,
     @SerialName("pixels_expiring_soon") val pixelsExpiringSoon: Int = 0,

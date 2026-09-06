@@ -113,6 +113,10 @@ object ApiConfig {
 
         fun pixelInviteAccept(code: String) = "invites/$code/accept"
 
+        /** O balcão (Fase 14). */
+        const val STAFF_MEMBERS = "staff/members"
+        const val STAFF_CHECKINS = "staff/checkins"
+
         // ── Notificações e push ───────────────────────────────────────────
         const val NOTIFICATIONS = "notifications"
         const val NOTIFICATIONS_READ_ALL = "notifications/read-all"

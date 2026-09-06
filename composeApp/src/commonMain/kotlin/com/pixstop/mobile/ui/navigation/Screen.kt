@@ -37,6 +37,9 @@ object Routes {
     /** Cartões guardados, alcançados pelo perfil. */
     const val CARDS = "cards"
 
+    /** O balcão: registrar visitas. */
+    const val STAFF = "staff"
+
     /** Um convite com pixels, alcançado pelo link. */
     const val INVITE = "invite/{code}"
 

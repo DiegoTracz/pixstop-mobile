@@ -23,6 +23,7 @@ fun MeDto.toDomain(): Account = Account(
         name = user.name,
         email = user.email,
         avatarUrl = user.avatarUrl,
+        memberCode = user.memberCode,
     ),
     memberships = tenants.map { it.toDomain() },
     activeCompany = activeTenant?.toDomain(),
@@ -61,6 +62,7 @@ fun ActiveTenantDto.toDomain(): ActiveCompany = ActiveCompany(
     modules = modules.orEmpty(),
     memberNoun = memberNoun?.singular ?: "colaborador",
     isCustomer = kind == "customer",
+    isStaff = isStaff,
     progression = progression?.toDomain(),
     pixelsExpiringSoon = pixelsExpiringSoon,
 )

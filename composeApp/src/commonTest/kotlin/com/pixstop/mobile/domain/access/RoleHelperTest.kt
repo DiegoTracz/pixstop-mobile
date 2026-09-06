@@ -24,6 +24,7 @@ class RoleHelperTest {
         isManager: Boolean = false,
         features: Map<String, Boolean> = emptyMap(),
         modules: List<String> = emptyList(),
+        isStaff: Boolean = false,
     ) = ActiveCompany(
         id = "1",
         name = "Empresa Alpha",
@@ -42,6 +43,7 @@ class RoleHelperTest {
         cashbackEnabled = true,
         features = features,
         modules = modules,
+        isStaff = isStaff,
     )
 
     private val papeis = listOf(
@@ -147,5 +149,16 @@ class RoleHelperTest {
 
         assertTrue(RoleHelper.bottomBar(geladeira).contains(Destination.Shop))
         assertTrue(RoleHelper.drawer(geladeira).contains(Destination.Team))
+    }
+
+    @Test
+    fun `o balcao aparece para o staff e para o administrador, onde ha visita registrada`() {
+        val barbearia = listOf("checkin", "vouchers")
+
+        assertTrue(RoleHelper.drawer(empresa(isStaff = true, modules = barbearia)).contains(Destination.Staff))
+        assertTrue(RoleHelper.drawer(empresa(role = CompanyRole.Admin, modules = barbearia)).contains(Destination.Staff))
+        assertFalse(RoleHelper.drawer(empresa(modules = barbearia)).contains(Destination.Staff))
+        // A geladeira não tem balcão, por mais staff que a pessoa seja.
+        assertFalse(RoleHelper.canOpen(Destination.Staff, empresa(isStaff = true, modules = listOf("departments", "shop"))))
     }
 }

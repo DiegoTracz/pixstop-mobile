@@ -25,6 +25,7 @@ import com.pixstop.mobile.ui.screen.OrdersScreen
 import com.pixstop.mobile.ui.screen.PixelHistoryScreen
 import com.pixstop.mobile.ui.screen.CardsScreen
 import com.pixstop.mobile.ui.screen.PixelInviteScreen
+import com.pixstop.mobile.ui.screen.StaffCheckinScreen
 import com.pixstop.mobile.ui.screen.ProgressScreen
 import com.pixstop.mobile.ui.screen.TeamScreen
 import com.pixstop.mobile.ui.screen.NotificationsScreen
@@ -256,6 +257,7 @@ fun AppNavigation() {
                         Destination.Pixels -> navController.navigate(Routes.PIXELS)
                         Destination.Progress -> navController.navigate(Routes.PROGRESS)
                         Destination.Team -> navController.navigate(Routes.TEAM)
+                        Destination.Staff -> navController.navigate(Routes.STAFF)
                         Destination.Company -> navController.navigate(Routes.COMPANY)
                         else -> Unit
                     }
@@ -316,7 +318,11 @@ fun AppNavigation() {
         }
 
         composable(Routes.PIXELS) {
-            PixelHistoryScreen(onBack = { navController.popBackStack() })
+            PixelHistoryScreen(
+                onBack = { navController.popBackStack() },
+                // O código do balcão só existe onde há visita registrada.
+                memberCode = session.account?.user?.memberCode?.takeIf { session.company?.hasModule("checkin") == true },
+            )
         }
 
         composable(Routes.PROGRESS) {
@@ -325,6 +331,10 @@ fun AppNavigation() {
 
         composable(Routes.CARDS) {
             CardsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.STAFF) {
+            StaffCheckinScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.INVITE) { entry ->

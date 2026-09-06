@@ -22,6 +22,8 @@ enum class Destination(
     Progress(requiredFeature = "pixels"),
     Notifications,
     Team(requiredFeature = "departments", requiredModule = "departments"),
+    /** O balcão: registrar a visita de quem está na frente. */
+    Staff(requiredModule = "checkin"),
     Company,
     Profile,
 }

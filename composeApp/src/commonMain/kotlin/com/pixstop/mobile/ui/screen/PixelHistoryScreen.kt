@@ -42,6 +42,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun PixelHistoryScreen(
     onBack: () -> Unit,
+    memberCode: String? = null,
     viewModel: PixelHistoryViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -68,6 +69,8 @@ fun PixelHistoryScreen(
             reserved = state.wallet.reserved,
             expiringSoon = state.wallet.expiringSoon,
         )
+
+        memberCode?.let { MemberCodeCard(it) }
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -183,5 +186,26 @@ private fun EntryRow(entry: PixelEntry) {
                 color = PixColors.Gray500,
             )
         }
+    }
+}
+
+/**
+ * O código do balcão (Fase 14): a pessoa diz ou mostra, e o staff registra a
+ * visita. Sem QR aqui — o app não desenha um; a web desenha.
+ */
+@Composable
+private fun MemberCodeCard(code: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .border(2.dp, PixColors.Green)
+            .background(PixColors.Darker)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(text = "SEU CÓDIGO NO BALCÃO", style = PixTypography.badgeText, color = PixColors.Gray400)
+        Text(text = code.chunked(4).joinToString(" "), style = PixTypography.pageTitle, color = PixColors.Green)
+        Text(text = "Diga o código para registrarem sua visita.", style = PixTypography.caption, color = PixColors.Gray400)
     }
 }

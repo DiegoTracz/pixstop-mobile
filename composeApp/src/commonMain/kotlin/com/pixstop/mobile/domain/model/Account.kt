@@ -24,6 +24,8 @@ data class AccountUser(
     val name: String,
     val email: String,
     val avatarUrl: String?,
+    /** O código que a pessoa diz no balcão (Fase 14). */
+    val memberCode: String? = null,
 ) {
     /** Primeiro nome, que é como o app se dirige à pessoa. */
     val firstName: String get() = name.trim().substringBefore(' ')
@@ -64,6 +66,8 @@ data class ActiveCompany(
     val memberNoun: String = "colaborador",
     /** `customer` quando a pessoa compra da empresa em vez de trabalhar nela. */
     val isCustomer: Boolean = false,
+    /** Atende no balcão: registra visitas (staff ou administrador). */
+    val isStaff: Boolean = false,
     /** Nulo quando a progressão por XP não está ligada nesta empresa. */
     val progression: Progression? = null,
     val pixelsExpiringSoon: Int = 0,
