@@ -45,6 +45,7 @@ fun ProfileScreen(
     onProfileSaved: () -> Unit,
     modifier: Modifier = Modifier,
     onAccountDeleted: () -> Unit = {},
+    onOpenCards: () -> Unit = {},
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -147,6 +148,22 @@ fun ProfileScreen(
             onClick = viewModel::savePassword,
             enabled = state.canSavePassword,
             isLoading = state.isSavingPassword,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        PixelDivider(text = "")
+
+        Text(text = "Meus cartões", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+
+        Text(
+            text = "Os cartões guardados no fechamento: escolha o padrão ou remova o que não quer mais ver.",
+            style = PixTypography.bodySecondary,
+        )
+
+        PixelButton(
+            text = "Gerenciar cartões",
+            onClick = onOpenCards,
+            variant = PixelButtonVariant.Secondary,
             modifier = Modifier.fillMaxWidth(),
         )
 

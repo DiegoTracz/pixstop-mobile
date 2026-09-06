@@ -23,6 +23,7 @@ import com.pixstop.mobile.ui.screen.CheckoutScreen
 import com.pixstop.mobile.ui.screen.OrderScreen
 import com.pixstop.mobile.ui.screen.OrdersScreen
 import com.pixstop.mobile.ui.screen.PixelHistoryScreen
+import com.pixstop.mobile.ui.screen.CardsScreen
 import com.pixstop.mobile.ui.screen.ProgressScreen
 import com.pixstop.mobile.ui.screen.TeamScreen
 import com.pixstop.mobile.ui.screen.NotificationsScreen
@@ -227,6 +228,7 @@ fun AppNavigation() {
                 onJoinCompany = { navController.navigate(Routes.JOIN_COMPANY) },
                 onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 onOpenCart = { navController.navigate(Routes.CART) },
+                onOpenCards = { navController.navigate(Routes.CARDS) },
                 // A tela não conhece rotas: ela diz para onde a pessoa quer
                 // ir, e a navegação sabe onde isso fica.
                 onDestination = { destination ->
@@ -300,6 +302,10 @@ fun AppNavigation() {
 
         composable(Routes.PROGRESS) {
             ProgressScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.CARDS) {
+            CardsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.TEAM) {

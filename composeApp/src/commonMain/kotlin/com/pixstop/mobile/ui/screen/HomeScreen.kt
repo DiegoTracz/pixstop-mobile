@@ -109,6 +109,7 @@ fun HomeScreen(
     onOpenCart: () -> Unit = {},
     onOpenProduct: (Long) -> Unit = {},
     onDestination: (Destination) -> Unit = {},
+    onOpenCards: () -> Unit = {},
     onOpenOrder: (Long) -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
     notificationsViewModel: NotificationsViewModel = koinViewModel(),
@@ -229,6 +230,7 @@ fun HomeScreen(
                     // O nome aparece em outras telas; sem recarregar a conta
                     // elas continuariam mostrando o antigo.
                     onProfileSaved = sessionViewModel::refresh,
+                    onOpenCards = onOpenCards,
                     modifier = Modifier.padding(paddingValues),
                 )
 

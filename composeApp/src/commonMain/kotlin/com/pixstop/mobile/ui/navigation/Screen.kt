@@ -34,6 +34,9 @@ object Routes {
     /** Progressão por XP: nível, o que falta e o histórico. */
     const val PROGRESS = "progress"
 
+    /** Cartões guardados, alcançados pelo perfil. */
+    const val CARDS = "cards"
+
     /** Área do gestor: verba do time e distribuição. */
     const val TEAM = "team"
 
