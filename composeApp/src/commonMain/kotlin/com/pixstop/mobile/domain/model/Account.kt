@@ -57,12 +57,22 @@ data class ActiveCompany(
     val mercadoPagoConnected: Boolean,
     val cashbackEnabled: Boolean,
     val features: Map<String, Boolean>,
+    /** Segmento (Fase 14): `pantry` é a geladeira, o que todo tenant era. */
+    val vertical: String = "pantry",
+    /** Os módulos do segmento; vazio quer dizer servidor antigo — tudo ligado. */
+    val modules: List<String> = emptyList(),
+    val memberNoun: String = "colaborador",
+    /** `customer` quando a pessoa compra da empresa em vez de trabalhar nela. */
+    val isCustomer: Boolean = false,
     /** Nulo quando a progressão por XP não está ligada nesta empresa. */
     val progression: Progression? = null,
     val pixelsExpiringSoon: Int = 0,
 ) {
     /** Uma funcionalidade ausente do plano é considerada ligada. */
     fun hasFeature(name: String): Boolean = features[name] ?: true
+
+    /** Sem lista de módulos (servidor antigo) tudo está ligado. */
+    fun hasModule(name: String): Boolean = modules.isEmpty() || name in modules
 
     /** Sem gateway conectado, só saldo e pixels pagam. */
     val canPayWithMoney: Boolean get() = mercadoPagoConnected

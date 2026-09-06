@@ -62,6 +62,10 @@ data class ActiveTenantDto(
     @SerialName("mercadopago_connected") val mercadoPagoConnected: Boolean = false,
     @SerialName("cashback_enabled") val cashbackEnabled: Boolean = false,
     val features: Map<String, Boolean> = emptyMap(),
+    val vertical: String? = null,
+    val modules: List<String>? = null,
+    @SerialName("member_noun") val memberNoun: MemberNounDto? = null,
+    val kind: String? = null,
     /** Progressão por XP; ausente ou desligada vira `null` no domínio. */
     val progression: ProgressionDto? = null,
     @SerialName("pixels_expiring_soon") val pixelsExpiringSoon: Int = 0,
@@ -100,3 +104,7 @@ data class InviteDto(
     @SerialName("company_code") val companyCode: String,
     @SerialName("invite_url") val inviteUrl: String,
 )
+
+/** Como se chama quem usa: colaborador na geladeira, cliente no resto. */
+@Serializable
+data class MemberNounDto(val singular: String = "colaborador", val plural: String = "colaboradores")

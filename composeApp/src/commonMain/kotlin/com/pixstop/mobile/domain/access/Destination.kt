@@ -10,16 +10,18 @@ package com.pixstop.mobile.domain.access
 enum class Destination(
     /** Funcionalidade do plano que o destino exige, quando exige alguma. */
     val requiredFeature: String? = null,
+    /** Módulo do segmento (Fase 14) que o destino exige: a barbearia não tem loja. */
+    val requiredModule: String? = null,
 ) {
     Home,
-    Shop(requiredFeature = "products"),
-    Cart(requiredFeature = "products"),
-    Orders(requiredFeature = "orders"),
+    Shop(requiredFeature = "products", requiredModule = "shop"),
+    Cart(requiredFeature = "products", requiredModule = "shop"),
+    Orders(requiredFeature = "orders", requiredModule = "shop"),
     Pixels(requiredFeature = "pixels"),
     /** A barra de XP por dentro: níveis e histórico. Vive junto dos pixels. */
     Progress(requiredFeature = "pixels"),
     Notifications,
-    Team(requiredFeature = "departments"),
+    Team(requiredFeature = "departments", requiredModule = "departments"),
     Company,
     Profile,
 }

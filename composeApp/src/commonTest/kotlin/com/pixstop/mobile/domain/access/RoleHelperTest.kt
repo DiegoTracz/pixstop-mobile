@@ -23,6 +23,7 @@ class RoleHelperTest {
         role: CompanyRole = CompanyRole.Member,
         isManager: Boolean = false,
         features: Map<String, Boolean> = emptyMap(),
+        modules: List<String> = emptyList(),
     ) = ActiveCompany(
         id = "1",
         name = "Empresa Alpha",
@@ -40,6 +41,7 @@ class RoleHelperTest {
         mercadoPagoConnected = false,
         cashbackEnabled = true,
         features = features,
+        modules = modules,
     )
 
     private val papeis = listOf(
@@ -125,5 +127,25 @@ class RoleHelperTest {
             assertTrue(RoleHelper.canOpen(Destination.Home, company))
             assertTrue(RoleHelper.canOpen(Destination.Profile, company))
         }
+    }
+
+    @Test
+    fun `o segmento sem loja esconde loja, carrinho e pedidos, e sem departamentos esconde o time`() {
+        val barbearia = empresa(role = CompanyRole.Admin, isManager = true, modules = listOf("checkin", "vouchers"))
+
+        assertFalse(RoleHelper.bottomBar(barbearia).contains(Destination.Shop))
+        assertFalse(RoleHelper.canOpen(Destination.Cart, barbearia))
+        assertFalse(RoleHelper.drawer(barbearia).contains(Destination.Orders))
+        assertFalse(RoleHelper.drawer(barbearia).contains(Destination.Team))
+        assertTrue(RoleHelper.drawer(barbearia).contains(Destination.Pixels))
+        assertTrue(RoleHelper.drawer(barbearia).contains(Destination.Company))
+    }
+
+    @Test
+    fun `sem lista de modulos o servidor antigo continua com tudo ligado`() {
+        val geladeira = empresa(isManager = true)
+
+        assertTrue(RoleHelper.bottomBar(geladeira).contains(Destination.Shop))
+        assertTrue(RoleHelper.drawer(geladeira).contains(Destination.Team))
     }
 }

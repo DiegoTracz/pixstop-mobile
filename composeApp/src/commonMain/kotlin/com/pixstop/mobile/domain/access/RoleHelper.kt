@@ -45,6 +45,10 @@ object RoleHelper {
             return false
         }
 
+        if (destination.requiredModule?.let { !company.hasModule(it) } == true) {
+            return false
+        }
+
         return when (destination) {
             // Gerir um departamento não vem do papel: quem é `user` na empresa
             // pode gerir um time, e o administrador pode não gerir nenhum.

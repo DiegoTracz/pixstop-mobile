@@ -57,6 +57,10 @@ fun ActiveTenantDto.toDomain(): ActiveCompany = ActiveCompany(
     mercadoPagoConnected = mercadoPagoConnected,
     cashbackEnabled = cashbackEnabled,
     features = features,
+    vertical = vertical ?: "pantry",
+    modules = modules.orEmpty(),
+    memberNoun = memberNoun?.singular ?: "colaborador",
+    isCustomer = kind == "customer",
     progression = progression?.toDomain(),
     pixelsExpiringSoon = pixelsExpiringSoon,
 )
