@@ -16,6 +16,8 @@ enum class Destination(
     Cart(requiredFeature = "products"),
     Orders(requiredFeature = "orders"),
     Pixels(requiredFeature = "pixels"),
+    /** A barra de XP por dentro: níveis e histórico. Vive junto dos pixels. */
+    Progress(requiredFeature = "pixels"),
     Notifications,
     Team(requiredFeature = "departments"),
     Company,

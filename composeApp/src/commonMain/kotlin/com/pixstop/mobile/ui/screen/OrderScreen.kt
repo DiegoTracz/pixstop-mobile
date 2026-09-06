@@ -22,6 +22,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -35,7 +39,11 @@ import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelCoin
+import com.pixstop.mobile.ui.components.LevelBadge
 import com.pixstop.mobile.ui.components.decodeBase64Image
+import com.pixstop.mobile.domain.model.OrderXp
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
@@ -85,6 +93,12 @@ fun OrderScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     StatusHeader(order)
+
+                    // O que a compra rendeu (Fase 13): o "+XP" e, quando houve,
+                    // a subida de nível — o momento inteiro do sistema.
+                    if (order.isPaid && !order.xp.isEmpty) {
+                        XpEarned(xp = order.xp)
+                    }
 
                     // Só enquanto o pagamento é esperado: um pedido já pago
                     // não pode ficar dizendo que aguarda.
@@ -224,6 +238,60 @@ private fun StatusHeader(order: Order) {
  * banco, inclusive quando a pessoa está pagando pelo próprio celular e não
  * tem como apontar a câmera para a própria tela.
  */
+@Composable
+private fun XpEarned(xp: OrderXp) {
+    // Aparece depois do cabeçalho, não junto: a pessoa lê "pago" primeiro,
+    // e só então descobre que a compra rendeu algo além do produto.
+    var shown by remember { mutableStateOf(false) }
+
+    LaunchedEffect(xp) { shown = true }
+
+    AnimatedVisibility(
+        visible = shown,
+        enter = fadeIn(tween(400)) + expandVertically(tween(400)),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (xp.earned > 0) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(2.dp, PixColors.Cyan)
+                        .background(PixColors.CyanAlpha10)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(text = "Esta compra rendeu", style = PixTypography.caption, color = PixColors.Gray300)
+                    Text(text = "+${xp.earned} XP", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+                }
+            }
+
+            xp.leveledUpTo?.let { level ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(2.dp, PixColors.Yellow)
+                        .background(PixColors.Darker)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    LevelBadge(level = level)
+
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(text = "LEVEL UP!", style = PixTypography.sectionTitle, color = PixColors.Yellow)
+                        Text(
+                            text = "Você chegou ao nível $level. A recompensa já está nos seus pixels.",
+                            style = PixTypography.caption,
+                            color = PixColors.Gray300,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun PixBlock(
     code: String,

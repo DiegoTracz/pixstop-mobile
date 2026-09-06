@@ -16,6 +16,7 @@ import com.pixstop.mobile.data.repository.NotificationRepository
 import com.pixstop.mobile.data.repository.OrderRepository
 import com.pixstop.mobile.data.repository.ProfileRepository
 import com.pixstop.mobile.data.repository.ShopRepository
+import com.pixstop.mobile.data.repository.ProgressRepository
 import com.pixstop.mobile.data.repository.TeamRepository
 import com.pixstop.mobile.ui.viewmodel.LegalConsentViewModel
 import com.pixstop.mobile.ui.viewmodel.CartViewModel
@@ -26,6 +27,7 @@ import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
 import com.pixstop.mobile.ui.viewmodel.OrderViewModel
 import com.pixstop.mobile.ui.viewmodel.OrdersViewModel
 import com.pixstop.mobile.ui.viewmodel.PixelHistoryViewModel
+import com.pixstop.mobile.ui.viewmodel.ProgressViewModel
 import com.pixstop.mobile.ui.viewmodel.TeamViewModel
 import com.pixstop.mobile.ui.viewmodel.ProductDetailViewModel
 import com.pixstop.mobile.ui.viewmodel.ProfileViewModel
@@ -73,6 +75,7 @@ val dataModule: Module = module {
     single { CartRepository(get()) }
     single { OrderRepository(get()) }
     single { TeamRepository(get()) }
+    single { ProgressRepository(get()) }
     single { CompanyRepository(get()) }
     single { CardTokenizer(get(named(GATEWAY_CLIENT)), get()) }
 }
@@ -93,6 +96,7 @@ val viewModelModule: Module = module {
     viewModel { OrderViewModel(get(), get()) }
     viewModel { OrdersViewModel(get()) }
     viewModel { PixelHistoryViewModel(get(), get()) }
+    viewModel { ProgressViewModel(get()) }
     viewModel { TeamViewModel(get()) }
     viewModel { CompanyViewModel(get()) }
 }

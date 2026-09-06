@@ -62,6 +62,9 @@ data class ActiveTenantDto(
     @SerialName("mercadopago_connected") val mercadoPagoConnected: Boolean = false,
     @SerialName("cashback_enabled") val cashbackEnabled: Boolean = false,
     val features: Map<String, Boolean> = emptyMap(),
+    /** Progressão por XP; ausente ou desligada vira `null` no domínio. */
+    val progression: ProgressionDto? = null,
+    @SerialName("pixels_expiring_soon") val pixelsExpiringSoon: Int = 0,
 )
 
 @Serializable

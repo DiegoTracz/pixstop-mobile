@@ -57,6 +57,9 @@ data class ActiveCompany(
     val mercadoPagoConnected: Boolean,
     val cashbackEnabled: Boolean,
     val features: Map<String, Boolean>,
+    /** Nulo quando a progressão por XP não está ligada nesta empresa. */
+    val progression: Progression? = null,
+    val pixelsExpiringSoon: Int = 0,
 ) {
     /** Uma funcionalidade ausente do plano é considerada ligada. */
     fun hasFeature(name: String): Boolean = features[name] ?: true

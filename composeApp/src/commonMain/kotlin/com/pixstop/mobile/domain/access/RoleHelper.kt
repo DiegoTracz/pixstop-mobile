@@ -31,7 +31,7 @@ object RoleHelper {
      * O que entra no menu lateral, na ordem em que aparece.
      */
     fun drawer(company: ActiveCompany?): List<Destination> =
-        listOf(Destination.Orders, Destination.Pixels, Destination.Team, Destination.Company)
+        listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Team, Destination.Company)
             .filter { canOpen(it, company) }
 
     fun canOpen(destination: Destination, company: ActiveCompany?): Boolean {

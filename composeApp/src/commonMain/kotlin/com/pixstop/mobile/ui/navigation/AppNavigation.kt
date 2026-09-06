@@ -23,6 +23,7 @@ import com.pixstop.mobile.ui.screen.CheckoutScreen
 import com.pixstop.mobile.ui.screen.OrderScreen
 import com.pixstop.mobile.ui.screen.OrdersScreen
 import com.pixstop.mobile.ui.screen.PixelHistoryScreen
+import com.pixstop.mobile.ui.screen.ProgressScreen
 import com.pixstop.mobile.ui.screen.TeamScreen
 import com.pixstop.mobile.ui.screen.NotificationsScreen
 import com.pixstop.mobile.ui.screen.ProductDetailScreen
@@ -232,6 +233,7 @@ fun AppNavigation() {
                     when (destination) {
                         Destination.Orders -> navController.navigate(Routes.ORDERS)
                         Destination.Pixels -> navController.navigate(Routes.PIXELS)
+                        Destination.Progress -> navController.navigate(Routes.PROGRESS)
                         Destination.Team -> navController.navigate(Routes.TEAM)
                         Destination.Company -> navController.navigate(Routes.COMPANY)
                         else -> Unit
@@ -294,6 +296,10 @@ fun AppNavigation() {
 
         composable(Routes.PIXELS) {
             PixelHistoryScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.PROGRESS) {
+            ProgressScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.TEAM) {

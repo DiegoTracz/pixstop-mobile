@@ -50,6 +50,7 @@ data class Order(
     val cancellationReason: String?,
     val isCancelable: Boolean,
     val createdAt: String?,
+    val xp: OrderXp = OrderXp.None,
 ) {
     val isPaid: Boolean get() = status == OrderStatus.Paid
     val isPending: Boolean get() = status == OrderStatus.Pending || status == OrderStatus.InReview

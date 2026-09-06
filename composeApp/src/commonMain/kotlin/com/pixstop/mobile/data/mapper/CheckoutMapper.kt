@@ -8,6 +8,7 @@ import com.pixstop.mobile.data.remote.dto.PixDto
 import com.pixstop.mobile.data.remote.dto.SavedCardDto
 import com.pixstop.mobile.domain.model.Checkout
 import com.pixstop.mobile.domain.model.Order
+import com.pixstop.mobile.domain.model.OrderXp
 import com.pixstop.mobile.domain.model.OrderLine
 import com.pixstop.mobile.domain.model.OrderStatus
 import com.pixstop.mobile.domain.model.PixPayment
@@ -60,6 +61,7 @@ fun OrderDto.toDomain() = Order(
     cancellationReason = cancellationReason,
     isCancelable = isCancelable,
     createdAt = createdAt,
+    xp = xp?.toDomain() ?: OrderXp.None,
 )
 
 fun OrderItemDto.toDomain() = OrderLine(

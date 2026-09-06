@@ -108,7 +108,7 @@ class RoleHelperTest {
         val company = empresa(CompanyRole.Admin, isManager = true, features = emptyMap())
 
         assertEquals(
-            listOf(Destination.Orders, Destination.Pixels, Destination.Team, Destination.Company),
+            listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Team, Destination.Company),
             RoleHelper.drawer(company),
         )
     }

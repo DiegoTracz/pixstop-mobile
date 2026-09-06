@@ -88,6 +88,7 @@ private fun bottomNavItems(destinations: List<Destination>) = destinations.map {
 private fun drawerLabel(destination: Destination): Pair<String, AppIconType> = when (destination) {
     Destination.Orders -> "Meus pedidos" to AppIconType.Cart
     Destination.Pixels -> "Meus pixels" to AppIconType.Check
+    Destination.Progress -> "Meu progresso" to AppIconType.Home
     Destination.Team -> "Meu time" to AppIconType.Person
     Destination.Company -> "Empresa" to AppIconType.Settings
     else -> destination.name to AppIconType.Info
@@ -244,6 +245,7 @@ fun HomeScreen(
                     },
                     onOpenShop = { selectedTab = Destination.Shop.name },
                     onOpenPixels = { onDestination(Destination.Pixels) },
+                    onOpenProgress = { onDestination(Destination.Progress) },
                     onAddToCart = { cartViewModel.add(it) },
                     modifier = Modifier.padding(paddingValues),
                 )

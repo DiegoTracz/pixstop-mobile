@@ -37,6 +37,7 @@ import com.pixstop.mobile.ui.components.DiscountTag
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelCoin
+import com.pixstop.mobile.ui.components.XpBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
@@ -60,6 +61,7 @@ fun HomeFeed(
     onOpenCategory: (Long) -> Unit,
     onOpenShop: () -> Unit,
     onOpenPixels: () -> Unit,
+    onOpenProgress: () -> Unit,
     onAddToCart: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -86,6 +88,18 @@ fun HomeFeed(
                 balance = company?.balance ?: 0.0,
                 onClick = onOpenPixels,
             )
+        }
+
+        // A barra de XP só existe onde a empresa ligou a progressão. Fica logo
+        // abaixo da carteira: é a segunda coisa que a pessoa quer saber.
+        company?.progression?.let { progression ->
+            item {
+                XpBar(
+                    progression = progression,
+                    onClick = onOpenProgress,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
+            }
         }
 
         state.openOrder?.let { order ->

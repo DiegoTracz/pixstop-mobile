@@ -50,6 +50,15 @@ object IsoInstant {
      * @return o par `ano to mês`, com o mês de 1 a 12.
      */
     fun yearMonthOf(epochMillis: Long): Pair<Int, Int> {
+        val (year, month, _) = civilDateOf(epochMillis)
+
+        return year to month
+    }
+
+    /**
+     * Ano, mês e dia de um instante, em UTC.
+     */
+    fun civilDateOf(epochMillis: Long): Triple<Int, Int, Int> {
         // Divisão que arredonda para baixo: antes de 1970 os milissegundos são
         // negativos, e o truncamento do Kotlin daria um dia a mais.
         val days = if (epochMillis >= 0) epochMillis / 86_400_000L else (epochMillis - 86_399_999L) / 86_400_000L
@@ -62,7 +71,7 @@ object IsoInstant {
      *
      * `civil_from_days` de Howard Hinnant, o inverso exato do algoritmo abaixo.
      */
-    private fun civilFromDays(days: Long): Pair<Int, Int> {
+    private fun civilFromDays(days: Long): Triple<Int, Int, Int> {
         val shifted = days + 719_468L
         val era = (if (shifted >= 0) shifted else shifted - 146_096L) / 146_097L
         val dayOfEra = shifted - era * 146_097L
@@ -70,9 +79,10 @@ object IsoInstant {
         val year = yearOfEra + era * 400
         val dayOfYear = dayOfEra - (365 * yearOfEra + yearOfEra / 4 - yearOfEra / 100)
         val monthProxy = (5 * dayOfYear + 2) / 153
+        val day = dayOfYear - (153 * monthProxy + 2) / 5 + 1
         val month = if (monthProxy < 10) monthProxy + 3 else monthProxy - 9
 
-        return (if (month <= 2) year + 1 else year).toInt() to month.toInt()
+        return Triple((if (month <= 2) year + 1 else year).toInt(), month.toInt(), day.toInt())
     }
 
     /**

@@ -31,6 +31,9 @@ object Routes {
     /** Carteira e extrato de pixels. */
     const val PIXELS = "pixels"
 
+    /** Progressão por XP: nível, o que falta e o histórico. */
+    const val PROGRESS = "progress"
+
     /** Área do gestor: verba do time e distribuição. */
     const val TEAM = "team"
 

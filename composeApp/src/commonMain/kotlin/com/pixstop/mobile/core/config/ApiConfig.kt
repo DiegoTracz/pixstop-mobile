@@ -155,6 +155,8 @@ object ApiConfig {
         // ── Pixels ────────────────────────────────────────────────────────
         const val PIXELS_BALANCE = "pixels/balance"
         const val PIXELS_HISTORY = "pixels/history"
+        const val PIXELS_PROGRESS = "pixels/progress"
+        const val PIXELS_XP_HISTORY = "pixels/xp-history"
 
         // ── Gestor ────────────────────────────────────────────────────────
         const val TEAM = "team"

@@ -95,6 +95,8 @@ data class OrderDto(
     @SerialName("is_cancelable") val isCancelable: Boolean = false,
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("paid_at") val paidAt: String? = null,
+    /** O que o pedido rendeu de XP; só vem no pedido criado e no aberto. */
+    val xp: OrderXpDto? = null,
 )
 
 @Serializable
