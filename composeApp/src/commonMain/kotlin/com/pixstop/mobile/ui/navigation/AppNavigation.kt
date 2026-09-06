@@ -25,6 +25,7 @@ import com.pixstop.mobile.ui.screen.OrdersScreen
 import com.pixstop.mobile.ui.screen.PixelHistoryScreen
 import com.pixstop.mobile.ui.screen.CardsScreen
 import com.pixstop.mobile.ui.screen.PixelInviteScreen
+import com.pixstop.mobile.ui.screen.RewardsScreen
 import com.pixstop.mobile.ui.screen.StaffCheckinScreen
 import com.pixstop.mobile.ui.screen.ProgressScreen
 import com.pixstop.mobile.ui.screen.TeamScreen
@@ -258,6 +259,7 @@ fun AppNavigation() {
                         Destination.Progress -> navController.navigate(Routes.PROGRESS)
                         Destination.Team -> navController.navigate(Routes.TEAM)
                         Destination.Staff -> navController.navigate(Routes.STAFF)
+                        Destination.Rewards -> navController.navigate(Routes.REWARDS)
                         Destination.Company -> navController.navigate(Routes.COMPANY)
                         else -> Unit
                     }
@@ -331,6 +333,10 @@ fun AppNavigation() {
 
         composable(Routes.CARDS) {
             CardsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.REWARDS) {
+            RewardsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.STAFF) {

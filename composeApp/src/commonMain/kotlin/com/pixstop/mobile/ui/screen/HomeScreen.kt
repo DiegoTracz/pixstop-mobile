@@ -90,6 +90,7 @@ private fun drawerLabel(destination: Destination): Pair<String, AppIconType> = w
     Destination.Pixels -> "Meus pixels" to AppIconType.Check
     Destination.Progress -> "Meu progresso" to AppIconType.Home
     Destination.Team -> "Meu time" to AppIconType.Person
+    Destination.Rewards -> "Recompensas" to AppIconType.Check
     Destination.Staff -> "Registrar visita" to AppIconType.Store
     Destination.Company -> "Empresa" to AppIconType.Settings
     else -> destination.name to AppIconType.Info

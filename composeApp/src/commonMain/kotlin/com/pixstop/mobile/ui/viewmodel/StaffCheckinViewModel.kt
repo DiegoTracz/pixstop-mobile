@@ -25,6 +25,8 @@ data class StaffCheckinUiState(
     val isRegistering: Boolean = false,
     val lastResult: String? = null,
     val error: String? = null,
+    val voucherCode: String = "",
+    val isValidating: Boolean = false,
 ) {
     val canRegister: Boolean get() = selected != null && !isRegistering && amountValue != null
 
@@ -116,6 +118,30 @@ class StaffCheckinViewModel(private val repository: StaffRepository) : ViewModel
         }
     }
 
+    fun onVoucherCodeChange(value: String) {
+        _uiState.value = _uiState.value.copy(voucherCode = VoucherCodeParser.parse(value).take(12), error = null)
+    }
+
+    /** O balcão valida um voucher: uma vez, dentro do prazo. */
+    fun validateVoucher() {
+        val code = _uiState.value.voucherCode.trim()
+        if (code.length < 4 || _uiState.value.isValidating) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isValidating = true, error = null, lastResult = null)
+
+            _uiState.value = when (val result = repository.validateVoucher(code)) {
+                is Outcome.Success -> _uiState.value.copy(
+                    isValidating = false,
+                    voucherCode = "",
+                    lastResult = "Voucher válido: ${result.value.rewardName}" + (result.value.name?.let { " para $it" } ?: "") + ". Pode entregar.",
+                )
+
+                is Outcome.Failure -> _uiState.value.copy(isValidating = false, error = result.error.message)
+            }
+        }
+    }
+
     private fun loadToday() {
         viewModelScope.launch {
             when (val result = repository.today()) {
@@ -132,4 +158,12 @@ object MemberCodeParser {
 
     fun parse(raw: String): String =
         fromLink.find(raw)?.groupValues?.get(1)?.uppercase() ?: raw
+}
+
+/** Um QR de voucher vem como `pixstop://v/ABC123XY`: só o código interessa. */
+object VoucherCodeParser {
+    private val fromLink = Regex("/v/([A-Za-z0-9]+)")
+
+    fun parse(raw: String): String =
+        fromLink.find(raw)?.groupValues?.get(1)?.uppercase() ?: raw.uppercase()
 }

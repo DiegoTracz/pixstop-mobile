@@ -37,6 +37,9 @@ object Routes {
     /** Cartões guardados, alcançados pelo perfil. */
     const val CARDS = "cards"
 
+    /** Recompensas por voucher. */
+    const val REWARDS = "rewards"
+
     /** O balcão: registrar visitas. */
     const val STAFF = "staff"
 

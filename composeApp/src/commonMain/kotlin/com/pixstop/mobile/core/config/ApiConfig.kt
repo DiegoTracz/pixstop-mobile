@@ -116,6 +116,12 @@ object ApiConfig {
         /** O balcão (Fase 14). */
         const val STAFF_MEMBERS = "staff/members"
         const val STAFF_CHECKINS = "staff/checkins"
+        const val STAFF_VOUCHER_VALIDATE = "staff/vouchers/validate"
+
+        /** Recompensas por voucher (Fase 14). */
+        const val REWARDS = "rewards"
+
+        fun rewardRedeem(id: Long) = "rewards/$id/redeem"
 
         // ── Notificações e push ───────────────────────────────────────────
         const val NOTIFICATIONS = "notifications"

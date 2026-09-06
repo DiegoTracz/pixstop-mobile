@@ -161,4 +161,11 @@ class RoleHelperTest {
         // A geladeira não tem balcão, por mais staff que a pessoa seja.
         assertFalse(RoleHelper.canOpen(Destination.Staff, empresa(isStaff = true, modules = listOf("departments", "shop"))))
     }
+
+    @Test
+    fun `recompensas aparecem so onde o segmento tem vouchers`() {
+        assertTrue(RoleHelper.drawer(empresa(modules = listOf("checkin", "vouchers"))).contains(Destination.Rewards))
+        assertFalse(RoleHelper.drawer(empresa(modules = listOf("departments", "shop"))).contains(Destination.Rewards))
+        assertFalse(RoleHelper.drawer(empresa()).contains(Destination.Rewards))
+    }
 }

@@ -6,6 +6,8 @@ import com.pixstop.mobile.data.remote.dto.CheckinRequest
 import com.pixstop.mobile.data.remote.dto.CheckinResultDto
 import com.pixstop.mobile.data.remote.dto.StaffMemberDto
 import com.pixstop.mobile.data.remote.dto.TodayCheckinDto
+import com.pixstop.mobile.data.remote.dto.ValidateVoucherRequest
+import com.pixstop.mobile.data.remote.dto.VoucherDto
 import com.pixstop.mobile.domain.model.Outcome
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -27,6 +29,9 @@ class StaffRepository(private val client: HttpClient) {
                 setBody(CheckinRequest(userId, kind, amount, description?.takeIf { it.isNotBlank() }))
             }
         }
+
+    suspend fun validateVoucher(code: String): Outcome<VoucherDto> =
+        safeCall(TAG) { client.post(ApiConfig.Endpoints.STAFF_VOUCHER_VALIDATE) { setBody(ValidateVoucherRequest(code.trim())) } }
 
     suspend fun today(): Outcome<List<TodayCheckinDto>> =
         safeCall(TAG) { client.get(ApiConfig.Endpoints.STAFF_CHECKINS) }

@@ -55,7 +55,8 @@ fun StaffCheckinScreen(
         QrCodeScannerScreen(
             onCodeScanned = { raw ->
                 scannerOpen = false
-                viewModel.onQueryChange(raw)
+                // O QR diz o que é: `/u/` é a pessoa, `/v/` é um voucher.
+                if (raw.contains("/v/")) viewModel.onVoucherCodeChange(raw) else viewModel.onQueryChange(raw)
             },
             onDismiss = { scannerOpen = false },
         )
@@ -105,6 +106,29 @@ fun StaffCheckinScreen(
                 if (state.members.isEmpty() && state.query.length >= 2 && !state.isSearching) {
                     Text(text = "Ninguém com \"${state.query}\" nesta empresa.", style = PixTypography.bodyMuted)
                 }
+
+                Text(text = "Validar voucher", style = PixTypography.sectionTitle, color = PixColors.Cyan, modifier = Modifier.padding(top = 8.dp))
+
+                PixelInput(
+                    value = state.voucherCode,
+                    onValueChange = viewModel::onVoucherCodeChange,
+                    label = "Código do voucher",
+                    placeholder = "ABC123XY",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                state.error?.let {
+                    Text(text = it, style = PixTypography.errorText, color = PixColors.Pink)
+                }
+
+                PixelButton(
+                    text = "Validar",
+                    onClick = viewModel::validateVoucher,
+                    enabled = state.voucherCode.length >= 4 && !state.isValidating,
+                    isLoading = state.isValidating,
+                    loadingText = "Validando...",
+                    modifier = Modifier.fillMaxWidth(),
+                )
             } else {
                 Column(
                     modifier = Modifier.fillMaxWidth().border(2.dp, PixColors.Cyan).background(PixColors.Darker).padding(14.dp),

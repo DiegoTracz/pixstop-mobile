@@ -22,6 +22,8 @@ enum class Destination(
     Progress(requiredFeature = "pixels"),
     Notifications,
     Team(requiredFeature = "departments", requiredModule = "departments"),
+    /** Recompensas por voucher: o que os pixels compram onde não há loja. */
+    Rewards(requiredFeature = "pixels", requiredModule = "vouchers"),
     /** O balcão: registrar a visita de quem está na frente. */
     Staff(requiredModule = "checkin"),
     Company,
