@@ -123,6 +123,9 @@ object ApiConfig {
 
         fun rewardRedeem(id: Long) = "rewards/$id/redeem"
 
+        /** Indicação (Fase 14): o meu link e quem veio por ele. */
+        const val REFERRALS = "referrals"
+
         // ── Notificações e push ───────────────────────────────────────────
         const val NOTIFICATIONS = "notifications"
         const val NOTIFICATIONS_READ_ALL = "notifications/read-all"

@@ -2,6 +2,7 @@ package com.pixstop.mobile.data.repository
 
 import com.pixstop.mobile.core.config.ApiConfig
 import com.pixstop.mobile.core.network.safeCall
+import com.pixstop.mobile.data.remote.dto.ReferralDto
 import com.pixstop.mobile.data.remote.dto.RewardsPageDto
 import com.pixstop.mobile.data.remote.dto.VoucherDto
 import com.pixstop.mobile.domain.model.Outcome
@@ -16,6 +17,10 @@ class RewardRepository(private val client: HttpClient) {
 
     suspend fun page(): Outcome<RewardsPageDto> =
         safeCall(TAG) { client.get(ApiConfig.Endpoints.REWARDS) }
+
+    /** `null` no sucesso quer dizer que esta empresa não usa indicação. */
+    suspend fun referral(): Outcome<ReferralDto?> =
+        safeCall(TAG) { client.get(ApiConfig.Endpoints.REFERRALS) }
 
     suspend fun redeem(rewardId: Long): Outcome<VoucherDto> =
         safeCall(TAG) { client.post(ApiConfig.Endpoints.rewardRedeem(rewardId)) }

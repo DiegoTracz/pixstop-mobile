@@ -42,3 +42,16 @@ data class VoucherDto(
 
 @Serializable
 data class ValidateVoucherRequest(val code: String)
+
+/** O meu link de indicação e quem já veio por ele (Fase 14). */
+@Serializable
+data class ReferralDto(
+    val code: String,
+    val url: String,
+    val message: String,
+    @SerialName("whatsapp_url") val whatsappUrl: String? = null,
+    val xp: Int = 0,
+    val pending: Int = 0,
+    val accepted: Int = 0,
+    val remaining: Int? = null,
+)

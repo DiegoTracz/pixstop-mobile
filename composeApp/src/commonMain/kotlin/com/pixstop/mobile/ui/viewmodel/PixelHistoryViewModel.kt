@@ -2,6 +2,8 @@ package com.pixstop.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pixstop.mobile.data.remote.dto.ReferralDto
+import com.pixstop.mobile.data.repository.RewardRepository
 import com.pixstop.mobile.data.repository.ShopRepository
 import com.pixstop.mobile.data.repository.TeamRepository
 import com.pixstop.mobile.domain.model.Outcome
@@ -19,6 +21,8 @@ data class PixelHistoryUiState(
     val isLoadingMore: Boolean = false,
     val page: Int = 1,
     val hasNextPage: Boolean = false,
+    /** O meu link de indicação; nulo onde a empresa não usa indicação. */
+    val referral: ReferralDto? = null,
     val error: String? = null,
 )
 
@@ -31,12 +35,14 @@ data class PixelHistoryUiState(
 class PixelHistoryViewModel(
     private val team: TeamRepository,
     private val shop: ShopRepository,
+    private val rewards: RewardRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PixelHistoryUiState())
     val uiState: StateFlow<PixelHistoryUiState> = _uiState.asStateFlow()
 
     init {
+        loadReferral()
         refresh()
     }
 
@@ -85,6 +91,19 @@ class PixelHistoryViewModel(
                     isLoadingMore = false,
                     error = result.error.message,
                 )
+            }
+        }
+    }
+
+    /**
+     * O link de indicação, à parte do extrato: uma empresa sem indicação
+     * simplesmente não mostra o cartão, e isso nunca segura a carteira.
+     */
+    private fun loadReferral() {
+        viewModelScope.launch {
+            when (val result = rewards.referral()) {
+                is Outcome.Success -> _uiState.value = _uiState.value.copy(referral = result.value)
+                is Outcome.Failure -> Unit
             }
         }
     }

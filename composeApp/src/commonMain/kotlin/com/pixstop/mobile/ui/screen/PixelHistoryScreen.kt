@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.pixstop.mobile.data.remote.dto.ReferralDto
 import com.pixstop.mobile.domain.model.PixelEntry
 import com.pixstop.mobile.ui.components.PixelCoin
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
@@ -71,6 +72,8 @@ fun PixelHistoryScreen(
         )
 
         memberCode?.let { MemberCodeCard(it) }
+
+        state.referral?.let { ReferralCard(it) }
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -207,5 +210,32 @@ private fun MemberCodeCard(code: String) {
         Text(text = "SEU CÓDIGO NO BALCÃO", style = PixTypography.badgeText, color = PixColors.Gray400)
         Text(text = code.chunked(4).joinToString(" "), style = PixTypography.pageTitle, color = PixColors.Green)
         Text(text = "Diga o código para registrarem sua visita.", style = PixTypography.caption, color = PixColors.Gray400)
+    }
+}
+
+/**
+ * O link de indicação (Fase 14): o cliente traz o cliente, com o mesmo
+ * código do balcão. Quem chega só rende quando compra pela primeira vez —
+ * por isso o cartão conta "vieram", e não "convidei".
+ */
+@Composable
+private fun ReferralCard(referral: ReferralDto) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .border(2.dp, PixColors.Purple)
+            .background(PixColors.Darker)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(text = "INDIQUE E GANHE", style = PixTypography.badgeText, color = PixColors.Gray400)
+        Text(text = "Quem entrar pelo seu link e comprar te rende ${referral.xp} XP.", color = PixColors.Gray100)
+        Text(text = referral.url, style = PixTypography.caption, color = PixColors.Cyan)
+        Text(
+            text = "${referral.accepted} vieram" + if (referral.pending > 0) " · ${referral.pending} entraram e ainda não compraram" else "",
+            style = PixTypography.caption,
+            color = PixColors.Gray400,
+        )
     }
 }

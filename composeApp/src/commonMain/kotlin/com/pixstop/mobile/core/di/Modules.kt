@@ -107,7 +107,7 @@ val viewModelModule: Module = module {
     viewModel { CheckoutViewModel(get(), get(), get()) }
     viewModel { OrderViewModel(get(), get()) }
     viewModel { OrdersViewModel(get()) }
-    viewModel { PixelHistoryViewModel(get(), get()) }
+    viewModel { PixelHistoryViewModel(get(), get(), get()) }
     viewModel { ProgressViewModel(get()) }
     viewModel { CardsViewModel(get()) }
     viewModel { (code: String) -> PixelInviteViewModel(code, get()) }
