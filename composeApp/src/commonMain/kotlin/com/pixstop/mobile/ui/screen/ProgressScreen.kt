@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.core.text.IsoInstant
 import com.pixstop.mobile.domain.model.Progression
 import com.pixstop.mobile.domain.model.ProgressionLevel
+import com.pixstop.mobile.domain.model.ProgressionMission
 import com.pixstop.mobile.domain.model.XpEntry
 import com.pixstop.mobile.ui.components.LevelBadge
 import com.pixstop.mobile.ui.components.PixelCoin
@@ -90,6 +91,16 @@ fun ProgressScreen(
                 val progression = state.progression!!
 
                 item { Summary(progression) }
+
+                if (progression.missions.isNotEmpty()) {
+                    item {
+                        Text(text = "Missões", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+                    }
+
+                    items(progression.missions, key = { "mission-${it.code}" }) { mission ->
+                        MissionRow(mission)
+                    }
+                }
 
                 item {
                     Text(text = "Níveis", style = PixTypography.sectionTitle, color = PixColors.Cyan)
@@ -169,6 +180,60 @@ private fun Summary(progression: Progression) {
                 color = PixColors.Yellow,
             )
         }
+
+        progression.campaign?.let { campaign ->
+            Text(
+                text = "${campaign.name}: XP ${campaign.multiplierLabel}" +
+                    (campaign.endsAt?.let { IsoInstant.toEpochMillis(it) }?.let { " até ${formatDay(it)}" } ?: ""),
+                style = PixTypography.caption,
+                color = PixColors.Yellow,
+                modifier = Modifier.border(1.dp, PixColors.Yellow).padding(horizontal = 8.dp, vertical = 4.dp),
+            )
+        }
+
+        progression.previousSeason?.let { previous ->
+            Text(
+                text = "Na temporada ${previous.season} você chegou ao nível ${previous.level}" +
+                    (previous.title?.let { " — $it" } ?: "") + ". A barra recomeça; os pixels ficam.",
+                style = PixTypography.caption,
+                color = PixColors.Gray400,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MissionRow(mission: ProgressionMission) {
+    val color = if (mission.done) PixColors.Green else PixColors.Gray700
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(2.dp, color)
+            .background(if (mission.done) PixColors.GreenAlpha20 else PixColors.Darker)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(text = mission.label, color = PixColors.Gray100)
+            Text(
+                text = "+${mission.xp} XP",
+                style = PixTypography.sectionTitle,
+                color = if (mission.done) PixColors.Green else PixColors.Cyan,
+            )
+        }
+
+        SegmentedBar(fraction = mission.fraction, segments = mission.target.coerceIn(3, 10))
+
+        Text(
+            text = "${mission.progress} de ${mission.target} ${mission.unit}".trim(),
+            style = PixTypography.caption,
+            color = PixColors.Gray400,
+        )
     }
 }
 

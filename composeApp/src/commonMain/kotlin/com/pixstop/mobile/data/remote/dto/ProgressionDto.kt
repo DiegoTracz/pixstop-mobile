@@ -24,6 +24,37 @@ data class ProgressionDto(
     @SerialName("streak_days") val streakDays: Int = 0,
     @SerialName("last_earned_on") val lastEarnedOn: String? = null,
     val levels: List<ProgressionLevelDto> = emptyList(),
+    val missions: List<ProgressionMissionDto> = emptyList(),
+    val campaign: ProgressionCampaignDto? = null,
+    @SerialName("previous_season") val previousSeason: PreviousSeasonDto? = null,
+)
+
+/** Uma missão da temporada e o quanto já andou. */
+@Serializable
+data class ProgressionMissionDto(
+    val code: String,
+    val label: String,
+    val xp: Int = 0,
+    val progress: Int = 0,
+    val target: Int = 1,
+    val done: Boolean = false,
+)
+
+/** A campanha da plataforma valendo agora: XP multiplicado até uma data. */
+@Serializable
+data class ProgressionCampaignDto(
+    val name: String,
+    val multiplier: Double = 1.0,
+    @SerialName("ends_at") val endsAt: String? = null,
+)
+
+/** Onde a pessoa parou na temporada passada. */
+@Serializable
+data class PreviousSeasonDto(
+    val season: Int,
+    val level: Int = 0,
+    val title: String? = null,
+    @SerialName("xp_total") val xpTotal: Int = 0,
 )
 
 @Serializable

@@ -19,6 +19,9 @@ data class Progression(
     val nextLevel: ProgressionLevel?,
     val streakDays: Int,
     val levels: List<ProgressionLevel>,
+    val missions: List<ProgressionMission> = emptyList(),
+    val campaign: ProgressionCampaign? = null,
+    val previousSeason: PreviousSeason? = null,
 ) {
     /** A fração da barra, de 0 a 1, para desenhar. */
     val progressFraction: Float get() = (progressPercent.coerceIn(0, 100)) / 100f
@@ -38,6 +41,47 @@ data class ProgressionLevel(
     val rewardPixels: Int,
     val title: String?,
     val reached: Boolean,
+)
+
+/** Uma missão da temporada: "semana completa", "nova categoria". */
+data class ProgressionMission(
+    val code: String,
+    val label: String,
+    val xp: Int,
+    val progress: Int,
+    val target: Int,
+    val done: Boolean,
+) {
+    /** A fração da barra, de 0 a 1. */
+    val fraction: Float get() = if (target <= 0) 0f else (progress.coerceIn(0, target).toFloat() / target)
+
+    /** O que o "2 de 3" mede, no texto da tela. */
+    val unit: String get() = when (code) {
+        "week_complete" -> "dias com compra nesta semana"
+        "new_category" -> "categorias novas nesta temporada"
+        else -> ""
+    }
+}
+
+/** A campanha da plataforma valendo agora. */
+data class ProgressionCampaign(
+    val name: String,
+    val multiplier: Double,
+    val endsAt: String?,
+) {
+    /** "×2" ou "×2,5": sem casa decimal quando ela é zero. */
+    val multiplierLabel: String get() {
+        val rounded = (multiplier * 10).toInt()
+        return if (rounded % 10 == 0) "×${rounded / 10}" else "×${rounded / 10},${rounded % 10}"
+    }
+}
+
+/** Onde a pessoa parou na temporada passada. */
+data class PreviousSeason(
+    val season: Int,
+    val level: Int,
+    val title: String?,
+    val xpTotal: Int,
 )
 
 /** Uma linha do histórico de XP. `xp == 0` é uma subida de nível. */

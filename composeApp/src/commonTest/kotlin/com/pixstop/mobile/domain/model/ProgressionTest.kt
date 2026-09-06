@@ -95,4 +95,32 @@ class ProgressionTest {
         assertFalse(comXp.xp.isEmpty)
         assertTrue(antigo.xp.isEmpty)
     }
+
+    @Test
+    fun `missoes, campanha e temporada passada chegam quando o servidor manda`() {
+        val json = ligada.dropLast(1) + """,
+            "missions":[{"code":"week_complete","label":"Semana completa","xp":30,"progress":2,"target":3,"done":false},
+                        {"code":"new_category","label":"Nova categoria","xp":20,"progress":20,"target":20,"done":true}],
+            "campaign":{"name":"XP em dobro","multiplier":2.5,"ends_at":"2026-09-12T23:59:00+00:00"},
+            "previous_season":{"season":1,"level":3,"title":"Veterano","xp_total":480}}"""
+
+        val progression = apiJson.decodeFromString<ProgressionDto>(json).toDomain()!!
+
+        assertEquals(2, progression.missions.size)
+        assertEquals("dias com compra nesta semana", progression.missions[0].unit)
+        assertEquals(2f / 3f, progression.missions[0].fraction)
+        assertTrue(progression.missions[1].done)
+        assertEquals("×2,5", progression.campaign?.multiplierLabel)
+        assertEquals("Veterano", progression.previousSeason?.title)
+    }
+
+    @Test
+    fun `sem missoes nem campanha o servidor antigo continua valendo`() {
+        val progression = apiJson.decodeFromString<ProgressionDto>(ligada).toDomain()!!
+
+        assertTrue(progression.missions.isEmpty())
+        assertNull(progression.campaign)
+        assertNull(progression.previousSeason)
+        assertEquals("×2", ProgressionCampaign("x", 2.0, null).multiplierLabel)
+    }
 }
