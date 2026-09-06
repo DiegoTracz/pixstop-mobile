@@ -22,8 +22,17 @@ object NotificationRouter {
      * Resolve um aviso da caixa: o `action_url` manda, e o `type` cobre os
      * avisos antigos que ainda não gravavam link.
      */
-    fun resolve(notification: AppNotification): NotificationTarget? =
-        fromLink(notification.actionUrl) ?: fromType(notification.type)
+    fun resolve(notification: AppNotification): NotificationTarget? {
+        val byType = fromType(notification.type)
+
+        // O aviso de progresso aponta para "Meus pixels" na web, que lá reúne
+        // carteira e barra; aqui a barra tem tela própria, e o tipo sabe disso.
+        if (byType is NotificationTarget.Progress) {
+            return byType
+        }
+
+        return fromLink(notification.actionUrl) ?: byType
+    }
 
     /**
      * Resolve um link, seja o caminho do painel web (`/orders/12`) ou o deep
@@ -45,6 +54,10 @@ object NotificationRouter {
                 ?: NotificationTarget.Orders
 
             "pixels" -> NotificationTarget.Pixels
+
+            // "Meus pixels" na web reúne carteira e progresso; aqui o aviso de
+            // progresso já sabe para onde quer ir pelo tipo, e a URL cai na carteira.
+            "my-pixels" -> NotificationTarget.Pixels
 
             "notifications" -> NotificationTarget.Notifications
 
@@ -76,6 +89,7 @@ object NotificationRouter {
     private fun fromType(type: String?): NotificationTarget? = when (type) {
         "order_paid", "order_canceled" -> NotificationTarget.Orders
         "pixels_received", "pixels_expiring" -> NotificationTarget.Pixels
+        "level_up", "season_closed" -> NotificationTarget.Progress
         "new_order_received", "plan_changed", "subscription_activated",
         "subscription_canceled", "subscription_payment_failed",
         "trial_ending", "trial_expired",

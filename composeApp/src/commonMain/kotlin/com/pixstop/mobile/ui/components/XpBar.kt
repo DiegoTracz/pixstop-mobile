@@ -62,16 +62,21 @@ fun XpBar(
                 }
             }
 
-            // A campanha manda mais que a sequência: é ela que muda o que cada compra rende.
-            val badge = progression.campaign?.let { "XP ${it.multiplierLabel}" }
-                ?: progression.streakDays.takeIf { progression.hasStreak }?.let { "$it dias seguidos" }
+            // A campanha manda mais que a sequência; e a sequência em risco
+            // manda mais que a sequência tranquila — é hoje que ela se perde.
+            val (badge, color) = when {
+                progression.campaign != null -> "XP ${progression.campaign.multiplierLabel}" to PixColors.Yellow
+                progression.streakAtRisk -> "Compre hoje: ${progression.streakDays} dias" to PixColors.Pink
+                progression.hasStreak -> "${progression.streakDays} dias seguidos" to PixColors.Yellow
+                else -> null to PixColors.Yellow
+            }
 
             if (badge != null) {
                 Text(
                     text = badge,
                     style = PixTypography.caption,
-                    color = PixColors.Yellow,
-                    modifier = Modifier.border(1.dp, PixColors.Yellow).padding(horizontal = 6.dp, vertical = 2.dp),
+                    color = color,
+                    modifier = Modifier.border(1.dp, color).padding(horizontal = 6.dp, vertical = 2.dp),
                 )
             }
         }

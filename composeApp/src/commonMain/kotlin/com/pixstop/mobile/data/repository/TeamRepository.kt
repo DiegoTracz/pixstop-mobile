@@ -91,4 +91,5 @@ private fun TeamMemberDto.toDomain() = TeamMember(
     isManager = role == "manager",
     isActive = isActive,
     pixelAvailable = pixelAvailable,
+    level = level,
 )

@@ -269,6 +269,15 @@ private fun MemberRow(member: TeamMember, checked: Boolean, onToggle: () -> Unit
             )
         }
 
+        if (member.level > 0) {
+            Text(
+                text = "Nv. ${member.level}",
+                style = PixTypography.caption,
+                color = PixColors.Cyan,
+                modifier = Modifier.border(1.dp, PixColors.Cyan).padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
+
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
             PixelCoin(size = 12.dp)
 

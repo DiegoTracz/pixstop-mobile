@@ -33,6 +33,11 @@ sealed interface NotificationTarget {
         override val destination: Destination get() = Destination.Pixels
     }
 
+    /** A barra de XP por dentro: subiu de nível, a temporada virou. */
+    data object Progress : NotificationTarget {
+        override val destination: Destination get() = Destination.Progress
+    }
+
     /** O painel do administrador da empresa. */
     data object Company : NotificationTarget {
         override val destination: Destination get() = Destination.Company

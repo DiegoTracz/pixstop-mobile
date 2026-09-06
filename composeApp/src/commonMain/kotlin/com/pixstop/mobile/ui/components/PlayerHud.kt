@@ -71,6 +71,17 @@ fun PlayerHud(
                 overflow = TextOverflow.Ellipsis,
             )
 
+            // O selo de nível: status que se carrega, não só se consulta.
+            company?.progression?.let { progression ->
+                Text(
+                    text = "NV. ${progression.level} · ${progression.displayTitle.uppercase()}",
+                    style = PixTypography.caption,
+                    color = PixColors.Cyan,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+
             PixelBalance(pixels = company?.pixelAvailable ?: 0)
         }
     }

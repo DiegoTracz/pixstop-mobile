@@ -22,11 +22,31 @@ data class ProgressionDto(
     @SerialName("progress_percent") val progressPercent: Int = 0,
     @SerialName("next_level") val nextLevel: ProgressionLevelDto? = null,
     @SerialName("streak_days") val streakDays: Int = 0,
+    @SerialName("streak_at_risk") val streakAtRisk: Boolean = false,
     @SerialName("last_earned_on") val lastEarnedOn: String? = null,
     val levels: List<ProgressionLevelDto> = emptyList(),
     val missions: List<ProgressionMissionDto> = emptyList(),
     val campaign: ProgressionCampaignDto? = null,
     @SerialName("previous_season") val previousSeason: PreviousSeasonDto? = null,
+    val ranking: RankingDto? = null,
+)
+
+/** Os primeiros do departamento na temporada, e onde a pessoa está. */
+@Serializable
+data class RankingDto(
+    val department: String,
+    val members: Int = 0,
+    val position: Int = 0,
+    val top: List<RankingEntryDto> = emptyList(),
+)
+
+@Serializable
+data class RankingEntryDto(
+    @SerialName("user_id") val userId: Long,
+    val name: String,
+    val level: Int = 0,
+    @SerialName("xp_total") val xpTotal: Int = 0,
+    @SerialName("is_me") val isMe: Boolean = false,
 )
 
 /** Uma missão da temporada e o quanto já andou. */

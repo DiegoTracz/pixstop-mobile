@@ -56,4 +56,6 @@ data class TeamMember(
     val isManager: Boolean,
     val isActive: Boolean,
     val pixelAvailable: Int,
+    /** Nível na progressão por XP nesta temporada; zero sem progressão. */
+    val level: Int = 0,
 )

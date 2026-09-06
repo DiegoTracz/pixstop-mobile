@@ -22,6 +22,9 @@ data class Progression(
     val missions: List<ProgressionMission> = emptyList(),
     val campaign: ProgressionCampaign? = null,
     val previousSeason: PreviousSeason? = null,
+    /** A sequência está viva, hoje é dia útil e ainda não rendeu: sem compra, ela acaba. */
+    val streakAtRisk: Boolean = false,
+    val ranking: Ranking? = null,
 ) {
     /** A fração da barra, de 0 a 1, para desenhar. */
     val progressFraction: Float get() = (progressPercent.coerceIn(0, 100)) / 100f
@@ -75,6 +78,22 @@ data class ProgressionCampaign(
         return if (rounded % 10 == 0) "×${rounded / 10}" else "×${rounded / 10},${rounded % 10}"
     }
 }
+
+/** Os primeiros do departamento na temporada, e onde a pessoa está. */
+data class Ranking(
+    val department: String,
+    val members: Int,
+    val position: Int,
+    val top: List<RankingEntry>,
+)
+
+data class RankingEntry(
+    val userId: Long,
+    val name: String,
+    val level: Int,
+    val xpTotal: Int,
+    val isMe: Boolean,
+)
 
 /** Onde a pessoa parou na temporada passada. */
 data class PreviousSeason(

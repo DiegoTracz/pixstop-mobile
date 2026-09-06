@@ -6,6 +6,8 @@ import com.pixstop.mobile.data.remote.dto.ProgressionCampaignDto
 import com.pixstop.mobile.data.remote.dto.ProgressionDto
 import com.pixstop.mobile.data.remote.dto.ProgressionLevelDto
 import com.pixstop.mobile.data.remote.dto.ProgressionMissionDto
+import com.pixstop.mobile.data.remote.dto.RankingDto
+import com.pixstop.mobile.data.remote.dto.RankingEntryDto
 import com.pixstop.mobile.data.remote.dto.XpEventDto
 import com.pixstop.mobile.domain.model.OrderXp
 import com.pixstop.mobile.domain.model.PreviousSeason
@@ -13,6 +15,8 @@ import com.pixstop.mobile.domain.model.Progression
 import com.pixstop.mobile.domain.model.ProgressionCampaign
 import com.pixstop.mobile.domain.model.ProgressionLevel
 import com.pixstop.mobile.domain.model.ProgressionMission
+import com.pixstop.mobile.domain.model.Ranking
+import com.pixstop.mobile.domain.model.RankingEntry
 import com.pixstop.mobile.domain.model.XpEntry
 
 /** Progressão desligada vira `null`: a tela não desenha barra nenhuma. */
@@ -36,8 +40,19 @@ fun ProgressionDto.toDomain(): Progression? {
         missions = missions.map { it.toDomain() },
         campaign = campaign?.toDomain(),
         previousSeason = previousSeason?.toDomain(),
+        streakAtRisk = streakAtRisk,
+        ranking = ranking?.toDomain(),
     )
 }
+
+fun RankingDto.toDomain() = Ranking(
+    department = department,
+    members = members,
+    position = position,
+    top = top.map { it.toDomain() },
+)
+
+fun RankingEntryDto.toDomain() = RankingEntry(userId = userId, name = name, level = level, xpTotal = xpTotal, isMe = isMe)
 
 fun ProgressionMissionDto.toDomain() = ProgressionMission(
     code = code,

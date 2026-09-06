@@ -39,6 +39,7 @@ data class TeamMemberDto(
     @SerialName("is_active") val isActive: Boolean = true,
     @SerialName("pixel_balance") val pixelBalance: Int = 0,
     @SerialName("pixel_available") val pixelAvailable: Int = 0,
+    val level: Int = 0,
 )
 
 /**

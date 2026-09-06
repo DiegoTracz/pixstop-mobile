@@ -29,6 +29,7 @@ import com.pixstop.mobile.core.text.IsoInstant
 import com.pixstop.mobile.domain.model.Progression
 import com.pixstop.mobile.domain.model.ProgressionLevel
 import com.pixstop.mobile.domain.model.ProgressionMission
+import com.pixstop.mobile.domain.model.Ranking
 import com.pixstop.mobile.domain.model.XpEntry
 import com.pixstop.mobile.ui.components.LevelBadge
 import com.pixstop.mobile.ui.components.PixelCoin
@@ -102,6 +103,18 @@ fun ProgressScreen(
                     }
                 }
 
+                progression.ranking?.let { ranking ->
+                    item {
+                        Text(
+                            text = "${ranking.department} · você está em ${ranking.position}º de ${ranking.members}",
+                            style = PixTypography.sectionTitle,
+                            color = PixColors.Cyan,
+                        )
+                    }
+
+                    item { RankingCard(ranking) }
+                }
+
                 item {
                     Text(text = "Níveis", style = PixTypography.sectionTitle, color = PixColors.Cyan)
                 }
@@ -173,7 +186,13 @@ private fun Summary(progression: Progression) {
             color = PixColors.Gray100,
         )
 
-        if (progression.hasStreak) {
+        if (progression.streakAtRisk) {
+            Text(
+                text = "Sua sequência de ${progression.streakDays} dias termina hoje se você não comprar.",
+                style = PixTypography.caption,
+                color = PixColors.Pink,
+            )
+        } else if (progression.hasStreak) {
             Text(
                 text = "${progression.streakDays} dias seguidos comprando. Amanhã vale mais.",
                 style = PixTypography.caption,
@@ -198,6 +217,40 @@ private fun Summary(progression: Progression) {
                 style = PixTypography.caption,
                 color = PixColors.Gray400,
             )
+        }
+    }
+}
+
+/**
+ * Só o topo do departamento aparece: mostrar o fim da fila envergonha quem
+ * está nele e não motiva ninguém. A posição da pessoa vai no título.
+ */
+@Composable
+private fun RankingCard(ranking: Ranking) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(2.dp, PixColors.Gray700)
+            .background(PixColors.Darker),
+    ) {
+        ranking.top.forEachIndexed { index, entry ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(if (entry.isMe) PixColors.CyanAlpha10 else PixColors.Transparent)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(text = "${index + 1}", style = PixTypography.caption, color = PixColors.Gray400, modifier = Modifier.size(width = 16.dp, height = 16.dp))
+                Text(
+                    text = if (entry.isMe) "${entry.name} (você)" else entry.name,
+                    color = if (entry.isMe) PixColors.Cyan else PixColors.Gray100,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(text = "Nv. ${entry.level}", style = PixTypography.caption, color = PixColors.Gray400)
+                Text(text = "${entry.xpTotal} XP", style = PixTypography.caption, color = PixColors.Cyan)
+            }
         }
     }
 }

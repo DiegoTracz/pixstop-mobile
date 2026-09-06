@@ -74,6 +74,7 @@ fun AppNavigation() {
             is NotificationTarget.Order -> Routes.order(target.id)
             NotificationTarget.Orders -> Routes.ORDERS
             NotificationTarget.Pixels -> Routes.PIXELS
+            NotificationTarget.Progress -> Routes.PROGRESS
             NotificationTarget.Company -> Routes.COMPANY
             NotificationTarget.Notifications -> Routes.NOTIFICATIONS
         }

@@ -107,4 +107,15 @@ class NotificationRouterTest {
         assertEquals(Destination.Company, NotificationTarget.Company.destination)
         assertEquals(Destination.Notifications, NotificationTarget.Notifications.destination)
     }
+
+    @Test
+    fun `subir de nivel e virar a temporada levam a barra de XP, mesmo com o link da carteira`() {
+        val levelUp = NotificationRouter.resolve(aviso(type = "level_up", actionUrl = "/my-pixels"))
+        val season = NotificationRouter.resolve(aviso(type = "season_closed", actionUrl = "/my-pixels"))
+
+        assertEquals(NotificationTarget.Progress, levelUp)
+        assertEquals(Destination.Progress, season?.destination)
+        // O mesmo link, num aviso de pixels, continua na carteira.
+        assertEquals(NotificationTarget.Pixels, NotificationRouter.resolve(aviso(type = "pixels_received", actionUrl = "/my-pixels")))
+    }
 }

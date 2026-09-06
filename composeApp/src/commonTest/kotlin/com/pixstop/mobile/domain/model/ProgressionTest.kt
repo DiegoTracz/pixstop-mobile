@@ -123,4 +123,20 @@ class ProgressionTest {
         assertNull(progression.previousSeason)
         assertEquals("×2", ProgressionCampaign("x", 2.0, null).multiplierLabel)
     }
+
+    @Test
+    fun `sequencia em risco e ranking chegam quando o servidor manda`() {
+        val json = ligada.dropLast(1) + """,
+            "streak_at_risk":true,
+            "ranking":{"department":"Vendas","members":6,"position":2,
+                       "top":[{"user_id":7,"name":"Bruno","level":2,"xp_total":300,"is_me":false},
+                              {"user_id":4,"name":"Ana","level":1,"xp_total":130,"is_me":true}]}}"""
+
+        val progression = apiJson.decodeFromString<ProgressionDto>(json).toDomain()!!
+
+        assertTrue(progression.streakAtRisk)
+        assertEquals(2, progression.ranking?.position)
+        assertEquals("Ana", progression.ranking?.top?.first { it.isMe }?.name)
+        assertFalse(apiJson.decodeFromString<ProgressionDto>(ligada).toDomain()!!.streakAtRisk)
+    }
 }
