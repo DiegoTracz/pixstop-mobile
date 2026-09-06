@@ -118,4 +118,12 @@ class NotificationRouterTest {
         // O mesmo link, num aviso de pixels, continua na carteira.
         assertEquals(NotificationTarget.Pixels, NotificationRouter.resolve(aviso(type = "pixels_received", actionUrl = "/my-pixels")))
     }
+
+    @Test
+    fun `o link do convite com pixels leva ao convite, em maiusculas`() {
+        assertEquals(NotificationTarget.Invite("ABC123XY"), NotificationRouter.fromLink("/c/abc123xy"))
+        assertEquals(NotificationTarget.Invite("ABC123XY"), NotificationRouter.fromLink("pixstop://c/ABC123XY"))
+        assertEquals(Destination.Home, NotificationRouter.fromLink("/c/ABC123XY")?.destination)
+        assertNull(NotificationRouter.fromLink("/c/"))
+    }
 }

@@ -17,6 +17,7 @@ import com.pixstop.mobile.data.repository.OrderRepository
 import com.pixstop.mobile.data.repository.ProfileRepository
 import com.pixstop.mobile.data.repository.ShopRepository
 import com.pixstop.mobile.data.repository.CardRepository
+import com.pixstop.mobile.data.repository.PixelInviteRepository
 import com.pixstop.mobile.data.repository.ProgressRepository
 import com.pixstop.mobile.data.repository.TeamRepository
 import com.pixstop.mobile.ui.viewmodel.LegalConsentViewModel
@@ -29,6 +30,7 @@ import com.pixstop.mobile.ui.viewmodel.OrderViewModel
 import com.pixstop.mobile.ui.viewmodel.OrdersViewModel
 import com.pixstop.mobile.ui.viewmodel.PixelHistoryViewModel
 import com.pixstop.mobile.ui.viewmodel.CardsViewModel
+import com.pixstop.mobile.ui.viewmodel.PixelInviteViewModel
 import com.pixstop.mobile.ui.viewmodel.ProgressViewModel
 import com.pixstop.mobile.ui.viewmodel.TeamViewModel
 import com.pixstop.mobile.ui.viewmodel.ProductDetailViewModel
@@ -79,6 +81,7 @@ val dataModule: Module = module {
     single { TeamRepository(get()) }
     single { ProgressRepository(get()) }
     single { CardRepository(get()) }
+    single { PixelInviteRepository(get()) }
     single { CompanyRepository(get()) }
     single { CardTokenizer(get(named(GATEWAY_CLIENT)), get()) }
 }
@@ -101,6 +104,7 @@ val viewModelModule: Module = module {
     viewModel { PixelHistoryViewModel(get(), get()) }
     viewModel { ProgressViewModel(get()) }
     viewModel { CardsViewModel(get()) }
+    viewModel { (code: String) -> PixelInviteViewModel(code, get()) }
     viewModel { TeamViewModel(get()) }
     viewModel { CompanyViewModel(get()) }
 }

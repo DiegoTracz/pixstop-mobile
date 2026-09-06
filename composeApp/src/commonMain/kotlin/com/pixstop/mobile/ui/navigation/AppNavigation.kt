@@ -24,6 +24,7 @@ import com.pixstop.mobile.ui.screen.OrderScreen
 import com.pixstop.mobile.ui.screen.OrdersScreen
 import com.pixstop.mobile.ui.screen.PixelHistoryScreen
 import com.pixstop.mobile.ui.screen.CardsScreen
+import com.pixstop.mobile.ui.screen.PixelInviteScreen
 import com.pixstop.mobile.ui.screen.ProgressScreen
 import com.pixstop.mobile.ui.screen.TeamScreen
 import com.pixstop.mobile.ui.screen.NotificationsScreen
@@ -75,6 +76,7 @@ fun AppNavigation() {
             NotificationTarget.Orders -> Routes.ORDERS
             NotificationTarget.Pixels -> Routes.PIXELS
             NotificationTarget.Progress -> Routes.PROGRESS
+            is NotificationTarget.Invite -> Routes.invite(target.code)
             NotificationTarget.Company -> Routes.COMPANY
             NotificationTarget.Notifications -> Routes.NOTIFICATIONS
         }
@@ -110,16 +112,32 @@ fun AppNavigation() {
     val canNavigate = session.company != null &&
         !session.needsConsent && !session.needsCompany
 
+    // O convite com pixels é a exceção: quem o abre pode não ter empresa
+    // nenhuma ainda — basta estar logado e ter aceitado os documentos.
+    val canOpenInvite = session.account != null && !session.needsConsent
+
     // A empresa entra na chave porque `openTarget` decide pelo papel de agora:
     // quem troca de empresa não pode continuar sendo julgado pela anterior.
-    LaunchedEffect(canNavigate, session.company?.id) {
-        if (!canNavigate) {
+    LaunchedEffect(canNavigate, canOpenInvite, session.company?.id) {
+        if (!canNavigate && !canOpenInvite) {
             return@LaunchedEffect
         }
 
         notificationEvents.targets.collect { target ->
-            openTarget(target)
-            notificationEvents.consume()
+            when {
+                target is NotificationTarget.Invite && canOpenInvite -> {
+                    navController.navigate(Routes.invite(target.code)) { launchSingleTop = true }
+                    notificationEvents.consume()
+                }
+
+                target !is NotificationTarget.Invite && canNavigate -> {
+                    openTarget(target)
+                    notificationEvents.consume()
+                }
+
+                // Fica guardado: o barramento reentrega quando a sessão mudar.
+                else -> Unit
+            }
         }
     }
 
@@ -307,6 +325,21 @@ fun AppNavigation() {
 
         composable(Routes.CARDS) {
             CardsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.INVITE) { entry ->
+            PixelInviteScreen(
+                code = entry.arguments?.getString("code").orEmpty(),
+                onAccepted = {
+                    // A empresa nova já está ativa no servidor; o `/me` traz
+                    // a carteira com o presente e a Home redesenha.
+                    sessionViewModel.refresh()
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onBack = { navController.popBackStack() },
+            )
         }
 
         composable(Routes.TEAM) {

@@ -33,6 +33,14 @@ sealed interface NotificationTarget {
         override val destination: Destination get() = Destination.Pixels
     }
 
+    /**
+     * Um convite com pixels (`/c/{code}`). Quem abre pode ainda não ter
+     * empresa — por isso o destino é a Home, que qualquer pessoa logada abre.
+     */
+    data class Invite(val code: String) : NotificationTarget {
+        override val destination: Destination get() = Destination.Home
+    }
+
     /** A barra de XP por dentro: subiu de nível, a temporada virou. */
     data object Progress : NotificationTarget {
         override val destination: Destination get() = Destination.Progress

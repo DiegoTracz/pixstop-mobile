@@ -37,6 +37,11 @@ object Routes {
     /** Cartões guardados, alcançados pelo perfil. */
     const val CARDS = "cards"
 
+    /** Um convite com pixels, alcançado pelo link. */
+    const val INVITE = "invite/{code}"
+
+    fun invite(code: String) = "invite/$code"
+
     /** Área do gestor: verba do time e distribuição. */
     const val TEAM = "team"
 

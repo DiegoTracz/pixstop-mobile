@@ -108,6 +108,11 @@ object ApiConfig {
         const val JOIN_TENANT = "tenant/join"
         const val TENANT_INVITE = "tenant/invite"
 
+        /** O convite com pixels (Fase 14): público antes do aceite. */
+        fun pixelInvite(code: String) = "invites/$code"
+
+        fun pixelInviteAccept(code: String) = "invites/$code/accept"
+
         // ── Notificações e push ───────────────────────────────────────────
         const val NOTIFICATIONS = "notifications"
         const val NOTIFICATIONS_READ_ALL = "notifications/read-all"

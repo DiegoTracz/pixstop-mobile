@@ -55,6 +55,11 @@ object NotificationRouter {
 
             "pixels" -> NotificationTarget.Pixels
 
+            // O link do convite com pixels: `/c/ABC123` na web, `pixstop://c/ABC123` no app.
+            "c" -> segments.getOrNull(1)
+                ?.takeIf { it.isNotBlank() }
+                ?.let { NotificationTarget.Invite(it.uppercase()) }
+
             // "Meus pixels" na web reúne carteira e progresso; aqui o aviso de
             // progresso já sabe para onde quer ir pelo tipo, e a URL cai na carteira.
             "my-pixels" -> NotificationTarget.Pixels
