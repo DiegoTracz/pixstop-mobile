@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -75,8 +77,17 @@ fun ConnectFridgeScreen(
                     CircularProgressIndicator(color = PixColors.Cyan)
                 }
 
+                // A barra de navegação do aparelho fica por cima do que a
+                // tela desenha: sem reservar esse espaço, o botão de
+                // conectar nascia atrás dos ícones do celular, sem jeito de
+                // ser tocado. O `imePadding` faz o mesmo pelo teclado.
                 else -> Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding()
+                        .imePadding()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     when (state.step) {
@@ -100,6 +111,9 @@ fun ConnectFridgeScreen(
         }
     }
 }
+
+/** Quantas redes a lista mostra antes de pedir para ver o resto. */
+private const val VISIBLE_NETWORKS = 5
 
 // ─────────────────────────────────────────────────────────────────────────
 // Passos
@@ -245,15 +259,44 @@ private fun NetworkStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
         Text("Nenhuma rede encontrada ainda.", style = PixTypography.caption, color = PixColors.Yellow)
     }
 
-    state.networks.forEach { network -> NetworkRow(network, selected = network.ssid == state.ssid) { viewModel.pickNetwork(network) } }
+    // Escolhida a rede, a lista sai da frente. Onze redes empurravam a
+    // senha e o botão para fora da tela, e quem estava instalando não via
+    // que ainda faltava alguma coisa a fazer.
+    var showAll by remember { mutableStateOf(false) }
+    val chosen = state.networks.firstOrNull { it.ssid == state.ssid }
 
-    PixelButton(
-        text = "Procurar de novo",
-        onClick = viewModel::scanNetworks,
-        variant = PixelButtonVariant.Secondary,
-        enabled = !state.isWorking,
-        modifier = Modifier.fillMaxWidth(),
-    )
+    if (state.ssid.isBlank()) {
+        val visible = if (showAll) state.networks else state.networks.take(VISIBLE_NETWORKS)
+
+        visible.forEach { network -> NetworkRow(network, selected = false) { viewModel.pickNetwork(network) } }
+
+        if (!showAll && state.networks.size > VISIBLE_NETWORKS) {
+            PixelButton(
+                text = "Ver as outras ${state.networks.size - VISIBLE_NETWORKS}",
+                onClick = { showAll = true },
+                variant = PixelButtonVariant.Secondary,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        PixelButton(
+            text = "Procurar de novo",
+            onClick = viewModel::scanNetworks,
+            variant = PixelButtonVariant.Secondary,
+            enabled = !state.isWorking,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    } else {
+        chosen?.let { NetworkRow(it, selected = true) {} }
+
+        PixelButton(
+            text = "Trocar de rede",
+            onClick = { viewModel.updateSsid(""); showAll = false },
+            variant = PixelButtonVariant.Secondary,
+            enabled = !state.isWorking,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 
     PixelInput(
         value = state.ssid,
