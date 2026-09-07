@@ -27,5 +27,7 @@ enum class Destination(
     /** O balcão: registrar a visita de quem está na frente. */
     Staff(requiredModule = "checkin"),
     Company,
+    /** Conectar e acompanhar as geladeiras (Fase 9.3). Só o administrador. */
+    Fridges,
     Profile,
 }

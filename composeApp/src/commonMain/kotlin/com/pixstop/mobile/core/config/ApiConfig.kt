@@ -179,6 +179,13 @@ object ApiConfig {
         // ── Gestor ────────────────────────────────────────────────────────
         const val TEAM = "team"
 
+        // ── Geladeiras (Fase 9.3) ────────────────────────────────────────
+        const val COMPANY_DEVICES = "company/devices"
+
+        fun companyDeviceCode(id: Long) = "company/devices/$id/code"
+
+        fun companyDeviceStatus(id: Long) = "company/devices/$id/status"
+
         fun teamMembers(departmentId: Long) = "team/$departmentId/members"
 
         fun teamHistory(departmentId: Long) = "team/$departmentId/history"

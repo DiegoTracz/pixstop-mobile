@@ -19,6 +19,7 @@ import com.pixstop.mobile.ui.screen.LegalConsentScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
 import com.pixstop.mobile.ui.screen.CartScreen
 import com.pixstop.mobile.ui.screen.CompanyScreen
+import com.pixstop.mobile.ui.screen.ConnectFridgeScreen
 import com.pixstop.mobile.ui.screen.CheckoutScreen
 import com.pixstop.mobile.ui.screen.OrderScreen
 import com.pixstop.mobile.ui.screen.OrdersScreen
@@ -261,6 +262,7 @@ fun AppNavigation() {
                         Destination.Staff -> navController.navigate(Routes.STAFF)
                         Destination.Rewards -> navController.navigate(Routes.REWARDS)
                         Destination.Company -> navController.navigate(Routes.COMPANY)
+                        Destination.Fridges -> navController.navigate(Routes.FRIDGES)
                         else -> Unit
                     }
                 },
@@ -364,6 +366,10 @@ fun AppNavigation() {
 
         composable(Routes.COMPANY) {
             CompanyScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.FRIDGES) {
+            ConnectFridgeScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.ORDERS) {

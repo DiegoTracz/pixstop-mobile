@@ -31,7 +31,7 @@ object RoleHelper {
      * O que entra no menu lateral, na ordem em que aparece.
      */
     fun drawer(company: ActiveCompany?): List<Destination> =
-        listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Rewards, Destination.Team, Destination.Staff, Destination.Company)
+        listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Rewards, Destination.Team, Destination.Staff, Destination.Company, Destination.Fridges)
             .filter { canOpen(it, company) }
 
     fun canOpen(destination: Destination, company: ActiveCompany?): Boolean {
@@ -59,6 +59,7 @@ object RoleHelper {
             // Recompensas também são novas: só com o módulo declarado.
             Destination.Rewards -> "vouchers" in company.modules
             Destination.Company -> company.role.isAdmin
+            Destination.Fridges -> company.role.isAdmin
             else -> true
         }
     }

@@ -54,6 +54,9 @@ object Routes {
     /** Painel do administrador da empresa. */
     const val COMPANY = "company"
 
+    /** Conectar e acompanhar as geladeiras (Fase 9.3). */
+    const val FRIDGES = "fridges"
+
     /** Caixa de avisos, alcançada pelo sino da barra superior. */
     const val NOTIFICATIONS = "notifications"
 
