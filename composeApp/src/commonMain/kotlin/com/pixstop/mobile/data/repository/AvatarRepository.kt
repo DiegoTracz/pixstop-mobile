@@ -30,22 +30,37 @@ class AvatarRepository(private val client: HttpClient) {
     suspend fun generatePixel(photo: ByteArray): Outcome<String> =
         safeCall<PixelAvatarPreviewDto>(TAG) {
             client.post(ApiConfig.Endpoints.GENERATE_PIXEL_AVATAR) {
-                setBody(
-                    MultiPartFormDataContent(
-                        formData {
-                            append(
-                                key = "photo",
-                                value = photo,
-                                headers = Headers.build {
-                                    append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
-                                    append(HttpHeaders.ContentDisposition, "filename=\"selfie.jpg\"")
-                                },
-                            )
-                        },
-                    ),
-                )
+                setBody(multipart("photo", photo))
             }
         }.map { it.preview }
+
+    /**
+     * O servidor valida pela extensão do arquivo, então o nome importa: sem
+     * ele o Laravel recusa o envio antes de olhar o conteúdo.
+     */
+    private fun multipart(field: String, photo: ByteArray) = MultiPartFormDataContent(
+        formData {
+            append(
+                key = field,
+                value = photo,
+                headers = Headers.build {
+                    append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
+                    append(HttpHeaders.ContentDisposition, "filename=\"foto.jpg\"")
+                },
+            )
+        },
+    )
+
+    /**
+     * A foto escolhida na galeria vira a foto do perfil, sem passar pela IA.
+     * É o caminho de quem já tem a foto de que gosta.
+     */
+    suspend fun upload(photo: ByteArray): Outcome<String> =
+        safeCall<ApplyPixelAvatarDto>(TAG) {
+            client.post(ApiConfig.Endpoints.UPDATE_AVATAR) {
+                setBody(multipart("avatar", photo))
+            }
+        }.map { it.avatarUrl }
 
     /** "Gostei deste": a prévia vira a foto do perfil. */
     suspend fun applyPixel(): Outcome<String> =

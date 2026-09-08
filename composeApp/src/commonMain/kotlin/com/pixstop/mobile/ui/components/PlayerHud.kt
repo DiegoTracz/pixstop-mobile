@@ -39,7 +39,7 @@ fun PlayerHud(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PlayerAvatar(name = user.name, size = 56.dp)
+        PlayerAvatar(name = user.name, avatarUrl = user.avatarUrl, size = 56.dp)
 
         Column(
             modifier = Modifier.weight(1f),

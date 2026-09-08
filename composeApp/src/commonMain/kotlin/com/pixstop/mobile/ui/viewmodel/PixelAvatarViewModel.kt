@@ -58,6 +58,29 @@ class PixelAvatarViewModel(private val avatars: AvatarRepository) : ViewModel() 
         }
     }
 
+    /**
+     * A foto escolhida na galeria vai direto: quem já tem a foto de que gosta
+     * não precisa passar pela IA nem aprovar prévia nenhuma.
+     *
+     * @param onApplied a conta precisa recarregar: o avatar mudou em toda a tela.
+     */
+    fun uploadPhoto(photo: ByteArray, onApplied: () -> Unit = {}) {
+        _uiState.update { it.copy(isWorking = true, preview = null, error = null, message = null) }
+
+        viewModelScope.launch {
+            when (val result = avatars.upload(photo)) {
+                is Outcome.Success -> {
+                    _uiState.update { it.copy(isWorking = false, message = "Foto atualizada.") }
+                    onApplied()
+                }
+
+                is Outcome.Failure -> _uiState.update {
+                    it.copy(isWorking = false, error = result.error.message)
+                }
+            }
+        }
+    }
+
     /** @param onApplied a conta precisa recarregar: o avatar mudou em toda a tela. */
     fun apply(onApplied: () -> Unit = {}) {
         if (!_uiState.value.hasPreview || _uiState.value.isWorking) return

@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.pixstop.mobile.domain.model.AccountUser
 import androidx.compose.ui.window.Dialog
 import com.pixstop.mobile.ui.components.PixelButton
@@ -35,6 +36,7 @@ import com.pixstop.mobile.ui.components.PixelInput
 import com.pixstop.mobile.ui.components.PixelPasswordInput
 import com.pixstop.mobile.ui.components.PixelCameraScreen
 import com.pixstop.mobile.ui.components.decodeBase64Image
+import com.pixstop.mobile.ui.components.rememberPhotoPicker
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.ProfileUiState
@@ -61,6 +63,7 @@ fun ProfileScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val avatar by avatarViewModel.uiState.collectAsState()
+    val pickPhoto = rememberPhotoPicker { avatarViewModel.uploadPhoto(it, onProfileSaved) }
 
     LaunchedEffect(user?.id) {
         user?.let { viewModel.start(it.name, it.email) }
@@ -106,7 +109,9 @@ fun ProfileScreen(
         AvatarSection(
             state = avatar,
             userName = user?.name,
+            avatarUrl = user?.avatarUrl,
             onOpenCamera = avatarViewModel::openCamera,
+            onPickPhoto = pickPhoto,
             onApply = { avatarViewModel.apply(onProfileSaved) },
             onDiscard = avatarViewModel::discardPreview,
         )
@@ -234,7 +239,9 @@ fun ProfileScreen(
 private fun AvatarSection(
     state: PixelAvatarUiState,
     userName: String?,
+    avatarUrl: String?,
     onOpenCamera: () -> Unit,
+    onPickPhoto: () -> Unit,
     onApply: () -> Unit,
     onDiscard: () -> Unit,
 ) {
@@ -242,7 +249,7 @@ private fun AvatarSection(
         Text(text = "Seu avatar", style = PixTypography.sectionTitle, color = PixColors.Cyan)
 
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            AvatarThumb(preview = state.preview, userName = userName)
+            AvatarThumb(preview = state.preview, avatarUrl = avatarUrl, userName = userName)
 
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
@@ -289,34 +296,46 @@ private fun AvatarSection(
                 loadingText = "Desenhando...",
                 modifier = Modifier.fillMaxWidth(),
             )
+
+            PixelButton(
+                text = "Escolher uma foto",
+                onClick = onPickPhoto,
+                variant = PixelButtonVariant.Secondary,
+                enabled = !state.isWorking,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
 
 /**
- * A prévia, ou a inicial no quadrado enquanto não houver foto.
- *
- * A foto que já está no perfil mora numa URL, e carregar imagem da rede pede
- * uma biblioteca que o app ainda não tem — a mesma razão de os produtos
- * aparecerem pela inicial.
+ * O que a pessoa está vendo agora: a prévia recém-gerada, se houver; senão a
+ * foto que já está no perfil; senão a inicial no quadrado.
  */
 @Composable
-private fun AvatarThumb(preview: String?, userName: String?) {
+private fun AvatarThumb(preview: String?, avatarUrl: String?, userName: String?) {
     val bitmap = remember(preview) { decodeBase64Image(preview) }
 
     Box(
         modifier = Modifier.size(96.dp).border(2.dp, PixColors.Cyan).background(PixColors.Gray800),
         contentAlignment = Alignment.Center,
     ) {
-        if (bitmap != null) {
-            Image(
+        when {
+            bitmap != null -> Image(
                 bitmap = bitmap,
                 contentDescription = "Prévia do avatar",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
-        } else {
-            Text(
+
+            !avatarUrl.isNullOrBlank() -> AsyncImage(
+                model = avatarUrl,
+                contentDescription = "Sua foto",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+
+            else -> Text(
                 text = userName?.take(1)?.uppercase().orEmpty(),
                 style = PixTypography.pageTitle,
                 color = PixColors.Gray500,

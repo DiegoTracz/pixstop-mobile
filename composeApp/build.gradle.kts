@@ -67,6 +67,12 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
+            // Coil - a foto do perfil vem por URL, e mostrar imagem da rede
+            // sem biblioteca significa reimplementar cache, decodificação e
+            // ciclo de vida em cada tela.
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
+
             // Ktor - HTTP Client
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
