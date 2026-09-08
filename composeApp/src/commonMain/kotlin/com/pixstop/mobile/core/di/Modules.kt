@@ -13,6 +13,7 @@ import com.pixstop.mobile.data.repository.LegalRepository
 import com.pixstop.mobile.data.repository.CartRepository
 import com.pixstop.mobile.data.remote.SetupPortalClient
 import com.pixstop.mobile.data.repository.CompanyRepository
+import com.pixstop.mobile.data.repository.AvatarRepository
 import com.pixstop.mobile.data.repository.FridgeRepository
 import com.pixstop.mobile.data.repository.NotificationRepository
 import com.pixstop.mobile.data.repository.OrderRepository
@@ -30,6 +31,7 @@ import com.pixstop.mobile.ui.viewmodel.CheckoutViewModel
 import com.pixstop.mobile.ui.viewmodel.HomeFeedViewModel
 import com.pixstop.mobile.ui.viewmodel.CompanyViewModel
 import com.pixstop.mobile.ui.viewmodel.ConnectFridgeViewModel
+import com.pixstop.mobile.ui.viewmodel.PixelAvatarViewModel
 import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
 import com.pixstop.mobile.ui.viewmodel.OrderViewModel
 import com.pixstop.mobile.ui.viewmodel.OrdersViewModel
@@ -93,6 +95,7 @@ val dataModule: Module = module {
     single { RewardRepository(get()) }
     single { CompanyRepository(get()) }
     single { FridgeRepository(get()) }
+    single { AvatarRepository(get()) }
     // O portal da geladeira fala sem token e sem log de corpo: o mesmo
     // cliente cru do gateway de pagamento serve.
     single { SetupPortalClient(get(named(GATEWAY_CLIENT))) }
@@ -123,6 +126,7 @@ val viewModelModule: Module = module {
     viewModel { TeamViewModel(get()) }
     viewModel { CompanyViewModel(get()) }
     viewModel { ConnectFridgeViewModel(get(), get(), get()) }
+    viewModel { PixelAvatarViewModel(get()) }
 }
 
 /** Tudo que o `startKoin` precisa carregar. */

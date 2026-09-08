@@ -22,6 +22,7 @@ data class RegisterUiState(
     val password: String = "",
     val passwordConfirmation: String = "",
     val companyCode: String = "",
+    /** A pessoa optou por digitar o código em vez de escanear. */
     val isCompanyCodeExpanded: Boolean = false,
     val isQrScannerOpen: Boolean = false,
     val isLoading: Boolean = false,
@@ -81,6 +82,7 @@ class RegisterViewModel(
         )
     }
 
+    /** Alterna entre escanear e digitar o código à mão. */
     fun toggleCompanyCodeSection() {
         _uiState.value = _uiState.value.copy(
             isCompanyCodeExpanded = !_uiState.value.isCompanyCodeExpanded
@@ -103,7 +105,9 @@ class RegisterViewModel(
         val code = CompanyCodeParser.parse(rawValue)
         _uiState.value = _uiState.value.copy(
             companyCode = code,
-            isCompanyCodeExpanded = true,
+            // Lido pela câmera, o código não precisa do campo de digitação
+            // aberto por baixo: o que a pessoa quer ver é qual código pegou.
+            isCompanyCodeExpanded = false,
             isQrScannerOpen = false,
             fieldErrors = _uiState.value.fieldErrors - "company_code",
             generalError = null

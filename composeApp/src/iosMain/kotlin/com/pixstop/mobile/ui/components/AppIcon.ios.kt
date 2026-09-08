@@ -156,6 +156,8 @@ private fun AppIconType.toSFSymbolName(): String = when (this) {
     AppIconType.Delete -> "trash.fill"
     AppIconType.Share -> "square.and.arrow.up"
     AppIconType.QrCodeScanner -> "qrcode.viewfinder"
+    AppIconType.Camera -> "camera.fill"
+    AppIconType.CameraSwitch -> "arrow.triangle.2.circlepath.camera"
 
     // Status
     AppIconType.Check -> "checkmark"

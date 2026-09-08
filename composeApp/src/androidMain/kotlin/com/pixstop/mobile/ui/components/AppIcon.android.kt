@@ -46,6 +46,8 @@ actual fun AppIcon(
         AppIconType.Delete -> Icons.Filled.Delete
         AppIconType.Share -> Icons.Filled.Share
         AppIconType.QrCodeScanner -> Icons.Filled.QrCodeScanner
+        AppIconType.Camera -> Icons.Filled.PhotoCamera
+        AppIconType.CameraSwitch -> Icons.Filled.Cameraswitch
         AppIconType.Remove -> Icons.Filled.Remove
 
         // Loja

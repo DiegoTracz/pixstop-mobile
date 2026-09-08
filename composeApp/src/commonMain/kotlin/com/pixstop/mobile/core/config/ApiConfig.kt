@@ -103,6 +103,10 @@ object ApiConfig {
         const val UPDATE_PASSWORD = "me/password"
         const val UPDATE_AVATAR = "me/avatar"
 
+        /** A foto vira retrato 8-bit e espera aprovação. */
+        const val GENERATE_PIXEL_AVATAR = "me/avatar/pixel"
+        const val APPLY_PIXEL_AVATAR = "me/avatar/pixel/apply"
+
         // ── Empresa ───────────────────────────────────────────────────────
         const val SWITCH_TENANT = "tenant/switch"
         const val JOIN_TENANT = "tenant/join"

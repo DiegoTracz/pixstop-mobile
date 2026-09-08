@@ -1,13 +1,16 @@
 package com.pixstop.mobile.ui.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -15,10 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.AccountUser
 import androidx.compose.ui.window.Dialog
@@ -27,9 +33,13 @@ import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelDivider
 import com.pixstop.mobile.ui.components.PixelInput
 import com.pixstop.mobile.ui.components.PixelPasswordInput
+import com.pixstop.mobile.ui.components.PixelCameraScreen
+import com.pixstop.mobile.ui.components.decodeBase64Image
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.ProfileUiState
+import com.pixstop.mobile.ui.viewmodel.PixelAvatarUiState
+import com.pixstop.mobile.ui.viewmodel.PixelAvatarViewModel
 import com.pixstop.mobile.ui.viewmodel.ProfileViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -47,8 +57,10 @@ fun ProfileScreen(
     onAccountDeleted: () -> Unit = {},
     onOpenCards: () -> Unit = {},
     viewModel: ProfileViewModel = koinViewModel(),
+    avatarViewModel: PixelAvatarViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val avatar by avatarViewModel.uiState.collectAsState()
 
     LaunchedEffect(user?.id) {
         user?.let { viewModel.start(it.name, it.email) }
@@ -59,6 +71,17 @@ fun ProfileScreen(
         if (state.isDeleted) {
             onAccountDeleted()
         }
+    }
+
+    // A câmera toma a tela inteira: mirar o próprio rosto num quadradinho
+    // dentro de um formulário não funciona.
+    if (avatar.isCameraOpen) {
+        PixelCameraScreen(
+            onPhoto = avatarViewModel::onPhoto,
+            onDismiss = avatarViewModel::closeCamera,
+        )
+
+        return
     }
 
     if (state.isDeleteOpen) {
@@ -80,6 +103,14 @@ fun ProfileScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        AvatarSection(
+            state = avatar,
+            userName = user?.name,
+            onOpenCamera = avatarViewModel::openCamera,
+            onApply = { avatarViewModel.apply(onProfileSaved) },
+            onDiscard = avatarViewModel::discardPreview,
+        )
+
         Text(text = "Seus dados", style = PixTypography.sectionTitle, color = PixColors.Cyan)
 
         PixelInput(
@@ -192,6 +223,108 @@ fun ProfileScreen(
  * Pede a senha porque é o que separa o pedido do titular de alguém que pegou
  * o celular destravado.
  */
+/**
+ * O avatar em pixel art.
+ *
+ * A foto vira um retrato 8-bit e fica esperando: quem tirou vê o resultado
+ * antes de ele virar a foto do perfil, e pode tirar outra sem ter perdido o
+ * avatar que já tinha.
+ */
+@Composable
+private fun AvatarSection(
+    state: PixelAvatarUiState,
+    userName: String?,
+    onOpenCamera: () -> Unit,
+    onApply: () -> Unit,
+    onDiscard: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(text = "Seu avatar", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            AvatarThumb(preview = state.preview, userName = userName)
+
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = if (state.hasPreview) "Ficou assim" else "Vire um personagem 8-bit",
+                    style = PixTypography.bodyRegular,
+                    color = PixColors.Gray100,
+                )
+
+                Text(
+                    text = if (state.hasPreview) {
+                        "Use este ou tire outra foto."
+                    } else {
+                        "Tire uma foto e a transformamos em pixel art."
+                    },
+                    style = PixTypography.bodyMuted,
+                )
+            }
+        }
+
+        Feedback(message = state.message, error = state.error)
+
+        if (state.hasPreview) {
+            PixelButton(
+                text = "Usar este avatar",
+                onClick = onApply,
+                enabled = !state.isWorking,
+                isLoading = state.isWorking,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            PixelButton(
+                text = "Tirar outra",
+                onClick = { onDiscard(); onOpenCamera() },
+                variant = PixelButtonVariant.Secondary,
+                enabled = !state.isWorking,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        } else {
+            PixelButton(
+                text = "Abrir a câmera pixel art",
+                onClick = onOpenCamera,
+                enabled = !state.isWorking,
+                isLoading = state.isWorking,
+                loadingText = "Desenhando...",
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+/**
+ * A prévia, ou a inicial no quadrado enquanto não houver foto.
+ *
+ * A foto que já está no perfil mora numa URL, e carregar imagem da rede pede
+ * uma biblioteca que o app ainda não tem — a mesma razão de os produtos
+ * aparecerem pela inicial.
+ */
+@Composable
+private fun AvatarThumb(preview: String?, userName: String?) {
+    val bitmap = remember(preview) { decodeBase64Image(preview) }
+
+    Box(
+        modifier = Modifier.size(96.dp).border(2.dp, PixColors.Cyan).background(PixColors.Gray800),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap,
+                contentDescription = "Prévia do avatar",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+        } else {
+            Text(
+                text = userName?.take(1)?.uppercase().orEmpty(),
+                style = PixTypography.pageTitle,
+                color = PixColors.Gray500,
+            )
+        }
+    }
+}
+
 @Composable
 private fun DeleteAccountDialog(
     password: String,

@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -66,7 +67,20 @@ fun RegisterScreen(
             themeColor = PixColors.Green
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ── Entrar numa empresa: é por aqui que quase todo mundo chega ──
+        CompanyCodeSection(
+            companyCode = uiState.companyCode,
+            onCompanyCodeChange = viewModel::onCompanyCodeChange,
+            isTyping = uiState.isCompanyCodeExpanded,
+            onToggleTyping = viewModel::toggleCompanyCodeSection,
+            onScanQr = viewModel::openQrScanner,
+            error = uiState.fieldErrors["company_code"],
+            enabled = !uiState.isLoading
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         // ── Nome ──
         PixelInput(
@@ -157,19 +171,6 @@ fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // ── Seção colapsável: Código de empresa ──
-        CompanyCodeSection(
-            companyCode = uiState.companyCode,
-            onCompanyCodeChange = viewModel::onCompanyCodeChange,
-            isExpanded = uiState.isCompanyCodeExpanded,
-            onToggle = viewModel::toggleCompanyCodeSection,
-            onScanQr = viewModel::openQrScanner,
-            error = uiState.fieldErrors["company_code"],
-            enabled = !uiState.isLoading
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
         // ── Erro geral ──
         if (uiState.generalError != null && uiState.fieldErrors.isEmpty()) {
             Box(
@@ -222,103 +223,114 @@ fun RegisterScreen(
 }
 
 /**
- * Seção colapsável do código de empresa com botão de QR scanner.
+ * Entrar numa empresa, no topo e sem esconderijo.
+ *
+ * Quase todo mundo que cria conta aqui foi convidado por uma empresa e
+ * chegou com um QR na mão. Antes isso vivia atrás de "Tem um código de
+ * empresa?", colapsado no fim do formulário: quem tinha o QR não o via, e
+ * criava a conta solta.
  */
 @Composable
 private fun CompanyCodeSection(
     companyCode: String,
     onCompanyCodeChange: (String) -> Unit,
-    isExpanded: Boolean,
-    onToggle: () -> Unit,
+    isTyping: Boolean,
+    onToggleTyping: () -> Unit,
     onScanQr: () -> Unit,
     error: String?,
     enabled: Boolean
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Toggle header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(enabled = enabled) { onToggle() }
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Tem um código de empresa?",
-                style = PixTypography.bodyMuted
-            )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PixColors.CyanAlpha10)
+            .pixelBorder(PixColors.Cyan)
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             AppIcon(
-                icon = if (isExpanded) AppIconType.ChevronUp else AppIconType.ChevronDown,
+                icon = AppIconType.QrCodeScanner,
                 contentDescription = null,
                 tint = PixColors.Cyan,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(20.dp)
+            )
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Text(text = "Entrar numa empresa", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "Aponte para o QR Code que a empresa mandou. É ele que liga sua conta à geladeira.",
+            style = PixTypography.bodyMuted
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (companyCode.isNotBlank() && !isTyping) {
+            // Já tem código: o que interessa agora é conferir e seguir.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = companyCode.uppercase(), style = PixTypography.sectionTitle, color = PixColors.Green)
+
+                Text(
+                    text = "TROCAR",
+                    style = PixTypography.link.copy(textDecoration = TextDecoration.Underline),
+                    modifier = Modifier.clickable(enabled = enabled) { onToggleTyping() }
+                )
+            }
+
+            error?.let {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(text = it, style = PixTypography.errorText)
+            }
+
+            return@Column
+        }
+
+        PixelButton(
+            text = "ESCANEAR QR CODE",
+            onClick = onScanQr,
+            modifier = Modifier.fillMaxWidth(),
+            variant = PixelButtonVariant.Primary,
+            enabled = enabled
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        if (isTyping) {
+            PixelInput(
+                value = companyCode,
+                onValueChange = onCompanyCodeChange,
+                label = "CÓDIGO DA EMPRESA",
+                placeholder = "Ex: A1B2C3D4",
+                error = error,
+                enabled = enabled,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            Text(
+                text = "ou digitar o código",
+                style = PixTypography.link.copy(textDecoration = TextDecoration.Underline),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = enabled) { onToggleTyping() },
+                textAlign = TextAlign.Center
             )
         }
 
-        // Expandable content
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            Column {
-                Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    // Input do código
-                    Box(modifier = Modifier.weight(1f)) {
-                        PixelInput(
-                            value = companyCode,
-                            onValueChange = onCompanyCodeChange,
-                            label = "CÓDIGO DA EMPRESA",
-                            placeholder = "Ex: A1B2C3D4",
-                            error = error,
-                            enabled = enabled,
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Botão QR Scanner
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Spacer para alinhar com o input (pula a label)
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .background(PixColors.Gray700)
-                                .pixelBorder(PixColors.Cyan)
-                                .clickable(enabled = enabled) { onScanQr() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            AppIcon(
-                                icon = AppIconType.QrCodeScanner,
-                                contentDescription = "Escanear QR Code",
-                                tint = PixColors.Cyan,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Escaneie o QR Code ou digite o código manualmente",
-                    style = PixTypography.footerText
-                )
-            }
-        }
+        Text(
+            text = "Sem empresa? Dá para criar a conta e entrar numa depois.",
+            style = PixTypography.footerText
+        )
     }
 }
 
