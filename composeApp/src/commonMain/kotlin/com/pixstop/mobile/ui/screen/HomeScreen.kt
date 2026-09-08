@@ -1,6 +1,7 @@
 package com.pixstop.mobile.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -314,13 +315,19 @@ private fun CartNotice(text: String, onOpenCart: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = text, style = PixTypography.badgeText, color = PixColors.Dark)
+        // Fonte de texto, não a de rótulo: a pixelada de 6sp em cima do
+        // verde vivo é bonita e ilegível, e este aviso existe para ser lido
+        // de relance.
+        Text(text = text, style = PixTypography.bodyRegular, color = PixColors.Dark)
 
         Text(
-            text = "VER CARRINHO",
-            style = PixTypography.badgeText,
+            text = "Ver carrinho",
+            style = PixTypography.bodyRegular,
             color = PixColors.Dark,
-            modifier = Modifier.clickable(onClick = onOpenCart).padding(4.dp),
+            modifier = Modifier
+                .border(2.dp, PixColors.Dark)
+                .clickable(onClick = onOpenCart)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
         )
     }
 }
