@@ -123,7 +123,7 @@ private const val VISIBLE_NETWORKS = 5
 private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
     Text("Nova geladeira", style = PixTypography.sectionTitle, color = PixColors.Cyan)
     Text(
-        "Dê um nome e o sistema gera o código de ativação. Depois é só ligar a geladeira na tomada.",
+        "O sistema gera o código de ativação. Sem nome, ela nasce como Pixstop 01. Depois é só ligar a geladeira na tomada.",
         style = PixTypography.caption,
         color = PixColors.Gray300,
     )
@@ -131,8 +131,8 @@ private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
     PixelInput(
         value = state.newName,
         onValueChange = viewModel::updateName,
-        label = "Nome",
-        placeholder = "Geladeira da copa",
+        label = "Nome (opcional)",
+        placeholder = "Pixstop 01",
         modifier = Modifier.fillMaxWidth(),
         enabled = !state.isWorking,
     )
@@ -348,8 +348,11 @@ private fun DoneStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
         }
     }
 
+    // A geladeira online ainda não vende nada: o que interessa agora é o
+    // que falta para a vitrine encher, e isso muda de empresa para empresa.
     Text(
-        "Pedidos pagos já abrem a trava, e toda abertura da porta fica gravada.",
+        device?.stock?.nextStep
+            ?: "Pedidos pagos já abrem a trava, e toda abertura da porta fica gravada.",
         style = PixTypography.caption,
         color = PixColors.Gray300,
     )

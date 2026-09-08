@@ -39,6 +39,7 @@ data class FridgeDevice(
     val firmwareVersion: String?,
     val doorOpen: Boolean?,
     val applianceName: String?,
+    val stock: FridgeStock? = null,
 ) {
     val isOnline: Boolean get() = presence == FridgePresence.Online
 
@@ -47,6 +48,38 @@ data class FridgeDevice(
 
     /** `483 921`, que é como se dita e como aparece no painel. */
     val formattedCode: String? get() = activationCode?.let { "${it.take(3)} ${it.drop(3)}" }
+}
+
+/**
+ * O estoque desta geladeira, para a tela dizer o que ainda falta.
+ *
+ * Ligar na tomada e entrar no WiFi não vende nada: sem produto cadastrado e
+ * sem estoque aqui dentro, a vitrine continua vazia. Esta é a única coisa
+ * que a pessoa precisa saber assim que a geladeira fica online.
+ */
+data class FridgeStock(
+    val applianceName: String?,
+    val inAppliance: Int,
+    val inCompany: Int,
+) {
+    /** O que dizer, na ordem em que os problemas aparecem. */
+    val nextStep: String
+        get() = when {
+            inCompany == 0 ->
+                "Falta cadastrar os produtos da empresa. Depois é só informar o estoque desta geladeira."
+
+            applianceName == null ->
+                "Falta ligar esta geladeira a um equipamento no painel para ela receber estoque."
+
+            inAppliance == 0 ->
+                "Os produtos já estão cadastrados. Falta informar o estoque de $applianceName para a vitrine encher."
+
+            inAppliance == 1 ->
+                "1 produto já está em $applianceName. Pedidos pagos abrem a trava, e toda abertura fica gravada."
+
+            else ->
+                "$inAppliance produtos já estão em $applianceName. Pedidos pagos abrem a trava, e toda abertura fica gravada."
+        }
 }
 
 /** Uma rede WiFi vista pela geladeira, no modo de configuração. */

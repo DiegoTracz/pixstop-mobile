@@ -49,6 +49,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ShopScreen(
     onProductClick: (Long) -> Unit,
+    onAddToCart: (Long) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ShopViewModel = koinViewModel(),
 ) {
@@ -126,7 +127,11 @@ fun ShopScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(state.products, key = { it.id }) { product ->
-                    ProductRow(product = product, onClick = { onProductClick(product.id) })
+                    ProductRow(
+                        product = product,
+                        onClick = { onProductClick(product.id) },
+                        onAdd = { onAddToCart(product.id) },
+                    )
                 }
 
                 if (state.isLoadingMore) {
@@ -176,7 +181,7 @@ private fun CategoryStrip(
 }
 
 @Composable
-private fun ProductRow(product: Product, onClick: () -> Unit) {
+private fun ProductRow(product: Product, onClick: () -> Unit, onAdd: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -213,6 +218,30 @@ private fun ProductRow(product: Product, onClick: () -> Unit) {
                 color = if (product.isSoldOut) PixColors.Pink else PixColors.Gray400,
             )
         }
+
+        // Na vitrine só dava para abrir o produto: para pôr no carrinho era
+        // preciso entrar nele e voltar. Quem já sabe o que quer levar não
+        // deveria pagar esse pedágio.
+        AddButton(enabled = !product.isSoldOut, onClick = onAdd)
+    }
+}
+
+/** O mesmo quadrado de adicionar dos cartões do início. */
+@Composable
+private fun AddButton(enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .background(if (enabled) PixColors.Cyan else PixColors.Gray700)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        AppIcon(
+            icon = AppIconType.CartAdd,
+            contentDescription = if (enabled) "Adicionar ao carrinho" else "Esgotado",
+            modifier = Modifier.size(20.dp),
+            tint = if (enabled) PixColors.Dark else PixColors.Gray500,
+        )
     }
 }
 

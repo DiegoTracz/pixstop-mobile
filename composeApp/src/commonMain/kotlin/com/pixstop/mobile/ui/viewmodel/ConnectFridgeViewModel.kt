@@ -64,7 +64,12 @@ data class ConnectFridgeUiState(
 
     val code: String? get() = chosen?.activationCode
 
-    val canCreate: Boolean get() = newName.trim().length >= 3 && !isWorking
+    /**
+     * O nome é opcional: em branco, o servidor batiza de "Pixstop 01". Um
+     * nome de uma letra, porém, é engano de digitação — e a lista com vinte
+     * geladeiras chamadas "a" não ajuda ninguém.
+     */
+    val canCreate: Boolean get() = (newName.isBlank() || newName.trim().length >= 3) && !isWorking
 
     val canConfigure: Boolean get() = ssid.isNotBlank() && !code.isNullOrBlank() && !isWorking
 

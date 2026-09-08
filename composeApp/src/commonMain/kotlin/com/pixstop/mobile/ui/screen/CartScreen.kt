@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,6 +29,7 @@ import com.pixstop.mobile.domain.model.CartLine
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
+import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
@@ -94,6 +96,111 @@ fun CartScreen(
                     onCheckout = onCheckout,
                 )
             }
+        }
+    }
+}
+
+/**
+ * O carrinho como gaveta lateral, ao lado da vitrine.
+ *
+ * Ver o que já foi escolhido não deveria custar sair da loja: a gaveta abre
+ * por cima, mostra as mesmas linhas da tela cheia e fecha em "continuar
+ * comprando", com a pessoa exatamente onde estava.
+ */
+@Composable
+fun CartDrawerSheet(
+    onKeepShopping: () -> Unit,
+    onCheckout: () -> Unit,
+    viewModel: CartViewModel = koinViewModel(),
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    Column(modifier = Modifier.fillMaxSize().background(PixColors.Dark)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(text = "Carrinho", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+
+            Text(
+                text = when (state.cart.totalItems) {
+                    0 -> ""
+                    1 -> "1 item"
+                    else -> "${state.cart.totalItems} itens"
+                },
+                style = PixTypography.caption,
+                color = PixColors.Gray400,
+            )
+        }
+
+        state.secondsLeft?.let { ReservationBanner(it) }
+
+        when {
+            state.isLoading && state.cart.isEmpty -> Box(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(color = PixColors.Cyan)
+            }
+
+            state.cart.isEmpty -> Box(
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(20.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = state.error ?: "Seu carrinho está vazio.",
+                    style = if (state.error != null) PixTypography.errorText else PixTypography.bodyMuted,
+                )
+            }
+
+            else -> LazyColumn(
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(state.cart.items, key = { it.id }) { line ->
+                    CartRow(
+                        line = line,
+                        busy = state.busyItemId == line.id,
+                        onChangeQuantity = { viewModel.changeQuantity(line.id, it) },
+                        onRemove = { viewModel.remove(line.id) },
+                    )
+                }
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(PixColors.Darker)
+                .navigationBarsPadding()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            state.error?.takeIf { !state.cart.isEmpty }?.let {
+                Text(text = it, style = PixTypography.errorText)
+            }
+
+            if (!state.cart.isEmpty) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(text = "Total", style = PixTypography.caption, color = PixColors.Gray400)
+                    Text(text = formatMoney(state.cart.total), style = PixTypography.pageTitle, color = PixColors.Green)
+                }
+
+                PixelButton(text = "Finalizar compra", onClick = onCheckout, modifier = Modifier.fillMaxWidth())
+            }
+
+            PixelButton(
+                text = "Continuar comprando",
+                onClick = onKeepShopping,
+                variant = PixelButtonVariant.Secondary,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

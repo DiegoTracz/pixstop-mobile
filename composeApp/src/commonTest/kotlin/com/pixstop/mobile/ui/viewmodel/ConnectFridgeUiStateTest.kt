@@ -2,6 +2,7 @@ package com.pixstop.mobile.ui.viewmodel
 
 import com.pixstop.mobile.domain.model.FridgeDevice
 import com.pixstop.mobile.domain.model.FridgePresence
+import com.pixstop.mobile.domain.model.FridgeStock
 import com.pixstop.mobile.domain.model.PortalMode
 import com.pixstop.mobile.domain.model.PortalStatus
 import kotlin.test.Test
@@ -149,11 +150,43 @@ class ConnectFridgeUiStateTest {
     }
 
     @Test
-    fun `criar exige um nome com tres letras e nao pode estar ocupado`() {
+    fun `criar aceita nome em branco, recusa nome curto e nao pode estar ocupado`() {
         val state = ConnectFridgeUiState(isLoading = false)
 
+        // Em branco o servidor batiza de "Pixstop 01"; duas letras é engano.
+        assertTrue(state.canCreate)
         assertFalse(state.copy(newName = "Ge").canCreate)
         assertTrue(state.copy(newName = "Geladeira").canCreate)
         assertFalse(state.copy(newName = "Geladeira", isWorking = true).canCreate)
+    }
+
+    @Test
+    fun `depois de conectar, a tela diz o que ainda falta para a vitrine encher`() {
+        // Empresa sem produto nenhum: o estoque da geladeira nem é o assunto.
+        assertEquals(
+            "Falta cadastrar os produtos da empresa. Depois é só informar o estoque desta geladeira.",
+            FridgeStock(applianceName = "Copa", inAppliance = 0, inCompany = 0).nextStep,
+        )
+
+        // Geladeira sem equipamento: não há onde o estoque morar.
+        assertEquals(
+            "Falta ligar esta geladeira a um equipamento no painel para ela receber estoque.",
+            FridgeStock(applianceName = null, inAppliance = 0, inCompany = 8).nextStep,
+        )
+
+        assertEquals(
+            "Os produtos já estão cadastrados. Falta informar o estoque de Copa para a vitrine encher.",
+            FridgeStock(applianceName = "Copa", inAppliance = 0, inCompany = 8).nextStep,
+        )
+
+        assertEquals(
+            "1 produto já está em Copa. Pedidos pagos abrem a trava, e toda abertura fica gravada.",
+            FridgeStock(applianceName = "Copa", inAppliance = 1, inCompany = 8).nextStep,
+        )
+
+        assertEquals(
+            "6 produtos já estão em Copa. Pedidos pagos abrem a trava, e toda abertura fica gravada.",
+            FridgeStock(applianceName = "Copa", inAppliance = 6, inCompany = 8).nextStep,
+        )
     }
 }

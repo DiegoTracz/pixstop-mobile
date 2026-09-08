@@ -20,6 +20,15 @@ data class FridgeDeviceDto(
     @SerialName("firmware_version") val firmwareVersion: String? = null,
     @SerialName("door_open") val doorOpen: Boolean? = null,
     val appliance: NamedRefDto? = null,
+    val stock: FridgeStockDto? = null,
+)
+
+/** O que ainda falta para a geladeira vender (Fase 9.3). */
+@Serializable
+data class FridgeStockDto(
+    val appliance: NamedRefDto? = null,
+    @SerialName("in_appliance") val inAppliance: Int = 0,
+    @SerialName("in_company") val inCompany: Int = 0,
 )
 
 @Serializable

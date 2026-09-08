@@ -58,6 +58,7 @@ import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.core.storage.currentHourOfDay
 import com.pixstop.mobile.core.text.greetingForHour
+import kotlinx.coroutines.delay
 import com.pixstop.mobile.ui.viewmodel.HomeFeedViewModel
 import com.pixstop.mobile.ui.viewmodel.ShopViewModel
 import com.pixstop.mobile.ui.viewmodel.CartViewModel
@@ -127,10 +128,23 @@ fun HomeScreen(
     val cart by cartViewModel.uiState.collectAsState()
     val feed by homeFeedViewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    // Uma segunda gaveta, do mesmo lado, aberta só pelo ícone do carrinho: o
+    // gesto de arrastar continua sendo do menu, que é o de fora.
+    val cartDrawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val openCartDrawer: () -> Unit = { scope.launch { cartDrawerState.open() } }
     var switcherOpen by remember { mutableStateOf(false) }
     val destinations = RoleHelper.bottomBar(session.company)
     var selectedTab by remember { mutableStateOf(Destination.Home.name) }
+
+    // "Adicionado ao carrinho" é recado de segundos: some sozinho, para não
+    // virar mais uma coisa para a pessoa fechar.
+    LaunchedEffect(cart.message) {
+        if (cart.message != null) {
+            delay(2500)
+            cartViewModel.dismissMessage()
+        }
+    }
 
     // Um plano que desliga a loja tira a aba dela; quem estava nela precisa
     // sair, senão ficaria olhando uma tela que já não existe.
@@ -192,6 +206,23 @@ fun HomeScreen(
             }
         },
     ) {
+        ModalNavigationDrawer(
+            drawerState = cartDrawerState,
+            // Só o ícone do carrinho abre: o arrastar da borda é do menu.
+            gesturesEnabled = false,
+            drawerContent = {
+                ModalDrawerSheet(modifier = Modifier.width(320.dp), drawerContainerColor = PixColors.Dark) {
+                    CartDrawerSheet(
+                        viewModel = cartViewModel,
+                        onKeepShopping = { scope.launch { cartDrawerState.close() } },
+                        onCheckout = {
+                            scope.launch { cartDrawerState.close() }
+                            onOpenCart()
+                        },
+                    )
+                }
+            },
+        ) {
         Scaffold(
             containerColor = PixColors.Dark,
             topBar = {
@@ -203,22 +234,29 @@ fun HomeScreen(
                     onNotificationsClick = onOpenNotifications,
                     unreadCount = notifications.unread,
                     // Sem a loja no plano não há carrinho a mostrar.
-                    onCartClick = onOpenCart.takeIf { RoleHelper.canOpen(Destination.Cart, session.company) },
+                    onCartClick = openCartDrawer.takeIf { RoleHelper.canOpen(Destination.Cart, session.company) },
                     cartCount = cart.itemCount,
                 )
             },
             bottomBar = {
-                PixelBottomNav(
-                    items = bottomNavItems(destinations),
-                    selectedRoute = selectedTab,
-                    onItemSelected = { selectedTab = it },
-                )
+                Column {
+                    cart.message?.let { text ->
+                        CartNotice(text = text, onOpenCart = openCartDrawer)
+                    }
+
+                    PixelBottomNav(
+                        items = bottomNavItems(destinations),
+                        selectedRoute = selectedTab,
+                        onItemSelected = { selectedTab = it },
+                    )
+                }
             },
         ) { paddingValues ->
             when (selectedTab) {
                 Destination.Shop.name -> ShopScreen(
                     viewModel = shopViewModel,
                     onProductClick = onOpenProduct,
+                    onAddToCart = { cartViewModel.add(it) },
                     modifier = Modifier.padding(paddingValues),
                 )
 
@@ -256,6 +294,34 @@ fun HomeScreen(
                 )
             }
         }
+        }
+    }
+}
+
+/**
+ * "Adicionado ao carrinho", com o caminho para o carrinho ao lado.
+ *
+ * Antes só o número do ícone mudava: quem tocou no botão não tinha como
+ * saber se o toque pegou sem procurar o contador no canto da tela.
+ */
+@Composable
+private fun CartNotice(text: String, onOpenCart: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PixColors.Green)
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text = text, style = PixTypography.badgeText, color = PixColors.Dark)
+
+        Text(
+            text = "VER CARRINHO",
+            style = PixTypography.badgeText,
+            color = PixColors.Dark,
+            modifier = Modifier.clickable(onClick = onOpenCart).padding(4.dp),
+        )
     }
 }
 

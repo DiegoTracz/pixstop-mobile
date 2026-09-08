@@ -6,6 +6,7 @@ import com.pixstop.mobile.data.remote.dto.FridgeDeviceDto
 import com.pixstop.mobile.data.remote.dto.StoreFridgeRequest
 import com.pixstop.mobile.domain.model.FridgeDevice
 import com.pixstop.mobile.domain.model.FridgePresence
+import com.pixstop.mobile.domain.model.FridgeStock
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.map
 import io.ktor.client.HttpClient
@@ -62,4 +63,11 @@ private fun FridgeDeviceDto.toDomain() = FridgeDevice(
     firmwareVersion = firmwareVersion,
     doorOpen = doorOpen,
     applianceName = appliance?.name,
+    stock = stock?.let {
+        FridgeStock(
+            applianceName = it.appliance?.name ?: appliance?.name,
+            inAppliance = it.inAppliance,
+            inCompany = it.inCompany,
+        )
+    },
 )
