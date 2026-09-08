@@ -146,6 +146,9 @@ actual fun QrCodeScannerScreen(
         }
 
         // Scanning frame overlay
+        // O `drawBehind` desenha fora da composição: a cor vem daqui.
+        val cyanColor = PixColors.Cyan
+
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -153,7 +156,6 @@ actual fun QrCodeScannerScreen(
                 .drawBehind {
                     val cornerLen = 30.dp.toPx()
                     val strokeW = 4.dp.toPx()
-                    val cyanColor = PixColors.Cyan
 
                     // Top-left
                     drawRect(cyanColor, Offset.Zero, Size(cornerLen, strokeW))

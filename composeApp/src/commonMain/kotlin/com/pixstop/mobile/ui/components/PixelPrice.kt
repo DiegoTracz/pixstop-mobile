@@ -68,7 +68,7 @@ fun DiscountTag(percentage: Int, modifier: Modifier = Modifier) {
     Text(
         text = "-$percentage%",
         style = PixTypography.badgeText,
-        color = PixColors.White,
+        color = PixColors.Dark,
         modifier = modifier.background(PixColors.Pink).padding(horizontal = 6.dp, vertical = 2.dp),
     )
 }

@@ -9,8 +9,10 @@ import androidx.compose.ui.Modifier
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.network.ktor3.KtorNetworkFetcherFactory
+import com.pixstop.mobile.core.storage.ThemeStore
 import com.pixstop.mobile.ui.navigation.AppNavigation
 import com.pixstop.mobile.ui.theme.AppTheme
+import org.koin.compose.koinInject
 
 /**
  * Ponto de entrada do aplicativo.
@@ -43,7 +45,10 @@ fun App() {
             .build()
     }
 
-    AppTheme {
+    val themeStore: ThemeStore = koinInject()
+    val mode by themeStore.mode.collectAsState()
+
+    AppTheme(mode = mode) {
         Box(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.background)

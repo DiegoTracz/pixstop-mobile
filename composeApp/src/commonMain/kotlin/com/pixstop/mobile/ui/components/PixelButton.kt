@@ -74,7 +74,7 @@ fun PixelButton(
         )
         PixelButtonVariant.Destructive -> ButtonColors(
             bg = PixColors.Pink,
-            text = PixColors.White,
+            text = PixColors.Dark,
             border = PixColors.Pink,
             shadow = PixColors.Pink
         )

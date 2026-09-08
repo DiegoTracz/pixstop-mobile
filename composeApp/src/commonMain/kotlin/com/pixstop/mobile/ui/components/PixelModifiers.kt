@@ -1,5 +1,6 @@
 package com.pixstop.mobile.ui.components
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
@@ -15,6 +16,7 @@ import com.pixstop.mobile.ui.theme.PixColors
 /**
  * Sombra pixel sólida sem blur — estilo retro 8-bit.
  */
+@Composable
 fun Modifier.pixelShadow(
     color: Color = PixColors.Cyan,
     offsetX: Dp = 4.dp,
@@ -30,6 +32,7 @@ fun Modifier.pixelShadow(
 /**
  * Glow neon — blur suave ao redor do componente.
  */
+@Composable
 fun Modifier.neonGlow(
     color: Color = PixColors.Cyan,
     radius: Dp = 20.dp,
@@ -47,6 +50,7 @@ fun Modifier.neonGlow(
 /**
  * Overlay de scanlines CRT — linhas horizontais semitransparentes.
  */
+@Composable
 fun Modifier.scanlines() = this.drawWithContent {
     drawContent()
     val lineHeight = 2.dp.toPx()
@@ -65,6 +69,7 @@ fun Modifier.scanlines() = this.drawWithContent {
 /**
  * Grid pattern decorativo — linhas ciano finas simulando tela digital.
  */
+@Composable
 fun Modifier.gridPattern(
     color: Color = PixColors.Cyan.copy(alpha = 0.03f),
     spacing: Dp = 40.dp
@@ -96,6 +101,7 @@ fun Modifier.gridPattern(
 /**
  * Borda pixel sólida 2dp — cantos retos.
  */
+@Composable
 fun Modifier.pixelBorder(
     color: Color = PixColors.Cyan,
     width: Dp = 2.dp

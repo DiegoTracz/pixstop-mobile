@@ -3,6 +3,7 @@ package com.pixstop.mobile.ui.screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,8 +26,10 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.pixstop.mobile.core.storage.ThemeStore
 import com.pixstop.mobile.domain.model.AccountUser
 import androidx.compose.ui.window.Dialog
 import com.pixstop.mobile.ui.components.PixelButton
@@ -37,12 +40,14 @@ import com.pixstop.mobile.ui.components.PixelPasswordInput
 import com.pixstop.mobile.ui.components.PixelCameraScreen
 import com.pixstop.mobile.ui.components.decodeBase64Image
 import com.pixstop.mobile.ui.components.rememberPhotoPicker
+import com.pixstop.mobile.ui.theme.AppThemeMode
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.ProfileUiState
 import com.pixstop.mobile.ui.viewmodel.PixelAvatarUiState
 import com.pixstop.mobile.ui.viewmodel.PixelAvatarViewModel
 import com.pixstop.mobile.ui.viewmodel.ProfileViewModel
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -64,6 +69,8 @@ fun ProfileScreen(
     val state by viewModel.uiState.collectAsState()
     val avatar by avatarViewModel.uiState.collectAsState()
     val pickPhoto = rememberPhotoPicker { avatarViewModel.uploadPhoto(it, onProfileSaved) }
+    val themeStore: ThemeStore = koinInject()
+    val themeMode by themeStore.mode.collectAsState()
 
     LaunchedEffect(user?.id) {
         user?.let { viewModel.start(it.name, it.email) }
@@ -147,6 +154,8 @@ fun ProfileScreen(
         )
 
         PixelDivider(text = "")
+
+        AppearanceSection(selected = themeMode, onSelect = themeStore::set)
 
         Text(text = "Trocar a senha", style = PixTypography.sectionTitle, color = PixColors.Cyan)
 
@@ -235,6 +244,38 @@ fun ProfileScreen(
  * antes de ele virar a foto do perfil, e pode tirar outra sem ter perdido o
  * avatar que já tinha.
  */
+/**
+ * Claro, escuro ou o que o aparelho estiver usando.
+ *
+ * O padrão é acompanhar o sistema: quem liga o modo escuro à noite espera que
+ * o aplicativo acompanhe sem ter de vir aqui.
+ */
+@Composable
+private fun AppearanceSection(selected: AppThemeMode, onSelect: (AppThemeMode) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text = "Aparência", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            AppThemeMode.entries.forEach { mode ->
+                val isSelected = mode == selected
+
+                Text(
+                    text = mode.label.uppercase(),
+                    style = PixTypography.badgeText,
+                    color = if (isSelected) PixColors.Dark else PixColors.Cyan,
+                    modifier = Modifier
+                        .weight(1f)
+                        .border(2.dp, PixColors.Cyan)
+                        .background(if (isSelected) PixColors.Cyan else PixColors.Transparent)
+                        .clickable { onSelect(mode) }
+                        .padding(vertical = 12.dp),
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun AvatarSection(
     state: PixelAvatarUiState,

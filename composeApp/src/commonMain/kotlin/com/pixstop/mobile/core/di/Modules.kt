@@ -13,6 +13,7 @@ import com.pixstop.mobile.data.repository.LegalRepository
 import com.pixstop.mobile.data.repository.CartRepository
 import com.pixstop.mobile.data.remote.SetupPortalClient
 import com.pixstop.mobile.data.repository.CompanyRepository
+import com.pixstop.mobile.core.storage.ThemeStore
 import com.pixstop.mobile.data.repository.AvatarRepository
 import com.pixstop.mobile.data.repository.FridgeRepository
 import com.pixstop.mobile.data.repository.NotificationRepository
@@ -96,6 +97,7 @@ val dataModule: Module = module {
     single { CompanyRepository(get()) }
     single { FridgeRepository(get()) }
     single { AvatarRepository(get()) }
+    single { ThemeStore(get()) }
     // O portal da geladeira fala sem token e sem log de corpo: o mesmo
     // cliente cru do gateway de pagamento serve.
     single { SetupPortalClient(get(named(GATEWAY_CLIENT))) }

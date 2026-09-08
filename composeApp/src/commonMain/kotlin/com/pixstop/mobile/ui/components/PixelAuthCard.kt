@@ -78,6 +78,9 @@ fun PixelAuthCard(
  */
 @Composable
 private fun TerminalHeaderBar(title: String) {
+    // O `drawBehind` desenha fora da composição: a cor precisa ser lida aqui.
+    val corDaBorda = PixColors.Cyan.copy(alpha = 0.2f)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -85,7 +88,7 @@ private fun TerminalHeaderBar(title: String) {
             .drawBehind {
                 // 1dp bottom border cyan 20%
                 drawRect(
-                    PixColors.Cyan.copy(alpha = 0.2f),
+                    corDaBorda,
                     Offset(0f, size.height - 1.dp.toPx()),
                     Size(size.width, 1.dp.toPx())
                 )

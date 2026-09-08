@@ -163,7 +163,7 @@ private fun IconTarget(
                 Text(
                     text = if (count > 99) "99+" else count.toString(),
                     style = PixTypography.badgeText,
-                    color = PixColors.White,
+                    color = PixColors.Dark,
                 )
             }
         }

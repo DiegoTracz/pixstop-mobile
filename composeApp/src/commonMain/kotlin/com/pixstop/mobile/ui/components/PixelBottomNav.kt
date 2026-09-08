@@ -66,13 +66,16 @@ fun PixelBottomNav(
     onItemSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // O `drawBehind` desenha fora da composição: a cor precisa ser lida aqui.
+    val corDaLinha = PixColors.Gray700
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(PixColors.Darker)
             // Só a linha de cima: as outras três encostariam nas bordas da tela.
             .drawBehind {
-                drawRect(PixColors.Gray700, Offset.Zero, Size(size.width, 2.dp.toPx()))
+                drawRect(corDaLinha, Offset.Zero, Size(size.width, 2.dp.toPx()))
             }
             .navigationBarsPadding()
             .height(BAR_HEIGHT),
@@ -164,7 +167,7 @@ private fun BadgedIcon(item: BottomNavItem, selected: Boolean) {
                 Text(
                     text = if (count > 99) "99+" else count.toString(),
                     style = PixTypography.badgeText,
-                    color = PixColors.White,
+                    color = PixColors.Dark,
                 )
             }
         }
