@@ -376,10 +376,12 @@ private fun AvatarThumb(preview: String?, avatarUrl: String?, userName: String?)
                 contentScale = ContentScale.Crop,
             )
 
+            // Gray500 é o cinza mais apagado da escala: em cima do quadrado
+            // branco do modo claro a inicial simplesmente não aparecia.
             else -> Text(
                 text = userName?.take(1)?.uppercase().orEmpty(),
                 style = PixTypography.pageTitle,
-                color = PixColors.Gray500,
+                color = PixColors.Gray300,
             )
         }
     }

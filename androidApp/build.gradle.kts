@@ -173,6 +173,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 dependencies {
     implementation(libs.koin.android)
     implementation(projects.composeApp)
+
+    // O carregador de imagem é montado no Application, que vive aqui.
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.ktor)
     implementation(libs.compose.uiTooling)
     implementation(libs.androidx.activity.compose)
 }

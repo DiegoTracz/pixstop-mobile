@@ -97,7 +97,9 @@ val dataModule: Module = module {
     single { CompanyRepository(get()) }
     single { FridgeRepository(get()) }
     single { AvatarRepository(get()) }
-    single { ThemeStore(get()) }
+    // O `Settings` comum não está no grafo: quem precisa dele o constrói,
+    // como o TokenManager faz logo acima.
+    single { ThemeStore(Settings()) }
     // O portal da geladeira fala sem token e sem log de corpo: o mesmo
     // cliente cru do gateway de pagamento serve.
     single { SetupPortalClient(get(named(GATEWAY_CLIENT))) }

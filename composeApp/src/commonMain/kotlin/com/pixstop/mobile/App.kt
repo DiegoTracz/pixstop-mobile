@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import coil3.ImageLoader
-import coil3.SingletonImageLoader
-import coil3.network.ktor3.KtorNetworkFetcherFactory
 import com.pixstop.mobile.core.storage.ThemeStore
 import com.pixstop.mobile.ui.navigation.AppNavigation
 import com.pixstop.mobile.ui.theme.AppTheme
@@ -36,15 +33,6 @@ import org.koin.compose.koinInject
  */
 @Composable
 fun App() {
-    // O carregador de imagem precisa saber falar HTTP: sem registrar o
-    // buscador do Ktor, a foto de perfil que mora numa URL simplesmente não
-    // aparece, e sem erro nenhum na tela.
-    SingletonImageLoader.setSafe { context ->
-        ImageLoader.Builder(context)
-            .components { add(KtorNetworkFetcherFactory()) }
-            .build()
-    }
-
     val themeStore: ThemeStore = koinInject()
     val mode by themeStore.mode.collectAsState()
 
