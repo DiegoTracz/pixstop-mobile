@@ -33,6 +33,8 @@ import com.pixstop.mobile.ui.components.CardForm
 import com.pixstop.mobile.ui.viewmodel.CardMode
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
+import com.pixstop.mobile.domain.model.FridgeLight
+import com.pixstop.mobile.ui.components.FridgeLamp
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelCoin
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
@@ -81,6 +83,31 @@ fun CheckoutScreen(
                     modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
+                    // A geladeira desta compra (Fase 9.7): a mesma cor que a
+                    // fita está mostrando, e o aviso quando ela não vai abrir.
+                    val appliance = checkout.appliance
+
+                    if (appliance.light != FridgeLight.Off || appliance.blocksPayment) {
+                        Section(title = "A geladeira") {
+                            FridgeLamp(
+                                light = appliance.light,
+                                label = appliance.label.ifBlank { "Geladeira" },
+                                hint = when {
+                                    appliance.blocksPayment && appliance.supportPhone != null ->
+                                        "Nada será cobrado enquanto ela estiver assim. Fale com o responsável: ${appliance.supportPhone}."
+
+                                    appliance.blocksPayment ->
+                                        "Nada será cobrado enquanto ela estiver assim. Procure o responsável pela empresa."
+
+                                    appliance.bleAvailable && appliance.presence != com.pixstop.mobile.domain.model.Presence.Online ->
+                                        "Sem internet, mas você abre por Bluetooth depois de pagar, aqui do lado dela."
+
+                                    else -> null
+                                },
+                            )
+                        }
+                    }
+
                     Section(title = "Como pagar") {
                         state.availableMethods.forEach { method ->
                             MethodOption(

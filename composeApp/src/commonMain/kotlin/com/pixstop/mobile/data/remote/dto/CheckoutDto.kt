@@ -15,6 +15,22 @@ data class CheckoutDto(
     val checkout: CheckoutRulesDto = CheckoutRulesDto(),
     @SerialName("saved_cards") val savedCards: List<SavedCardDto> = emptyList(),
     @SerialName("reservation_minutes") val reservationMinutes: Int = 0,
+    /** A geladeira desta compra (Fase 9.7): vai abrir, e de que cor está. */
+    val appliance: ApplianceDto? = null,
+)
+
+/**
+ * A geladeira no pagamento (Fase 9.7). Tudo com padrão: um servidor que não
+ * conhece o bloco continua servindo o fechamento.
+ */
+@Serializable
+data class ApplianceDto(
+    val presence: String = "unknown",
+    val label: String = "",
+    @SerialName("appliance_id") val applianceId: Long? = null,
+    @SerialName("ble_available") val bleAvailable: Boolean = false,
+    @SerialName("support_phone") val supportPhone: String? = null,
+    @SerialName("led_color") val ledColor: String? = null,
 )
 
 @Serializable
@@ -97,6 +113,32 @@ data class OrderDto(
     @SerialName("paid_at") val paidAt: String? = null,
     /** O que o pedido rendeu de XP; só vem no pedido criado e no aberto. */
     val xp: OrderXpDto? = null,
+    /** A retirada (Fase 9.8): em que pé está e se dá para abrir agora. */
+    val pickup: PickupDto? = null,
+    /** O bilhete de abertura por Bluetooth (Fase 9.7), quando há. */
+    @SerialName("unlock_ticket") val unlockTicket: String? = null,
+    @SerialName("picked_up_at") val pickedUpAt: String? = null,
+)
+
+/**
+ * O bloco da retirada (Fase 9.8).
+ *
+ * Tudo com padrão: um servidor antigo, que não conhece a retirada, continua
+ * respondendo pedidos — e o app mostra o que sempre mostrou.
+ */
+@Serializable
+data class PickupDto(
+    val status: String = "none",
+    @SerialName("can_unlock") val canUnlock: Boolean = false,
+    val reason: String? = null,
+    val attempts: Int = 0,
+    @SerialName("max_attempts") val maxAttempts: Int = 0,
+    @SerialName("window_until") val windowUntil: String? = null,
+    @SerialName("door_opened_at") val doorOpenedAt: String? = null,
+    @SerialName("picked_up_at") val pickedUpAt: String? = null,
+    @SerialName("has_ticket") val hasTicket: Boolean = false,
+    /** A cor de repouso da fita LED (Fase 9.6). */
+    @SerialName("led_color") val ledColor: String? = null,
 )
 
 @Serializable
@@ -131,4 +173,26 @@ data class OrderStatusDto(
     val status: String,
     @SerialName("status_label") val statusLabel: String? = null,
     @SerialName("paid_at") val paidAt: String? = null,
+    @SerialName("picked_up_at") val pickedUpAt: String? = null,
+    /** A retirada (Fase 9.8): é o que a tela acompanha enquanto a porta não abre. */
+    val pickup: PickupDto? = null,
+    /** O bilhete de abertura por Bluetooth (Fase 9.7), enquanto valer. */
+    @SerialName("unlock_ticket") val unlockTicket: String? = null,
+)
+
+/**
+ * A resposta do "Abrir a geladeira" (Fase 9.8). A recusa vem com o mesmo
+ * bloco: a tela não precisa de outra chamada para saber o que dizer.
+ */
+@Serializable
+data class UnlockResponseDto(
+    val pickup: PickupDto? = null,
+    @SerialName("unlock_ticket") val unlockTicket: String? = null,
+)
+
+/** Um bilhete novo para um pedido que ainda não abriu a porta (Fase 9.7). */
+@Serializable
+data class UnlockTicketDto(
+    @SerialName("unlock_ticket") val unlockTicket: String? = null,
+    @SerialName("unlock_ticket_expires_at") val expiresAt: String? = null,
 )

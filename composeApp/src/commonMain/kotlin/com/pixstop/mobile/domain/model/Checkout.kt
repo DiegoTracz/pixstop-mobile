@@ -21,6 +21,8 @@ data class Checkout(
     val cardTokenizationAvailable: Boolean,
     val savedCards: List<SavedCard>,
     val itemCount: Int,
+    /** A geladeira desta compra (Fase 9.7). */
+    val appliance: ApplianceStatus = ApplianceStatus.Unknown,
 )
 
 data class SavedCard(
@@ -51,6 +53,10 @@ data class Order(
     val isCancelable: Boolean,
     val createdAt: String?,
     val xp: OrderXp = OrderXp.None,
+    /** A retirada (Fase 9.8): em que pé está e se dá para abrir agora. */
+    val pickup: Pickup = Pickup.None,
+    /** O bilhete de abertura por Bluetooth (Fase 9.7), já lido. */
+    val ticket: UnlockTicket? = null,
 ) {
     val isPaid: Boolean get() = status == OrderStatus.Paid
     val isPending: Boolean get() = status == OrderStatus.Pending || status == OrderStatus.InReview

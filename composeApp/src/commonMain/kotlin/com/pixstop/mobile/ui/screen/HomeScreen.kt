@@ -138,11 +138,14 @@ fun HomeScreen(
     val destinations = RoleHelper.bottomBar(session.company)
     var selectedTab by remember { mutableStateOf(Destination.Home.name) }
 
-    // "Adicionado ao carrinho" é recado de segundos: some sozinho, para não
-    // virar mais uma coisa para a pessoa fechar.
+    // "Adicionado ao carrinho" some sozinho, para não virar mais uma coisa
+    // para a pessoa fechar. Mas o aviso tem um botão dentro — e um botão que
+    // desaparece em dois segundos e meio é pior do que não existir: a pessoa
+    // lê, estica o dedo, e o toque cai na barra de navegação que estava
+    // embaixo. O prazo é o tempo de ler e alcançar.
     LaunchedEffect(cart.message) {
         if (cart.message != null) {
-            delay(2500)
+            delay(CART_NOTICE_MILLIS)
             cartViewModel.dismissMessage()
         }
     }
@@ -305,6 +308,9 @@ fun HomeScreen(
  * Antes só o número do ícone mudava: quem tocou no botão não tinha como
  * saber se o toque pegou sem procurar o contador no canto da tela.
  */
+/** Quanto o aviso do carrinho fica no ar. Tem um botão dentro: precisa dar tempo de tocar. */
+private const val CART_NOTICE_MILLIS = 6_000L
+
 @Composable
 private fun CartNotice(text: String, onOpenCart: () -> Unit) {
     Row(

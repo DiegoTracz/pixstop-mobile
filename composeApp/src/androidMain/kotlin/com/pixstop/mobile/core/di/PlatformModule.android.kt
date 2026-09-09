@@ -3,7 +3,9 @@ package com.pixstop.mobile.core.di
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.pixstop.mobile.domain.access.AndroidFridgeNetworkConnector
+import com.pixstop.mobile.domain.access.AndroidFridgeUnlockConnector
 import com.pixstop.mobile.domain.access.FridgeNetworkConnector
+import com.pixstop.mobile.domain.access.FridgeUnlockConnector
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.SharedPreferencesSettings
 import org.koin.android.ext.koin.androidContext
@@ -36,6 +38,9 @@ actual val platformModule: Module = module {
 
     // Entrar na rede da geladeira (Fase 9.3): só o Android 10+ deixa o app fazer isso.
     single<FridgeNetworkConnector> { AndroidFridgeNetworkConnector(androidContext()) }
+
+    // A porta pelo rádio quando a geladeira está sem internet (Fase 9.7).
+    single<FridgeUnlockConnector> { AndroidFridgeUnlockConnector(androidContext()) }
 }
 
 /** Arquivo próprio: o cache do perfil continua no armazenamento comum. */

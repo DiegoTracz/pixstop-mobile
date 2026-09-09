@@ -166,6 +166,11 @@ object ApiConfig {
 
         fun orderCancel(id: Long) = "orders/$id/cancel"
 
+        /** "Abrir a geladeira" (Fase 9.8) e o bilhete de Bluetooth (Fase 9.7). */
+        fun orderUnlock(id: Long) = "orders/$id/unlock"
+
+        fun orderUnlockTicket(id: Long) = "orders/$id/unlock-ticket"
+
         // ── Pagamento ─────────────────────────────────────────────────────
         const val PAYMENT_CARDS = "payment/cards"
         const val PAYMENT_CONFIG = "payment/config"

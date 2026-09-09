@@ -127,9 +127,17 @@ data class CheckoutUiState(
             checkout != null &&
             breakdown.charged > 0
 
+    /**
+     * A geladeira está fora do ar e não há Bluetooth (Fase 9.7): cobrar agora
+     * seria cobrar por uma porta que não vai abrir. O servidor recusa de
+     * qualquer jeito; dizer isto aqui evita a pessoa descobrir depois de
+     * escolher tudo.
+     */
+    val fridgeBlocks: Boolean get() = checkout?.appliance?.blocksPayment == true
+
     val canPlace: Boolean
         get() {
-            if (isPlacing || checkout == null || checkout.itemCount == 0 || missingMoney) {
+            if (isPlacing || checkout == null || checkout.itemCount == 0 || missingMoney || fridgeBlocks) {
                 return false
             }
 

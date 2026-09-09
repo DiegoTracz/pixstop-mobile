@@ -4,15 +4,24 @@ import com.pixstop.mobile.core.text.IsoInstant
 import com.pixstop.mobile.data.remote.dto.CheckoutDto
 import com.pixstop.mobile.data.remote.dto.OrderDto
 import com.pixstop.mobile.data.remote.dto.OrderItemDto
+import com.pixstop.mobile.data.remote.dto.ApplianceDto
+import com.pixstop.mobile.data.remote.dto.PickupDto
 import com.pixstop.mobile.data.remote.dto.PixDto
 import com.pixstop.mobile.data.remote.dto.SavedCardDto
 import com.pixstop.mobile.domain.model.Checkout
+import com.pixstop.mobile.domain.model.FridgeLight
 import com.pixstop.mobile.domain.model.Order
 import com.pixstop.mobile.domain.model.OrderXp
 import com.pixstop.mobile.domain.model.OrderLine
 import com.pixstop.mobile.domain.model.OrderStatus
+import com.pixstop.mobile.domain.model.ApplianceStatus
+import com.pixstop.mobile.domain.model.Pickup
+import com.pixstop.mobile.domain.model.PickupReason
+import com.pixstop.mobile.domain.model.PickupStatus
 import com.pixstop.mobile.domain.model.PixPayment
+import com.pixstop.mobile.domain.model.Presence
 import com.pixstop.mobile.domain.model.SavedCard
+import com.pixstop.mobile.domain.model.UnlockTicket
 
 fun CheckoutDto.toDomain() = Checkout(
     productsTotal = totals.products,
@@ -35,6 +44,7 @@ fun CheckoutDto.toDomain() = Checkout(
         (checkout.isSandbox || !checkout.mpPublicKey.isNullOrBlank()),
     savedCards = savedCards.map { it.toDomain() },
     itemCount = items.sumOf { it.quantity },
+    appliance = appliance?.toDomain() ?: ApplianceStatus.Unknown,
 )
 
 fun SavedCardDto.toDomain() = SavedCard(
@@ -43,6 +53,16 @@ fun SavedCardDto.toDomain() = SavedCard(
     brand = brand,
     isDefault = isDefault,
     expires = expires,
+)
+
+/** A geladeira no pagamento (Fase 9.7). */
+fun ApplianceDto.toDomain() = ApplianceStatus(
+    presence = Presence.from(presence),
+    label = label,
+    applianceId = applianceId,
+    bleAvailable = bleAvailable,
+    supportPhone = supportPhone?.takeIf { it.isNotBlank() },
+    restingLight = FridgeLight.from(ledColor),
 )
 
 fun OrderDto.toDomain() = Order(
@@ -62,6 +82,25 @@ fun OrderDto.toDomain() = Order(
     isCancelable = isCancelable,
     createdAt = createdAt,
     xp = xp?.toDomain() ?: OrderXp.None,
+    pickup = pickup?.toDomain() ?: Pickup.None,
+    ticket = UnlockTicket.parse(unlockTicket),
+)
+
+/**
+ * A retirada (Fase 9.8). Um status desconhecido vira `None`, que é o único
+ * que não promete porta nenhuma.
+ */
+fun PickupDto.toDomain() = Pickup(
+    status = PickupStatus.from(status),
+    canUnlock = canUnlock,
+    reason = PickupReason.from(reason),
+    attempts = attempts,
+    maxAttempts = maxAttempts,
+    windowUntil = IsoInstant.toEpochMillis(windowUntil),
+    doorOpenedAt = IsoInstant.toEpochMillis(doorOpenedAt),
+    pickedUpAt = IsoInstant.toEpochMillis(pickedUpAt),
+    hasTicket = hasTicket,
+    restingLight = FridgeLight.from(ledColor),
 )
 
 fun OrderItemDto.toDomain() = OrderLine(

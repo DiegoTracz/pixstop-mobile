@@ -8,6 +8,26 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!--
+        Abrir a geladeira pelo rádio quando ela está sem internet (Fase 9.7).
+        Do Android 12 em diante são permissões próprias, e `neverForLocation`
+        diz ao sistema que o app não usa o rádio para saber onde a pessoa
+        está — é o que dispensa a permissão de localização.
+    -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!--
+        Android 11 e anteriores: as duas antigas são de instalação, não se
+        pedem em tempo de execução, e sem elas até *perguntar* se o rádio está
+        ligado lança SecurityException. A localização é a de tempo de
+        execução, porque naquelas versões escanear rádio dizia onde a pessoa
+        está.
+    -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
 
 </manifest>

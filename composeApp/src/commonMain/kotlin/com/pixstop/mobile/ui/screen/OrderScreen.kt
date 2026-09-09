@@ -48,6 +48,10 @@ import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
+import com.pixstop.mobile.domain.model.FridgeLight
+import com.pixstop.mobile.ui.components.FridgeLamp
+import com.pixstop.mobile.ui.components.rememberBluetoothPermissionRequest
+import com.pixstop.mobile.ui.viewmodel.OrderUiState
 import com.pixstop.mobile.ui.viewmodel.OrderViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -65,6 +69,12 @@ fun OrderScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val clipboard = LocalClipboardManager.current
+
+    // O rádio só é pedido quando a pessoa toca em abrir por Bluetooth: pedir
+    // na abertura da tela assusta, e o sistema penaliza quem faz isso.
+    val askBluetooth = rememberBluetoothPermissionRequest { granted ->
+        if (granted) viewModel.unlockByBluetooth()
+    }
 
     LaunchedEffect(orderId) {
         viewModel.load(orderId)
@@ -92,7 +102,17 @@ fun OrderScreen(
                     modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
-                    StatusHeader(order)
+                    StatusHeader(order, state)
+
+                    // A retirada (Fase 9.8): o pagamento reserva, e abrir é
+                    // uma tentativa que o sensor da porta confere.
+                    if (order.isPaid && (state.canUnlock || state.canUnlockByBluetooth || state.feedback != null)) {
+                        PickupBlock(
+                            state = state,
+                            onUnlock = viewModel::unlock,
+                            onUnlockByBluetooth = askBluetooth,
+                        )
+                    }
 
                     // O que a compra rendeu (Fase 13): o "+XP" e, quando houve,
                     // a subida de nível — o momento inteiro do sistema.
@@ -186,7 +206,7 @@ fun OrderScreen(
 }
 
 @Composable
-private fun StatusHeader(order: Order) {
+private fun StatusHeader(order: Order, state: OrderUiState) {
     val color = when (order.status) {
         OrderStatus.Paid, OrderStatus.Delivered -> PixColors.Green
         OrderStatus.Canceled -> PixColors.Pink
@@ -224,8 +244,84 @@ private fun StatusHeader(order: Order) {
 
         if (order.isPaid) {
             Text(
-                text = "Pode retirar o produto.",
+                text = state.pickupMessage,
                 style = PixTypography.bodySecondary,
+                textAlign = TextAlign.Center,
+            )
+
+            // Quantas tentativas já foram: quem está na terceira precisa saber
+            // que é a última antes de gastá-la.
+            if (state.pickup.attempts > 0 && state.pickup.isFollowing) {
+                Text(
+                    text = "Tentativa ${state.pickup.attempts} de ${state.pickup.maxAttempts}",
+                    style = PixTypography.inputLabel,
+                    color = PixColors.Gray400,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Abrir a geladeira.
+ *
+ * Dois caminhos e um botão de cada vez. Pela internet é o normal: o servidor
+ * manda o pulso e a porta responde por alguns segundos. Pelo Bluetooth é o
+ * caminho de quando a geladeira está fora do ar — o celular leva até a porta
+ * o bilhete que o servidor assinou, e ela confere sozinha.
+ */
+@Composable
+private fun PickupBlock(
+    state: OrderUiState,
+    onUnlock: () -> Unit,
+    onUnlockByBluetooth: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().border(2.dp, PixColors.Cyan).background(PixColors.Darker).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        // Título em fonte pixelada, como todo bloco desta tela: sem ele o
+        // cartão da retirada parecia de outro aplicativo.
+        Text(text = "Retirada", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+
+        // A mesma cor que a fita da geladeira está mostrando (Fase 9.6):
+        // quem olha o celular e levanta os olhos vê a mesma coisa.
+        val light = FridgeLight.of(state.pickup, state.pickup.restingLight, state.isTalkingToFridge)
+
+        if (light != FridgeLight.Off) {
+            FridgeLamp(light = light, label = "A geladeira está assim agora")
+        }
+
+        state.feedback?.let {
+            Text(text = it, style = PixTypography.bodySecondary, color = PixColors.Yellow)
+        }
+
+        if (state.canUnlock) {
+            PixelButton(
+                text = if (state.pickup.isUnlocking) "Abrir de novo" else "Abrir a geladeira",
+                onClick = onUnlock,
+                modifier = Modifier.fillMaxWidth(),
+                isLoading = state.isUnlocking,
+                loadingText = "Abrindo...",
+                icon = {
+                    AppIcon(icon = AppIconType.Lock, contentDescription = null, modifier = Modifier.size(18.dp), tint = PixColors.Dark)
+                },
+            )
+        }
+
+        if (state.canUnlockByBluetooth) {
+            PixelButton(
+                text = "Abrir por Bluetooth",
+                onClick = onUnlockByBluetooth,
+                modifier = Modifier.fillMaxWidth(),
+                variant = PixelButtonVariant.Secondary,
+                isLoading = state.isTalkingToFridge,
+                loadingText = "Procurando a geladeira...",
+            )
+
+            Text(
+                text = "Fique perto da geladeira. O celular fala com ela direto, sem internet.",
+                style = PixTypography.bodyMuted,
             )
         }
     }
