@@ -3,6 +3,8 @@ package com.pixstop.mobile.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pixstop.mobile.data.repository.ShopRepository
+import com.pixstop.mobile.domain.model.Appliance
+import com.pixstop.mobile.domain.model.ApplianceChoice
 import com.pixstop.mobile.domain.model.Category
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.PixelWallet
@@ -25,7 +27,13 @@ data class ShopUiState(
     val page: Int = 1,
     val hasNextPage: Boolean = false,
     val error: String? = null,
+    /** De qual geladeira é esta compra (Fase 9.5). */
+    val appliances: ApplianceChoice = ApplianceChoice.Empty,
+    /** A folha de escolha está aberta. */
+    val choosingAppliance: Boolean = false,
 ) {
+    /** A porta em frente à qual a pessoa está, quando já se sabe qual é. */
+    val appliance: Appliance? get() = appliances.current
     val isEmpty: Boolean get() = !isLoading && products.isEmpty() && error == null
 
     /** Filtro ativo muda o texto do vazio: "nada aqui" e "nada encontrado" não são a mesma coisa. */
@@ -47,8 +55,62 @@ class ShopViewModel(private val shop: ShopRepository) : ViewModel() {
     private var searchJob: Job? = null
 
     init {
+        loadAppliances()
         loadCategories()
         loadWallet()
+        loadProducts()
+    }
+
+    /**
+     * Quais geladeiras existem e em qual a pessoa está.
+     *
+     * Com uma porta só o servidor responde `mustChoose: false` e nada muda na
+     * tela: ela é a resposta, e não há pergunta a fazer.
+     */
+    private fun loadAppliances() {
+        viewModelScope.launch {
+            val result = shop.appliances()
+
+            if (result is Outcome.Success) {
+                _uiState.value = _uiState.value.copy(
+                    appliances = result.value,
+                    choosingAppliance = result.value.mustChoose,
+                )
+            }
+        }
+    }
+
+    fun openApplianceChoice() {
+        if (_uiState.value.appliances.hasChoice) {
+            _uiState.value = _uiState.value.copy(choosingAppliance = true)
+        }
+    }
+
+    fun dismissApplianceChoice() {
+        // Fechar sem escolher só vale depois de já haver uma porta: sem
+        // nenhuma, a vitrine não sabe o que mostrar.
+        if (_uiState.value.appliance != null) {
+            _uiState.value = _uiState.value.copy(choosingAppliance = false)
+        }
+    }
+
+    /**
+     * A pessoa disse em frente a qual porta está — pela lista ou pelo QR
+     * colado na geladeira.
+     *
+     * A vitrine recarrega porque o disponível é o daquela porta: o que sobra
+     * no terceiro andar não diz nada sobre o primeiro.
+     */
+    fun onApplianceSelected(id: Long) {
+        val state = _uiState.value
+
+        if (state.appliances.appliances.none { it.id == id }) return
+
+        _uiState.value = state.copy(
+            appliances = state.appliances.copy(currentId = id, mustChoose = false),
+            choosingAppliance = false,
+        )
+
         loadProducts()
     }
 
@@ -71,6 +133,7 @@ class ShopViewModel(private val shop: ShopRepository) : ViewModel() {
     }
 
     fun refresh() {
+        loadAppliances()
         loadCategories()
         loadWallet()
         loadProducts()

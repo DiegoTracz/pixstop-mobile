@@ -4,10 +4,12 @@ import com.pixstop.mobile.core.config.ApiConfig
 import com.pixstop.mobile.core.network.safeCall
 import com.pixstop.mobile.core.network.safeCallPaged
 import com.pixstop.mobile.data.mapper.toDomain
+import com.pixstop.mobile.data.remote.dto.ApplianceChoiceDto
 import com.pixstop.mobile.data.remote.dto.CategoryDto
 import com.pixstop.mobile.data.remote.dto.Page
 import com.pixstop.mobile.data.remote.dto.PixelBalanceDto
 import com.pixstop.mobile.data.remote.dto.ProductDto
+import com.pixstop.mobile.domain.model.ApplianceChoice
 import com.pixstop.mobile.domain.model.Category
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.PixelWallet
@@ -51,6 +53,18 @@ class ShopRepository(private val client: HttpClient) {
 
     suspend fun product(id: Long): Outcome<Product> =
         safeCall<ProductDto>(TAG) { client.get(ApiConfig.Endpoints.shopProduct(id)) }.map { it.toDomain() }
+
+    /**
+     * De qual geladeira é a compra (Fase 9.5).
+     *
+     * Com uma porta só, `mustChoose` vem falso e nenhuma tela muda. Com mais
+     * de uma, a pessoa precisa dizer em frente a qual está antes de comprar:
+     * o estoque e a porta que abre são de uma geladeira, não da empresa.
+     */
+    suspend fun appliances(): Outcome<ApplianceChoice> =
+        safeCall<ApplianceChoiceDto>(TAG) {
+            client.get(ApiConfig.Endpoints.SHOP_APPLIANCES)
+        }.map { it.toDomain() }
 
     suspend fun pixelWallet(): Outcome<PixelWallet> =
         safeCall<PixelBalanceDto>(TAG) { client.get(ApiConfig.Endpoints.PIXELS_BALANCE) }.map { it.toDomain() }

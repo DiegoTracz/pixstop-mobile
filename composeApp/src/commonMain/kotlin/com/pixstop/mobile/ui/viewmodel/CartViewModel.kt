@@ -6,6 +6,8 @@ import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.core.storage.currentTimeMillis
 import com.pixstop.mobile.data.repository.CartRepository
 import com.pixstop.mobile.domain.model.Cart
+import com.pixstop.mobile.domain.model.DomainError
+import com.pixstop.mobile.domain.model.ErrorCode
 import com.pixstop.mobile.domain.model.Outcome
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,8 @@ data class CartUiState(
     val busyItemId: Long? = null,
     val error: String? = null,
     val message: String? = null,
+    /** Pedido de produto de outra geladeira, esperando a pessoa decidir. */
+    val conflict: ApplianceConflict? = null,
     /** Instante do relógio do aparelho, para o contador da reserva. */
     val now: Long = 0L,
 ) {
@@ -44,6 +48,16 @@ data class CartUiState(
 
     val isExpired: Boolean get() = secondsLeft == 0L && cart.items.isNotEmpty()
 }
+
+/**
+ * O carrinho já está numa geladeira e a pessoa pediu produto de outra
+ * (Fase 9.5).
+ *
+ * A reserva segura o estoque de uma porta: levá-la junto prometeria, na outra
+ * geladeira, o que está reservado nesta. Quem troca recomeça, e a tela
+ * pergunta antes de apagar o que já foi escolhido.
+ */
+data class ApplianceConflict(val message: String, val applianceId: Long, val productId: Long, val quantity: Int)
 
 /**
  * Carrinho.
@@ -99,20 +113,56 @@ class CartViewModel(
         }
     }
 
-    fun add(productId: Long, quantity: Int = 1, onAdded: () -> Unit = {}) {
+    fun add(productId: Long, quantity: Int = 1, applianceId: Long? = null, onAdded: () -> Unit = {}) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(error = null, message = null)
+            _uiState.value = _uiState.value.copy(error = null, message = null, conflict = null)
 
-            when (val result = cart.add(productId, quantity)) {
+            when (val result = cart.add(productId, quantity, applianceId)) {
                 is Outcome.Success -> {
                     reload()
                     _uiState.value = _uiState.value.copy(message = "Adicionado ao carrinho.")
                     onAdded()
                 }
 
-                is Outcome.Failure -> _uiState.value = _uiState.value.copy(error = result.error.message)
+                is Outcome.Failure -> {
+                    val error = result.error
+
+                    // Carrinho de outra porta: não é erro para mostrar e
+                    // esquecer, é uma pergunta — esvaziar e recomeçar aqui?
+                    if (error is DomainError.Rule && error.code == ErrorCode.APPLIANCE_MISMATCH && applianceId != null) {
+                        _uiState.value = _uiState.value.copy(
+                            conflict = ApplianceConflict(error.message, applianceId, productId, quantity),
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(error = error.message)
+                    }
+                }
             }
         }
+    }
+
+    /**
+     * A pessoa confirmou a troca de porta: o carrinho antigo sai e o produto
+     * entra na geladeira nova.
+     */
+    fun resolveConflict() {
+        val conflict = _uiState.value.conflict ?: return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(conflict = null, isLoading = true)
+
+            when (cart.clear()) {
+                is Outcome.Success -> add(conflict.productId, conflict.quantity, conflict.applianceId)
+                is Outcome.Failure -> _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Não foi possível esvaziar o carrinho. Tente de novo.",
+                )
+            }
+        }
+    }
+
+    fun dismissConflict() {
+        _uiState.value = _uiState.value.copy(conflict = null)
     }
 
     fun changeQuantity(itemId: Long, quantity: Int) {

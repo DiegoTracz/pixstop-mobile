@@ -61,4 +61,10 @@ object ErrorCode {
     const val MERCADOPAGO_NOT_CONNECTED = "mercadopago_not_connected"
     const val PLAN_LIMIT_REACHED = "plan_limit_reached"
     const val TOO_MANY_REQUESTS = "too_many_requests"
+
+    /** A geladeira do pedido está sem internet e nada foi cobrado. */
+    const val APPLIANCE_OFFLINE = "appliance_offline"
+
+    /** O carrinho é de outra geladeira: esvaziar é o caminho. */
+    const val APPLIANCE_MISMATCH = "appliance_mismatch"
 }

@@ -128,6 +128,9 @@ fun HomeScreen(
     val notifications by notificationsViewModel.uiState.collectAsState()
     val cart by cartViewModel.uiState.collectAsState()
     val feed by homeFeedViewModel.uiState.collectAsState()
+    // A geladeira escolhida na vitrine vale para o feed também: é a mesma
+    // loja, e o carrinho pertence a uma porta só (Fase 9.5).
+    val shopState by shopViewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     // Uma segunda gaveta, do mesmo lado, aberta só pelo ícone do carrinho: o
     // gesto de arrastar continua sendo do menu, que é o de fora.
@@ -260,7 +263,7 @@ fun HomeScreen(
                 Destination.Shop.name -> ShopScreen(
                     viewModel = shopViewModel,
                     onProductClick = onOpenProduct,
-                    onAddToCart = { cartViewModel.add(it) },
+                    onAddToCart = { productId, applianceId -> cartViewModel.add(productId, applianceId = applianceId) },
                     modifier = Modifier.padding(paddingValues),
                 )
 
@@ -293,7 +296,9 @@ fun HomeScreen(
                     onOpenShop = { selectedTab = Destination.Shop.name },
                     onOpenPixels = { onDestination(Destination.Pixels) },
                     onOpenProgress = { onDestination(Destination.Progress) },
-                    onAddToCart = { cartViewModel.add(it) },
+                    // O feed vende da mesma porta que a vitrine resolveu: são
+                    // a mesma loja, e o carrinho é de uma geladeira só.
+                    onAddToCart = { cartViewModel.add(it, applianceId = shopState.appliance?.id) },
                     modifier = Modifier.padding(paddingValues),
                 )
             }

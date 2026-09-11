@@ -59,6 +59,11 @@ data class CartItemDto(
 data class CartAddRequest(
     @SerialName("product_id") val productId: Long,
     val quantity: Int = 1,
+    /**
+     * De qual geladeira. Nulo deixa o servidor resolver — é o que acontece em
+     * toda empresa que tem uma porta só.
+     */
+    @SerialName("appliance_id") val applianceId: Long? = null,
 )
 
 @Serializable
@@ -78,4 +83,30 @@ data class PixelBalanceDto(
     @SerialName("max_discount_percentage") val maxDiscountPercentage: Double = 0.0,
     @SerialName("cashback_percentage") val cashbackPercentage: Double = 0.0,
     val enabled: Boolean = true,
+)
+
+/**
+ * Uma geladeira entre as quais escolher (Fase 9.5).
+ *
+ * O estoque, a reserva e a porta que abre são de **uma** geladeira. Com mais
+ * de uma na empresa, a pessoa precisa dizer em frente a qual está.
+ *
+ * Não se confunde com o `ApplianceDto` do checkout: aquele é o **estado** da
+ * geladeira do pedido (está de pé? abre por Bluetooth?), este é a identidade
+ * de uma porta entre várias.
+ */
+@Serializable
+data class ShopApplianceDto(
+    val id: Long,
+    val name: String,
+    val location: String? = null,
+    val type: String = "refrigerator",
+    val presence: String = "unknown",
+)
+
+@Serializable
+data class ApplianceChoiceDto(
+    @SerialName("must_choose") val mustChoose: Boolean = false,
+    @SerialName("current_id") val currentId: Long? = null,
+    val appliances: List<ShopApplianceDto> = emptyList(),
 )

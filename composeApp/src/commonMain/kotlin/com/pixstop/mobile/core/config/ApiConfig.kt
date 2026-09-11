@@ -148,6 +148,9 @@ object ApiConfig {
         const val SHOP_CATEGORIES = "shop/categories"
         const val SHOP_PRODUCTS = "shop/products"
 
+        /** As geladeiras entre as quais escolher, quando há mais de uma. */
+        const val SHOP_APPLIANCES = "shop/appliances"
+
         fun shopProduct(id: Long) = "shop/products/$id"
 
         // ── Carrinho ──────────────────────────────────────────────────────

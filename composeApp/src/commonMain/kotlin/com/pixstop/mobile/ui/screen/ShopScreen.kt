@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.Category
 import com.pixstop.mobile.domain.model.Product
 import com.pixstop.mobile.ui.components.AppIcon
+import com.pixstop.mobile.ui.components.ApplianceSwitcherSheet
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.DiscountTag
 import com.pixstop.mobile.ui.components.PixelBalance
@@ -49,7 +50,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ShopScreen(
     onProductClick: (Long) -> Unit,
-    onAddToCart: (Long) -> Unit = {},
+    onAddToCart: (Long, Long?) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
     viewModel: ShopViewModel = koinViewModel(),
 ) {
@@ -69,13 +70,39 @@ fun ShopScreen(
         }
     }
 
+    if (state.choosingAppliance) {
+        ApplianceSwitcherSheet(
+            appliances = state.appliances.appliances,
+            currentId = state.appliances.currentId,
+            // Sem porta escolhida a vitrine não sabe o que mostrar, e fechar
+            // deixaria a pessoa numa tela que não responde nada.
+            dismissible = state.appliance != null,
+            onSelect = { viewModel.onApplianceSelected(it.id) },
+            onDismiss = viewModel::dismissApplianceChoice,
+        )
+    }
+
     Column(modifier = modifier.fillMaxSize().background(PixColors.Dark)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(text = "Loja", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(text = "Loja", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+
+                // Com uma geladeira só não há o que mostrar: ela é a resposta.
+                state.appliance?.takeIf { state.appliances.hasChoice }?.let { appliance ->
+                    Row(
+                        modifier = Modifier.clickable(onClick = viewModel::openApplianceChoice),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(text = appliance.name, style = PixTypography.bodyMuted, color = PixColors.Green)
+                        Text(text = "· trocar", style = PixTypography.bodyMuted)
+                    }
+                }
+            }
 
             PixelBalance(pixels = state.wallet.available)
         }
@@ -130,7 +157,9 @@ fun ShopScreen(
                     ProductRow(
                         product = product,
                         onClick = { onProductClick(product.id) },
-                        onAdd = { onAddToCart(product.id) },
+                        // A geladeira vai junto: é dela que o produto sai, e
+                        // é ela que o carrinho passa a guardar.
+                        onAdd = { onAddToCart(product.id, state.appliance?.id) },
                     )
                 }
 

@@ -74,3 +74,39 @@ data class PixelWallet(
         val Empty = PixelWallet(0, 0, 0, 0, 100, 0, 0.0, 0.0, enabled = false)
     }
 }
+
+/**
+ * A geladeira de onde a pessoa vai tirar o produto (Fase 9.5).
+ *
+ * O estoque, a reserva e a porta que abre são de uma só. Quem tem uma
+ * geladeira na empresa nunca escolhe nada: ela é a resposta.
+ */
+data class Appliance(
+    val id: Long,
+    val name: String,
+    val location: String?,
+    /** Como o servidor a viu por último. O mesmo `Presence` do checkout. */
+    val presence: Presence,
+) {
+    /** O que aparece embaixo do nome na lista: o andar, a sala, o corredor. */
+    val subtitle: String? get() = location?.takeIf { it.isNotBlank() }
+}
+
+/**
+ * O que o app precisa saber para perguntar (ou não) de qual geladeira é a
+ * compra.
+ */
+data class ApplianceChoice(
+    val mustChoose: Boolean,
+    val currentId: Long?,
+    val appliances: List<Appliance>,
+) {
+    val current: Appliance? get() = appliances.firstOrNull { it.id == currentId }
+
+    /** Com uma porta só não há pergunta a fazer, e nenhuma tela muda. */
+    val hasChoice: Boolean get() = appliances.size > 1
+
+    companion object {
+        val Empty = ApplianceChoice(mustChoose = false, currentId = null, appliances = emptyList())
+    }
+}

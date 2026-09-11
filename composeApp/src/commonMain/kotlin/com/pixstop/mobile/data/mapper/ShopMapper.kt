@@ -1,15 +1,20 @@
 package com.pixstop.mobile.data.mapper
 
 import com.pixstop.mobile.core.text.IsoInstant
+import com.pixstop.mobile.data.remote.dto.ApplianceChoiceDto
 import com.pixstop.mobile.data.remote.dto.CartDto
 import com.pixstop.mobile.data.remote.dto.CartItemDto
 import com.pixstop.mobile.data.remote.dto.CategoryDto
 import com.pixstop.mobile.data.remote.dto.PixelBalanceDto
 import com.pixstop.mobile.data.remote.dto.ProductDto
+import com.pixstop.mobile.data.remote.dto.ShopApplianceDto
+import com.pixstop.mobile.domain.model.Appliance
+import com.pixstop.mobile.domain.model.ApplianceChoice
 import com.pixstop.mobile.domain.model.Cart
 import com.pixstop.mobile.domain.model.CartLine
 import com.pixstop.mobile.domain.model.Category
 import com.pixstop.mobile.domain.model.PixelWallet
+import com.pixstop.mobile.domain.model.Presence
 import com.pixstop.mobile.domain.model.Product
 
 fun CategoryDto.toDomain() = Category(id = id, name = name, productsCount = productsCount)
@@ -58,4 +63,20 @@ fun PixelBalanceDto.toDomain() = PixelWallet(
     maxDiscountPercentage = maxDiscountPercentage,
     cashbackPercentage = cashbackPercentage,
     enabled = enabled,
+)
+
+/**
+ * A geladeira como a tela de escolha precisa dela (Fase 9.5).
+ */
+fun ShopApplianceDto.toDomain() = Appliance(
+    id = id,
+    name = name,
+    location = location,
+    presence = Presence.from(presence),
+)
+
+fun ApplianceChoiceDto.toDomain() = ApplianceChoice(
+    mustChoose = mustChoose,
+    currentId = currentId,
+    appliances = appliances.map { it.toDomain() },
 )
