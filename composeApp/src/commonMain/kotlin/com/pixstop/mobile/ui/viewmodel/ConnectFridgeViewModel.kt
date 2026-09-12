@@ -44,6 +44,15 @@ enum class ConnectStep {
      * nada é pior que nenhuma tecla.
      */
     Color,
+
+    /**
+     * Uma geladeira instalada, por dentro: o que ela está sentindo agora.
+     *
+     * É a tela que a web tem e o app não tinha. Quem está de pé na frente
+     * dela quer saber se a porta fechou, se o sinal chega e se a câmera
+     * existe — sem abrir o computador.
+     */
+    Detail,
 }
 
 /**
@@ -153,6 +162,9 @@ class ConnectFridgeViewModel(
     val uiState: StateFlow<ConnectFridgeUiState> = _uiState.asStateFlow()
 
     private var watcher: Job? = null
+
+    /** De onde a pessoa entrou no passo da cor, para saber onde devolvê-la. */
+    private var cameFromDetail = false
 
     init {
         load()
@@ -356,6 +368,36 @@ class ConnectFridgeViewModel(
         }
     }
 
+    /**
+     * Abre uma geladeira instalada e busca o estado dela agora — o que a
+     * lista não mostra, por ser lista.
+     */
+    fun openDetail(device: FridgeDevice) {
+        _uiState.update { it.copy(chosen = device, step = ConnectStep.Detail, error = null, message = null, led = LedSettings.Empty) }
+        refreshDetail()
+    }
+
+    /** O estado de agora, para quem está olhando a tela. */
+    fun refreshDetail() {
+        val device = _uiState.value.chosen ?: return
+
+        _uiState.update { it.copy(isWorking = true) }
+
+        viewModelScope.launch {
+            // O estado do aparelho e a fita são duas perguntas, e a tela
+            // mostra as duas: a segunda só serve para dizer qual controle
+            // esta geladeira usa, sem obrigar a entrar no passo da cor.
+            when (val result = fridges.status(device.id)) {
+                is Outcome.Success -> _uiState.update { it.copy(chosen = result.value, isWorking = false) }
+                is Outcome.Failure -> _uiState.update { it.copy(isWorking = false, error = result.error.message) }
+            }
+
+            (fridges.ledSettings(device.id) as? Outcome.Success)?.let { led ->
+                _uiState.update { it.copy(led = led.value) }
+            }
+        }
+    }
+
     /* ─────────────────────────────────────────────────────────────────
      * A fita LED (Fase 9.10, etapa A)
      *
@@ -364,8 +406,17 @@ class ConnectFridgeViewModel(
      * Nada disto pede tradução: é o controle de verdade, na tela.
      * ───────────────────────────────────────────────────────────────── */
 
-    /** Abre o passo da fita e busca o catálogo de controles. */
-    fun openColorStep() {
+    /**
+     * Abre o passo da fita e busca o catálogo de controles.
+     *
+     * `device` vem preenchido quando a pessoa entra pela lista, numa
+     * geladeira que já está instalada: a fita se troca muito depois da
+     * instalação, e obrigar a reinstalar para mudar de cor seria absurdo.
+     */
+    fun openColorStep(device: FridgeDevice? = null) {
+        cameFromDetail = _uiState.value.step == ConnectStep.Detail
+        device?.let { chosen -> _uiState.update { it.copy(chosen = chosen) } }
+
         val device = _uiState.value.chosen ?: return
 
         _uiState.update { it.copy(step = ConnectStep.Color, isWorking = true, error = null, message = null) }
@@ -426,7 +477,10 @@ class ConnectFridgeViewModel(
                         led = result.value,
                         pickedColor = null,
                         isWorking = false,
-                        step = ConnectStep.Done,
+                        // Voltar para onde a pessoa estava: quem veio da
+                        // instalação termina nela; quem veio da geladeira
+                        // instalada volta a vê-la, agora com a cor nova.
+                        step = if (cameFromDetail) ConnectStep.Detail else ConnectStep.Done,
                         message = "A geladeira fica ${result.value.colorLabel.lowercase()} quando está em repouso.",
                     )
                 }
@@ -437,7 +491,7 @@ class ConnectFridgeViewModel(
 
     /** "Agora não": a geladeira segue no arco-íris, que já é uma cor que serve. */
     fun skipColor() {
-        _uiState.update { it.copy(step = ConnectStep.Done, pickedColor = null, error = null) }
+        _uiState.update { it.copy(step = if (cameFromDetail) ConnectStep.Detail else ConnectStep.Done, pickedColor = null, error = null) }
     }
 
     /** Volta para a lista, soltando a rede da geladeira se ainda estiver nela. */

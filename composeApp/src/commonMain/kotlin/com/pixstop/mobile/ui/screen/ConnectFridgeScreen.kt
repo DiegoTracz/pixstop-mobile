@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -109,6 +110,7 @@ fun ConnectFridgeScreen(
 
                         ConnectStep.Done -> DoneStep(state, viewModel)
                         ConnectStep.Color -> ColorStep(state, viewModel)
+                        ConnectStep.Detail -> DetailStep(state, viewModel)
                     }
                 }
             }
@@ -165,7 +167,14 @@ private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
         Text("Instaladas", style = PixTypography.sectionTitle, color = PixColors.Gray300)
 
         others.forEach { device ->
-            DeviceRow(device = device, action = "Reinstalar", onClick = { viewModel.choose(device) })
+            // Tocar na geladeira abre o que ela está sentindo; o botão
+            // continua sendo o caminho para reinstalá-la do zero.
+            DeviceRow(
+                device = device,
+                action = "Reinstalar",
+                onClick = { viewModel.choose(device) },
+                onRowClick = { viewModel.openDetail(device) },
+            )
         }
     }
 }
@@ -373,6 +382,98 @@ private fun DoneStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
 }
 
 /**
+ * A geladeira por dentro (Fase 9.10): o que ela está sentindo agora.
+ *
+ * É a tela que a web tem e o app não tinha. Quem está de pé na frente dela
+ * quer três respostas — a porta fechou, o sinal chega, a câmera existe — e
+ * nenhuma delas cabe numa lista.
+ */
+@Composable
+private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
+    val device = state.chosen ?: return
+
+    Text(device.name, style = PixTypography.sectionTitle, color = PixColors.Cyan)
+
+    device.applianceName?.let {
+        Text(it, style = PixTypography.caption, color = PixColors.Gray300)
+    }
+
+    // O primeiro quadro responde "ela está viva?", que é o que decide se
+    // vale a pena olhar o resto. "Ativa" é outra pergunta — se ela já foi
+    // provisionada —, e misturar as duas faz uma geladeira desligada da
+    // tomada parecer saudável.
+    SensorRow(
+        label = "Conexão",
+        value = device.presence.label,
+        color = if (device.isOnline) PixColors.Green else PixColors.Pink,
+    )
+
+    device.provisioningLabel?.takeIf { device.presence != FridgePresence.Pending }?.let {
+        SensorRow(label = "Ativação", value = it)
+    }
+
+    SensorRow(
+        label = "Porta",
+        value = device.doorLabel,
+        color = if (device.doorOpen == true) PixColors.Yellow else PixColors.Gray100,
+    )
+
+    device.signalLabel?.let {
+        SensorRow(
+            label = "Sinal do WiFi",
+            value = it,
+            color = if ((device.signalStrength ?: 0) < -75) PixColors.Yellow else PixColors.Gray100,
+        )
+    }
+
+    SensorRow(label = "Câmera", value = device.cameraLabel)
+
+    device.firmwareVersion?.let { SensorRow(label = "Versão", value = it) }
+    device.localIp?.let { SensorRow(label = "Endereço na rede", value = it) }
+
+    // A fita não é sensor, mas é o que a pessoa mais mexe depois de
+    // instalada — e daqui se chega ao controle sem reinstalar nada.
+    SensorRow(
+        label = "Fita LED",
+        value = if (state.led.profileId != null) state.led.colorLabel else "Sem controle escolhido",
+    )
+
+    device.stock?.let { stock ->
+        SensorRow(label = "Produtos aqui dentro", value = "${stock.inAppliance}")
+    }
+
+    Spacer(Modifier.height(4.dp))
+
+    PixelButton(
+        text = "Cor da fita",
+        onClick = { viewModel.openColorStep(device) },
+        enabled = device.isOnline,
+        modifier = Modifier.fillMaxWidth(),
+    )
+
+    PixelButton(
+        text = "Atualizar",
+        onClick = viewModel::refreshDetail,
+        isLoading = state.isWorking,
+        modifier = Modifier.fillMaxWidth(),
+    )
+
+    PixelButton(text = "Voltar às geladeiras", onClick = viewModel::restart, modifier = Modifier.fillMaxWidth())
+}
+
+/** Uma leitura da geladeira: o nome à esquerda, o que ela diz à direita. */
+@Composable
+private fun SensorRow(label: String, value: String, color: Color = PixColors.Gray100) {
+    Row(
+        modifier = Modifier.fillMaxWidth().border(1.dp, PixColors.Gray700).padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = PixTypography.caption, color = PixColors.Gray400, modifier = Modifier.weight(1f))
+        Text(value, style = PixTypography.bodySecondary, color = color)
+    }
+}
+
+/**
  * O passo da fita: o controle de verdade, na tela (Fase 9.10, etapa A).
  *
  * Aperta, a geladeira acende, e o que ficou aceso é o que se salva. Quem
@@ -475,7 +576,12 @@ private fun ProfileRow(name: String, keys: Int, selected: Boolean, onClick: () -
 // ─────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun DeviceRow(device: FridgeDevice, action: String, onClick: () -> Unit) {
+private fun DeviceRow(
+    device: FridgeDevice,
+    action: String,
+    onClick: () -> Unit,
+    onRowClick: (() -> Unit)? = null,
+) {
     val color = when (device.presence) {
         FridgePresence.Online -> PixColors.Green
         FridgePresence.Pending -> PixColors.Yellow
@@ -484,7 +590,11 @@ private fun DeviceRow(device: FridgeDevice, action: String, onClick: () -> Unit)
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth().border(1.dp, PixColors.Gray600).padding(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, PixColors.Gray600)
+            .then(if (onRowClick != null) Modifier.clickable(onClick = onRowClick) else Modifier)
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {

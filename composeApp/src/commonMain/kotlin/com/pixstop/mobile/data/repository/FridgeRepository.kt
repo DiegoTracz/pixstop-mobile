@@ -106,6 +106,9 @@ private fun FridgeDeviceDto.toDomain() = FridgeDevice(
     firmwareVersion = firmwareVersion,
     doorOpen = doorOpen,
     applianceName = appliance?.name,
+    localIp = localIp,
+    cameraKind = cameraKind,
+    provisioningLabel = provisioningLabel,
     stock = stock?.let {
         FridgeStock(
             applianceName = it.appliance?.name ?: appliance?.name,

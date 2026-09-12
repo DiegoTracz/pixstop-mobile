@@ -39,6 +39,12 @@ data class FridgeDevice(
     val firmwareVersion: String?,
     val doorOpen: Boolean?,
     val applianceName: String?,
+    /** O endereço dela na rede da empresa: serve ao suporte, não ao app. */
+    val localIp: String? = null,
+    /** `picamera`, `usb`, `none` — o que ela tem de olho. */
+    val cameraKind: String? = null,
+    /** "Ativa", "Aguardando ativação", "Revogada": o texto do servidor. */
+    val provisioningLabel: String? = null,
     val stock: FridgeStock? = null,
 ) {
     val isOnline: Boolean get() = presence == FridgePresence.Online
@@ -48,6 +54,35 @@ data class FridgeDevice(
 
     /** `483 921`, que é como se dita e como aparece no painel. */
     val formattedCode: String? get() = activationCode?.let { "${it.take(3)} ${it.drop(3)}" }
+
+    /** O que a geladeira está fazendo com a porta, em uma palavra. */
+    val doorLabel: String get() = when (doorOpen) {
+        true -> "Aberta"
+        false -> "Fechada"
+        null -> "Sem sensor"
+    }
+
+    /**
+     * A força do sinal em palavras. Abaixo de -75 dBm a geladeira ainda
+     * conecta, mas é ali que as quedas começam — e é a informação que faz
+     * alguém mover o roteador antes de abrir um chamado.
+     */
+    val signalLabel: String? get() = signalStrength?.let { rssi ->
+        val quality = when {
+            rssi >= -60 -> "bom"
+            rssi >= -75 -> "razoável"
+            else -> "fraco"
+        }
+
+        "$rssi dBm ($quality)"
+    }
+
+    val cameraLabel: String get() = when (cameraKind) {
+        "picamera" -> "Módulo oficial"
+        "usb" -> "Webcam USB"
+        "fake" -> "Simulada"
+        else -> "Sem câmera"
+    }
 }
 
 /**

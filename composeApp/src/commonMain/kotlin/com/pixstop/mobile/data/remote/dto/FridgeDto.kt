@@ -19,6 +19,9 @@ data class FridgeDeviceDto(
     @SerialName("signal_strength") val signalStrength: Int? = null,
     @SerialName("firmware_version") val firmwareVersion: String? = null,
     @SerialName("door_open") val doorOpen: Boolean? = null,
+    @SerialName("local_ip") val localIp: String? = null,
+    @SerialName("camera_kind") val cameraKind: String? = null,
+    @SerialName("provisioning_label") val provisioningLabel: String? = null,
     val appliance: NamedRefDto? = null,
     val stock: FridgeStockDto? = null,
 )
