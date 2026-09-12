@@ -19,7 +19,11 @@ enum class FridgeLight {
     Blue,
     Yellow,
     Cyan,
-    Magenta;
+    Magenta,
+
+    /** Os dois arco-íris do controle: cor de descanso que muda sozinha. */
+    Fade,
+    Smooth;
 
     companion object {
         fun from(value: String?): FridgeLight = when (value) {
@@ -30,6 +34,8 @@ enum class FridgeLight {
             "yellow" -> Yellow
             "cyan" -> Cyan
             "magenta" -> Magenta
+            "fade" -> Fade
+            "smooth" -> Smooth
             "off" -> Off
             else -> Off
         }

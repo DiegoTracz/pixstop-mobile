@@ -32,9 +32,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.pixstop.mobile.domain.model.FridgeLight
 import com.pixstop.mobile.domain.model.FridgeDevice
 import com.pixstop.mobile.domain.model.FridgePresence
 import com.pixstop.mobile.domain.model.WifiNetwork
+import com.pixstop.mobile.ui.components.FridgeLamp
+import com.pixstop.mobile.ui.components.IrRemote
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelInput
@@ -105,6 +108,7 @@ fun ConnectFridgeScreen(
                         )
 
                         ConnectStep.Done -> DoneStep(state, viewModel)
+                        ConnectStep.Color -> ColorStep(state, viewModel)
                     }
                 }
             }
@@ -357,7 +361,113 @@ private fun DoneStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
         color = PixColors.Gray300,
     )
 
+    // A fita é a última coisa da instalação, e a única que se faz de pé na
+    // frente da geladeira: a cor tem de acender ali para valer a escolha.
+    PixelButton(
+        text = if (state.led.profileId != null) "Mudar a cor da fita" else "Escolher a cor da fita",
+        onClick = viewModel::openColorStep,
+        modifier = Modifier.fillMaxWidth(),
+    )
+
     PixelButton(text = "Voltar às geladeiras", onClick = viewModel::restart, modifier = Modifier.fillMaxWidth())
+}
+
+/**
+ * O passo da fita: o controle de verdade, na tela (Fase 9.10, etapa A).
+ *
+ * Aperta, a geladeira acende, e o que ficou aceso é o que se salva. Quem
+ * não tem fita sai por "Agora não" e a geladeira fica no arco-íris lento,
+ * que já é uma cor que serve.
+ */
+@Composable
+private fun ColorStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
+    Text("A fita LED", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+
+    Text(
+        "Aperte como no controle de verdade: a geladeira acende na hora. O que ficar aceso é o que ela mostra quando não está acontecendo nada.",
+        style = PixTypography.caption,
+        color = PixColors.Gray300,
+    )
+
+    if (state.led.profiles.isEmpty()) {
+        Text(
+            "Nenhum controle no catálogo ainda. Um controle novo se mapeia uma vez, no painel, e vale para toda fita igual.",
+            style = PixTypography.bodyMuted,
+            color = PixColors.Gray300,
+        )
+    } else {
+        Text("Qual controle veio com esta fita?", style = PixTypography.inputLabel, color = PixColors.Gray100)
+
+        state.led.profiles.forEach { profile ->
+            ProfileRow(
+                name = profile.name,
+                keys = profile.keys.size,
+                selected = profile.id == state.led.profileId,
+                onClick = { viewModel.chooseProfile(profile.id) },
+            )
+        }
+    }
+
+    if (state.led.profileId != null) {
+        Spacer(Modifier.height(4.dp))
+
+        IrRemote(
+            available = state.led.availableKeys,
+            onPress = { viewModel.pressKey(it.slug) },
+            enabled = state.canPressKeys,
+            busy = state.pressing,
+            picked = state.pickedColor,
+        )
+
+        Text(
+            "Brilho, tons e os programas piscantes também funcionam — só não servem de repouso.",
+            style = PixTypography.caption,
+            color = PixColors.Gray400,
+        )
+
+        FridgeLamp(
+            light = FridgeLight.from(state.currentColor),
+            label = if (state.pickedColor != null) "Vai ficar assim" else "Está assim",
+            hint = state.led.colors.firstOrNull { it.value == state.currentColor }?.label,
+        )
+    }
+
+    if (!state.led.online) {
+        Text(
+            "A geladeira está fora do ar: as cores só se escolhem com ela ligada, porque é nela que você vê.",
+            style = PixTypography.bodyMuted,
+            color = PixColors.Yellow,
+        )
+    }
+
+    PixelButton(
+        text = "Salvar esta cor",
+        onClick = viewModel::saveColor,
+        enabled = state.canSaveColor,
+        modifier = Modifier.fillMaxWidth(),
+    )
+
+    PixelButton(text = "Agora não", onClick = viewModel::skipColor, modifier = Modifier.fillMaxWidth())
+}
+
+@Composable
+private fun ProfileRow(name: String, keys: Int, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(if (selected) 2.dp else 1.dp, if (selected) PixColors.Cyan else PixColors.Gray600)
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(name, style = PixTypography.bodySecondary, color = PixColors.Gray100)
+            Text("$keys teclas mapeadas", style = PixTypography.caption, color = PixColors.Gray400)
+        }
+
+        if (selected) Text("✓", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────

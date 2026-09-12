@@ -57,3 +57,31 @@ data class PortalConfigureRequest(val ssid: String, val password: String, val co
 
 @Serializable
 data class PortalMessageDto(val message: String = "")
+
+/** A fita LED desta geladeira, como o servidor a apresenta (Fase 9.10). */
+@Serializable
+data class LedSettingsDto(
+    val color: String = "fade",
+    @SerialName("ir_profile_id") val irProfileId: Long? = null,
+    val online: Boolean = false,
+    val colors: List<LedColorOptionDto> = emptyList(),
+    val profiles: List<IrProfileDto> = emptyList(),
+)
+
+@Serializable
+data class LedColorOptionDto(val value: String, val label: String, val swatch: String)
+
+/** Um modelo de controle do catálogo, com as teclas que alguém mapeou. */
+@Serializable
+data class IrProfileDto(val id: Long, val name: String, val keys: List<String> = emptyList())
+
+/** O que o app manda para salvar a fita: o nome da cor, nunca o código. */
+@Serializable
+data class SaveLedRequest(
+    val color: String,
+    @SerialName("ir_profile_id") val irProfileId: Long?,
+)
+
+/** Uma tecla apertada no celular. */
+@Serializable
+data class PressKeyRequest(val command: String)

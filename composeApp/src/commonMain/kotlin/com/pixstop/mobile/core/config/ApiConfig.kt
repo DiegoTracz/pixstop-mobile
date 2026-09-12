@@ -198,6 +198,12 @@ object ApiConfig {
 
         fun companyDeviceStatus(id: Long) = "company/devices/$id/status"
 
+        /** A fita LED pelo celular (Fase 9.10): a cor e o controle. */
+        fun companyDeviceLed(id: Long) = "company/devices/$id/led"
+
+        /** Uma tecla do controle, apertada no app. */
+        fun companyDeviceIrSend(id: Long) = "company/devices/$id/ir-send"
+
         fun teamMembers(departmentId: Long) = "team/$departmentId/members"
 
         fun teamHistory(departmentId: Long) = "team/$departmentId/history"

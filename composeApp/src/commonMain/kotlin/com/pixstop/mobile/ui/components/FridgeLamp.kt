@@ -80,6 +80,9 @@ private fun FridgeLight.toPixColor(): Color = when (this) {
     FridgeLight.Blue -> PixColors.Blue
     FridgeLight.Yellow -> PixColors.Yellow
     FridgeLight.Magenta -> PixColors.Purple
+    // Os arco-íris mudam de cor sozinhos; aqui vale a cor que os representa.
+    FridgeLight.Fade -> PixColors.Purple
+    FridgeLight.Smooth -> PixColors.Pink
     FridgeLight.White -> PixColors.White
     FridgeLight.Off -> PixColors.Gray400
 }

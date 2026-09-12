@@ -7,6 +7,7 @@ import com.pixstop.mobile.data.repository.FridgeRepository
 import com.pixstop.mobile.domain.access.FridgeNetworkConnector
 import com.pixstop.mobile.domain.model.FridgeDevice
 import com.pixstop.mobile.domain.model.FridgePresence
+import com.pixstop.mobile.domain.model.LedSettings
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.PortalMode
 import com.pixstop.mobile.domain.model.PortalStatus
@@ -34,6 +35,15 @@ enum class ConnectStep {
     /** Fora da rede da geladeira: esperando o servidor dizer "online". */
     WaitingOnline,
     Done,
+
+    /**
+     * A fita LED, com a geladeira já online (Fase 9.10, etapa A).
+     *
+     * Vem **depois** do `Done` de propósito: antes de estar online a
+     * geladeira não responde a comando nenhum, e uma tecla que não acende
+     * nada é pior que nenhuma tecla.
+     */
+    Color,
 }
 
 /**
@@ -58,6 +68,12 @@ data class ConnectFridgeUiState(
     val isWorking: Boolean = false,
     val message: String? = null,
     val error: String? = null,
+    /** A fita desta geladeira: cor de agora, catálogo de controles, teclas. */
+    val led: LedSettings = LedSettings.Empty,
+    /** A cor que a pessoa acendeu no controle e ainda não salvou. */
+    val pickedColor: String? = null,
+    /** A tecla que está saindo agora. */
+    val pressing: String? = null,
 ) {
     /** Só quem ainda espera o código aparece para conectar. */
     val pendingDevices: List<FridgeDevice> get() = devices.filter { it.presence == FridgePresence.Pending }
@@ -72,6 +88,15 @@ data class ConnectFridgeUiState(
     val canCreate: Boolean get() = (newName.isBlank() || newName.trim().length >= 3) && !isWorking
 
     val canConfigure: Boolean get() = ssid.isNotBlank() && !code.isNullOrBlank() && !isWorking
+
+    /** Sem controle escolhido não há tecla para apertar, mesmo online. */
+    val canPressKeys: Boolean get() = led.canPress && !isWorking
+
+    /** Salvar só faz sentido depois de a pessoa acender alguma coisa. */
+    val canSaveColor: Boolean get() = pickedColor != null && !isWorking
+
+    /** O que a fita está mostrando agora, para a lâmpada da tela. */
+    val currentColor: String get() = pickedColor ?: led.color
 
     /**
      * O portal disse em que pé está. `done` avança para esperar o servidor;
@@ -331,12 +356,107 @@ class ConnectFridgeViewModel(
         }
     }
 
+    /* ─────────────────────────────────────────────────────────────────
+     * A fita LED (Fase 9.10, etapa A)
+     *
+     * Quem instala está de pé na frente da geladeira. Escolhe o controle,
+     * aperta a tecla, a fita acende, e o que ficou aceso é o que se salva.
+     * Nada disto pede tradução: é o controle de verdade, na tela.
+     * ───────────────────────────────────────────────────────────────── */
+
+    /** Abre o passo da fita e busca o catálogo de controles. */
+    fun openColorStep() {
+        val device = _uiState.value.chosen ?: return
+
+        _uiState.update { it.copy(step = ConnectStep.Color, isWorking = true, error = null, message = null) }
+
+        viewModelScope.launch {
+            when (val result = fridges.ledSettings(device.id)) {
+                is Outcome.Success -> _uiState.update { it.copy(led = result.value, isWorking = false) }
+                is Outcome.Failure -> _uiState.update { it.copy(isWorking = false, error = result.error.message) }
+            }
+        }
+    }
+
+    /** Escolhe qual controle esta fita entende. Sem ele não há tecla nenhuma. */
+    fun chooseProfile(profileId: Long) {
+        _uiState.update { it.copy(led = it.led.copy(profileId = profileId), pickedColor = null, error = null) }
+    }
+
+    /**
+     * Aperta uma tecla. A geladeira transmite na hora; se a tecla for uma
+     * cor de repouso, ela passa a ser a candidata a ser salva. Brilho, tons
+     * e os programas piscantes funcionam igual, mas não viram escolha.
+     */
+    fun pressKey(slug: String) {
+        val device = _uiState.value.chosen ?: return
+        val led = _uiState.value.led
+
+        if (!led.canPress) return
+
+        _uiState.update { it.copy(pressing = slug, error = null) }
+
+        viewModelScope.launch {
+            val result = fridges.pressKey(device.id, slug)
+
+            _uiState.update {
+                when (result) {
+                    is Outcome.Success -> it.copy(
+                        pressing = null,
+                        pickedColor = if (it.led.colors.any { color -> color.value == slug }) slug else it.pickedColor,
+                    )
+                    is Outcome.Failure -> it.copy(pressing = null, error = result.error.message)
+                }
+            }
+        }
+    }
+
+    /** Salva o que está aceso: a fita já está mostrando, e é isso que se guarda. */
+    fun saveColor() {
+        val device = _uiState.value.chosen ?: return
+        val color = _uiState.value.pickedColor ?: return
+        val profileId = _uiState.value.led.profileId
+
+        _uiState.update { it.copy(isWorking = true, error = null) }
+
+        viewModelScope.launch {
+            when (val result = fridges.saveLed(device.id, color, profileId)) {
+                is Outcome.Success -> _uiState.update {
+                    it.copy(
+                        led = result.value,
+                        pickedColor = null,
+                        isWorking = false,
+                        step = ConnectStep.Done,
+                        message = "A geladeira fica ${result.value.colorLabel.lowercase()} quando está em repouso.",
+                    )
+                }
+                is Outcome.Failure -> _uiState.update { it.copy(isWorking = false, error = result.error.message) }
+            }
+        }
+    }
+
+    /** "Agora não": a geladeira segue no arco-íris, que já é uma cor que serve. */
+    fun skipColor() {
+        _uiState.update { it.copy(step = ConnectStep.Done, pickedColor = null, error = null) }
+    }
+
     /** Volta para a lista, soltando a rede da geladeira se ainda estiver nela. */
     fun restart() {
         watcher?.cancel()
         leaveHotspot()
         _uiState.update {
-            it.copy(step = ConnectStep.Devices, chosen = null, networks = emptyList(), ssid = "", password = "", portalMessage = null, isWorking = false, error = null)
+            it.copy(
+                step = ConnectStep.Devices,
+                chosen = null,
+                networks = emptyList(),
+                ssid = "",
+                password = "",
+                portalMessage = null,
+                isWorking = false,
+                error = null,
+                led = LedSettings.Empty,
+                pickedColor = null,
+            )
         }
         load()
     }
