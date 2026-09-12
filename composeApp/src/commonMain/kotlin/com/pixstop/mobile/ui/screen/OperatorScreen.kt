@@ -31,6 +31,7 @@ import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.SensorCard
+import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.OperatorTab
@@ -187,7 +188,7 @@ private fun CompanyList(
                 label = company.name,
                 value = detailFor(company),
                 detail = if (seesMoney && company.revenueToday != null) {
-                    "hoje: R$ ${company.revenueToday}"
+                    "hoje: ${formatMoney(company.revenueToday)}"
                 } else {
                     null
                 },
