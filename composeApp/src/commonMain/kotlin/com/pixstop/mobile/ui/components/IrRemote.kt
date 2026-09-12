@@ -25,6 +25,15 @@ import com.pixstop.mobile.domain.model.RemoteKey
 import com.pixstop.mobile.ui.theme.PixColors
 
 /**
+ * O corpo do controle e as bordas das teclas não vêm do tema: o controle é
+ * um objeto cinza escuro na mesa, e é assim nos dois modos. Puxá-los do
+ * tema fazia o corpo virar branco no modo claro, e aí a tecla branca e as
+ * de brilho sumiam dentro dele.
+ */
+private val RemoteBody = Color(0xFF3F4653)
+private val KeyEdge = Color(0xFF6B7280)
+
+/**
  * O controle de 24 teclas desenhado na tela (Fase 9.10, etapa A).
  *
  * A disposição é a do controle físico, tecla por tecla: quem o tem na mão
@@ -45,10 +54,12 @@ fun IrRemote(
     busy: String? = null,
     /** A cor escolhida até aqui, destacada com um anel. */
     picked: String? = null,
+    /** A última tecla que saiu, mesmo que não sirva de repouso. */
+    lastSent: String? = null,
 ) {
     Column(
         modifier = modifier
-            .background(PixColors.Gray800, RoundedCornerShape(12.dp))
+            .background(RemoteBody, RoundedCornerShape(14.dp))
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -60,6 +71,10 @@ fun IrRemote(
                         enabled = enabled && available.contains(key.slug),
                         busy = busy == key.slug,
                         picked = picked == key.slug,
+                        // Uma tecla que não serve de repouso também precisa
+                        // dizer que saiu: sem isso, apertar FLASH parece um
+                        // botão quebrado.
+                        sent = lastSent == key.slug && picked != key.slug,
                         onPress = { onPress(key) },
                     )
                 }
@@ -74,20 +89,31 @@ private fun RemoteButton(
     enabled: Boolean,
     busy: Boolean,
     picked: Boolean,
+    sent: Boolean,
     onPress: () -> Unit,
 ) {
-    val face = key.swatch?.let { Color(it) } ?: PixColors.Gray600
+    // As teclas de programa são cinza-claro no controle de verdade; as de
+    // cor têm a cor delas.
+    val face = key.swatch?.let { Color(it) } ?: Color(0xFFAEB4BE)
     // Tecla clara pede letra escura; o resto é branco em cima de cor forte.
-    val ink = if (key.slug == "white" || key.slug.startsWith("brightness")) PixColors.Dark else PixColors.White
+    val light = key.slug == "white" || key.slug.startsWith("brightness") || key.swatch == null
+    val ink = if (light) Color(0xFF111827) else Color(0xFFFFFFFF)
+
+    // Um texto de duas letras cabe grande; "SMOOTH" precisa caber inteiro.
+    val size = if ((key.text?.length ?: 0) > 3) 8.sp else 15.sp
 
     Box(
         modifier = Modifier
             .size(48.dp)
-            .alpha(if (enabled) 1f else 0.25f)
+            .alpha(if (enabled) 1f else 0.3f)
             .background(face, CircleShape)
             .border(
-                width = if (picked || busy) 3.dp else 1.dp,
-                color = if (picked || busy) PixColors.Cyan else PixColors.Gray500,
+                width = if (picked || busy || sent) 3.dp else 1.dp,
+                color = when {
+                    picked -> PixColors.Cyan
+                    busy || sent -> PixColors.White
+                    else -> KeyEdge
+                },
                 shape = CircleShape,
             )
             .clickable(enabled = enabled, onClick = onPress),
@@ -97,7 +123,7 @@ private fun RemoteButton(
             Text(
                 text = it,
                 color = ink,
-                fontSize = 9.sp,
+                fontSize = size,
                 textAlign = TextAlign.Center,
             )
         }

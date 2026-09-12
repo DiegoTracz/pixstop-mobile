@@ -34,8 +34,8 @@ data class RemoteKey(
 object IrRemoteLayout {
     val rows: List<List<RemoteKey>> = listOf(
         listOf(
-            RemoteKey("brightness_up", "Mais brilho", "☀+", 0xFFF8FAFC),
-            RemoteKey("brightness_down", "Menos brilho", "☀−", 0xFFF8FAFC),
+            RemoteKey("brightness_up", "Mais brilho", "+", 0xFFF8FAFC),
+            RemoteKey("brightness_down", "Menos brilho", "−", 0xFFF8FAFC),
             RemoteKey("power_off", "Desligar", "OFF", 0xFF1F2937),
             RemoteKey("power_on", "Ligar", "ON", 0xFFDC2626),
         ),

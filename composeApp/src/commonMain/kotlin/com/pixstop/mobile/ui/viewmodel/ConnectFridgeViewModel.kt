@@ -83,6 +83,8 @@ data class ConnectFridgeUiState(
     val pickedColor: String? = null,
     /** A tecla que está saindo agora. */
     val pressing: String? = null,
+    /** A última tecla que a geladeira recebeu, serve de repouso ou não. */
+    val lastSent: String? = null,
 ) {
     /** Só quem ainda espera o código aparece para conectar. */
     val pendingDevices: List<FridgeDevice> get() = devices.filter { it.presence == FridgePresence.Pending }
@@ -452,10 +454,19 @@ class ConnectFridgeViewModel(
 
             _uiState.update {
                 when (result) {
-                    is Outcome.Success -> it.copy(
-                        pressing = null,
-                        pickedColor = if (it.led.colors.any { color -> color.value == slug }) slug else it.pickedColor,
-                    )
+                    is Outcome.Success -> {
+                        val isColor = it.led.colors.any { color -> color.value == slug }
+
+                        it.copy(
+                            pressing = null,
+                            lastSent = slug,
+                            pickedColor = if (isColor) slug else it.pickedColor,
+                            // Quem aperta FLASH vê a fita mudar e não vê a
+                            // seleção mudar: sem uma palavra aqui, parece
+                            // que o botão não funcionou.
+                            message = if (isColor) null else "Enviado. Esta tecla não serve de cor de repouso.",
+                        )
+                    }
                     is Outcome.Failure -> it.copy(pressing = null, error = result.error.message)
                 }
             }

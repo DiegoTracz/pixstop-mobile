@@ -512,14 +512,20 @@ private fun ColorStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewM
     if (state.led.profileId != null) {
         Spacer(Modifier.height(4.dp))
 
-        IrRemote(
-            available = state.led.availableKeys,
-            onPress = { viewModel.pressKey(it.slug) },
-            enabled = state.canPressKeys,
-            busy = state.pressing,
-            picked = state.pickedColor,
-        )
+        // O controle fica no meio da tela, como ficaria na mão.
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            IrRemote(
+                available = state.led.availableKeys,
+                onPress = { viewModel.pressKey(it.slug) },
+                enabled = state.canPressKeys,
+                busy = state.pressing,
+                picked = state.pickedColor,
+                lastSent = state.lastSent,
+            )
+        }
 
+        // O aviso da tecla enviada já sai na faixa do topo; aqui fica só a
+        // regra, que vale o tempo todo.
         Text(
             "Brilho, tons e os programas piscantes também funcionam — só não servem de repouso.",
             style = PixTypography.caption,
