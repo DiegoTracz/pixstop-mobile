@@ -10,6 +10,7 @@ import com.pixstop.mobile.domain.model.CompanyRole
 import com.pixstop.mobile.domain.model.ManagedDepartment
 import com.pixstop.mobile.domain.model.Membership
 import com.pixstop.mobile.domain.model.NamedRef
+import com.pixstop.mobile.domain.model.OperatorAccount
 
 /**
  * Traduz o que a API devolve para o que o app entende.
@@ -28,6 +29,7 @@ fun MeDto.toDomain(): Account = Account(
     memberships = tenants.map { it.toDomain() },
     activeCompany = activeTenant?.toDomain(),
     hasPendingConsent = hasPendingConsent,
+    operator = operator?.let { OperatorAccount(it.id, it.name, it.role, it.seesMoney) },
 )
 
 fun MembershipDto.toDomain(): Membership = Membership(
@@ -39,6 +41,7 @@ fun MembershipDto.toDomain(): Membership = Membership(
     pixelAvailable = pixelAvailable,
     isCurrent = active,
     isActive = isActive,
+    operates = operates,
 )
 
 fun ActiveTenantDto.toDomain(): ActiveCompany = ActiveCompany(
@@ -63,6 +66,7 @@ fun ActiveTenantDto.toDomain(): ActiveCompany = ActiveCompany(
     memberNoun = memberNoun?.singular ?: "colaborador",
     isCustomer = kind == "customer",
     isStaff = isStaff,
+    operates = operates,
     progression = progression?.toDomain(),
     pixelsExpiringSoon = pixelsExpiringSoon,
 )

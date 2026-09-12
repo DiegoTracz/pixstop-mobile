@@ -20,6 +20,7 @@ import com.pixstop.mobile.ui.screen.LoginScreen
 import com.pixstop.mobile.ui.screen.CartScreen
 import com.pixstop.mobile.ui.screen.CompanyScreen
 import com.pixstop.mobile.ui.screen.ConnectFridgeScreen
+import com.pixstop.mobile.ui.screen.OperatorScreen
 import com.pixstop.mobile.ui.screen.CheckoutScreen
 import com.pixstop.mobile.ui.screen.OrderScreen
 import com.pixstop.mobile.ui.screen.OrdersScreen
@@ -263,6 +264,7 @@ fun AppNavigation() {
                         Destination.Rewards -> navController.navigate(Routes.REWARDS)
                         Destination.Company -> navController.navigate(Routes.COMPANY)
                         Destination.Fridges -> navController.navigate(Routes.FRIDGES)
+                        Destination.Operator -> navController.navigate(Routes.OPERATOR)
                         else -> Unit
                     }
                 },
@@ -370,6 +372,18 @@ fun AppNavigation() {
 
         composable(Routes.FRIDGES) {
             ConnectFridgeScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.OPERATOR) {
+            OperatorScreen(
+                onBack = { navController.popBackStack() },
+                // Tocar numa empresa é entrar nela: daí as telas de geladeira
+                // e estoque passam a falar dessa, como na web (Fase 16, O8).
+                onOpenCompany = { companyId ->
+                    sessionViewModel.switchCompany(companyId)
+                    navController.navigate(Routes.FRIDGES)
+                },
+            )
         }
 
         composable(Routes.ORDERS) {

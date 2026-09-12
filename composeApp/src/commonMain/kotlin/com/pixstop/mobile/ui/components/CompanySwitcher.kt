@@ -133,5 +133,7 @@ private fun CompanyRow(
 private fun Membership.roleLabel(): String = when (role) {
     CompanyRole.Admin -> "Administrador"
     CompanyRole.Manager -> "Gestor"
+    // Quem opera esta empresa sem administrá-la (Fase 16).
+    CompanyRole.Operator -> "Operador"
     CompanyRole.Member -> "Membro"
 }

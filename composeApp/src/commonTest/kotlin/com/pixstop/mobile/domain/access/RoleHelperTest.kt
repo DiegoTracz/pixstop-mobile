@@ -25,6 +25,7 @@ class RoleHelperTest {
         features: Map<String, Boolean> = emptyMap(),
         modules: List<String> = emptyList(),
         isStaff: Boolean = false,
+        operates: Boolean = false,
     ) = ActiveCompany(
         id = "1",
         name = "Empresa Alpha",
@@ -44,6 +45,7 @@ class RoleHelperTest {
         features = features,
         modules = modules,
         isStaff = isStaff,
+        operates = operates,
     )
 
     private val papeis = listOf(
@@ -51,6 +53,8 @@ class RoleHelperTest {
         empresa(CompanyRole.Manager, isManager = true),
         empresa(CompanyRole.Admin),
         empresa(CompanyRole.Admin, isManager = true),
+        empresa(CompanyRole.Operator, operates = true),
+        empresa(CompanyRole.Admin, operates = true),
     )
 
     @Test
@@ -68,11 +72,13 @@ class RoleHelperTest {
     @Test
     fun `o menu lateral so oferece o que o papel abre`() {
         papeis.forEach { company ->
-            RoleHelper.drawer(company).forEach { destination ->
-                assertTrue(
-                    RoleHelper.canOpen(destination, company),
-                    "o menu oferece $destination para ${company.role} sem poder abrir",
-                )
+            listOf(false, true).forEach { isOperator ->
+                RoleHelper.drawer(company, isOperator).forEach { destination ->
+                    assertTrue(
+                        RoleHelper.canOpen(destination, company, isOperator),
+                        "o menu oferece $destination para ${company.role} sem poder abrir",
+                    )
+                }
             }
         }
     }
@@ -115,6 +121,46 @@ class RoleHelperTest {
             listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Team, Destination.Company, Destination.Fridges),
             RoleHelper.drawer(company),
         )
+    }
+
+    @Test
+    fun `quem opera a empresa cuida das geladeiras sem administrar a empresa`() {
+        // O mesmo corte do servidor entre `company.manager` e `company.admin`
+        // (Fase 16, O8): geladeira é operação, pessoas e plano não.
+        val operada = empresa(CompanyRole.Operator, operates = true)
+
+        assertTrue(RoleHelper.canOpen(Destination.Fridges, operada))
+        assertFalse(RoleHelper.canOpen(Destination.Company, operada))
+
+        // E quem só participa continua de fora.
+        assertFalse(RoleHelper.canOpen(Destination.Fridges, empresa(CompanyRole.Member)))
+    }
+
+    @Test
+    fun `quem cria a propria empresa administra e opera ao mesmo tempo`() {
+        val minha = empresa(CompanyRole.Admin, operates = true)
+
+        assertTrue(RoleHelper.canOpen(Destination.Fridges, minha))
+        assertTrue(RoleHelper.canOpen(Destination.Company, minha))
+    }
+
+    @Test
+    fun `o painel do operador so aparece para quem faz parte de um`() {
+        val company = empresa(CompanyRole.Member)
+
+        assertFalse(RoleHelper.drawer(company).contains(Destination.Operator))
+        assertContains(RoleHelper.drawer(company, isOperator = true), Destination.Operator)
+
+        // Ele atravessa empresas: existe mesmo sem uma escolhida.
+        assertTrue(RoleHelper.canOpen(Destination.Operator, null, isOperator = true))
+    }
+
+    @Test
+    fun `um papel que o app nao conhece cai no mais restrito`() {
+        // Se o servidor inventar um papel novo, uma versão antiga do app não
+        // pode abrir portas demais por não reconhecê-lo.
+        assertEquals(CompanyRole.Member, CompanyRole.from("papel-que-nao-existe"))
+        assertEquals(CompanyRole.Operator, CompanyRole.from("operator"))
     }
 
     @Test

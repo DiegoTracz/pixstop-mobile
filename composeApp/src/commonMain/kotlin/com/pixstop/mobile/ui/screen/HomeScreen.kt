@@ -96,6 +96,7 @@ private fun drawerLabel(destination: Destination): Pair<String, AppIconType> = w
     Destination.Staff -> "Registrar visita" to AppIconType.Store
     Destination.Company -> "Empresa" to AppIconType.Settings
     Destination.Fridges -> "Geladeiras" to AppIconType.Lock
+    Destination.Operator -> "Painel do operador" to AppIconType.Box
     else -> destination.name to AppIconType.Info
 }
 
@@ -185,7 +186,7 @@ fun HomeScreen(
                     user = session.account?.user,
                     company = session.company,
                     canSwitchCompany = session.account?.canSwitchCompany == true,
-                    destinations = RoleHelper.drawer(session.company),
+                    destinations = RoleHelper.drawer(session.company, isOperator = session.account?.isOperator == true),
                     onDestination = { destination ->
                         scope.launch { drawerState.close() }
                         onDestination(destination)

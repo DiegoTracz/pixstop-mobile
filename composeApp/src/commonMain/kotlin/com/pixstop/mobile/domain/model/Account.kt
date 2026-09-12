@@ -11,12 +11,37 @@ data class Account(
     val memberships: List<Membership>,
     val activeCompany: ActiveCompany?,
     val hasPendingConsent: Boolean,
+    /**
+     * Quem empreende com geladeiras (Fase 16): compra o estoque, coloca
+     * geladeiras em várias empresas e repõe. Nulo para todo mundo que não é,
+     * e é assim que o app decide se existe painel de operador.
+     */
+    val operator: OperatorAccount? = null,
 ) {
     /** Sem empresa escolhida, o app só oferece entrar em uma. */
     val needsCompany: Boolean get() = activeCompany == null
 
     /** Trocar de empresa só faz sentido com mais de uma. */
     val canSwitchCompany: Boolean get() = memberships.count { it.isActive } > 1
+
+    /** O painel do operador só existe para quem faz parte de um. */
+    val isOperator: Boolean get() = operator != null
+}
+
+/**
+ * A conta de operador de quem está usando o app (Fase 16).
+ *
+ * `seesMoney` é do servidor, não do app: o repositor simplesmente não recebe
+ * receita nem margem nas respostas, e esta bandeira existe para a tela não
+ * prometer um número que nunca vai chegar.
+ */
+data class OperatorAccount(
+    val id: Long,
+    val name: String,
+    val role: String?,
+    val seesMoney: Boolean,
+) {
+    val isOwner: Boolean get() = role == "owner"
 }
 
 data class AccountUser(
@@ -40,6 +65,8 @@ data class Membership(
     val pixelAvailable: Int,
     val isCurrent: Boolean,
     val isActive: Boolean,
+    /** Opera esta empresa (Fase 16), com ou sem papel de admin nela. */
+    val operates: Boolean = false,
 )
 
 data class ActiveCompany(
@@ -68,10 +95,24 @@ data class ActiveCompany(
     val isCustomer: Boolean = false,
     /** Atende no balcão: registra visitas (staff ou administrador). */
     val isStaff: Boolean = false,
+    /**
+     * Opera esta empresa (Fase 16): pertence ao operador dela. Anda junto com
+     * o papel, e não no lugar dele — quem cria a própria empresa administra e
+     * opera ao mesmo tempo.
+     */
+    val operates: Boolean = false,
     /** Nulo quando a progressão por XP não está ligada nesta empresa. */
     val progression: Progression? = null,
     val pixelsExpiringSoon: Int = 0,
 ) {
+    /**
+     * Cuida da operação: geladeira, estoque e pedido.
+     *
+     * É o mesmo corte que o servidor faz entre `company.manager` e
+     * `company.admin`; o app não pode abrir mais portas do que ele.
+     */
+    val canManageOperation: Boolean get() = role.isAdmin || operates
+
     /** Uma funcionalidade ausente do plano é considerada ligada. */
     fun hasFeature(name: String): Boolean = features[name] ?: true
 
@@ -96,6 +137,8 @@ data class ManagedDepartment(val id: Long, val name: String, val pixelBalance: I
 enum class CompanyRole(val apiValue: String) {
     Admin("admin-company"),
     Manager("manager"),
+    /** Quem opera a geladeira desta empresa sem administrá-la (Fase 16). */
+    Operator("operator"),
     Member("user");
 
     val isAdmin: Boolean get() = this == Admin

@@ -57,6 +57,9 @@ object Routes {
     /** Conectar e acompanhar as geladeiras (Fase 9.3). */
     const val FRIDGES = "fridges"
 
+    /** O painel de quem opera geladeiras em várias empresas (Fase 16). */
+    const val OPERATOR = "operator"
+
     /** Caixa de avisos, alcançada pelo sino da barra superior. */
     const val NOTIFICATIONS = "notifications"
 

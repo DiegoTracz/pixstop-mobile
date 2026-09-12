@@ -15,6 +15,17 @@ data class MeDto(
     val tenants: List<MembershipDto> = emptyList(),
     @SerialName("active_tenant") val activeTenant: ActiveTenantDto? = null,
     @SerialName("has_pending_consent") val hasPendingConsent: Boolean = false,
+    /** Quem opera geladeiras (Fase 16); ausente em servidor antigo. */
+    val operator: OperatorAccountDto? = null,
+)
+
+/** A conta de operador de quem entrou. */
+@Serializable
+data class OperatorAccountDto(
+    val id: Long,
+    val name: String,
+    val role: String? = null,
+    @SerialName("sees_money") val seesMoney: Boolean = false,
 )
 
 @Serializable
@@ -39,6 +50,8 @@ data class MembershipDto(
     @SerialName("pixel_available") val pixelAvailable: Int = 0,
     val active: Boolean = false,
     @SerialName("is_active") val isActive: Boolean = true,
+    /** Opera esta empresa (Fase 16): pertence ao operador dela. */
+    val operates: Boolean = false,
 )
 
 /**
@@ -68,6 +81,8 @@ data class ActiveTenantDto(
     @SerialName("member_noun") val memberNoun: MemberNounDto? = null,
     val kind: String? = null,
     @SerialName("is_staff") val isStaff: Boolean = false,
+    /** Opera esta empresa (Fase 16), que não é o mesmo que administrá-la. */
+    val operates: Boolean = false,
     /** Progressão por XP; ausente ou desligada vira `null` no domínio. */
     val progression: ProgressionDto? = null,
     @SerialName("pixels_expiring_soon") val pixelsExpiringSoon: Int = 0,

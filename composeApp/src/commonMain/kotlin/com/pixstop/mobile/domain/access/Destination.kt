@@ -27,7 +27,15 @@ enum class Destination(
     /** O balcão: registrar a visita de quem está na frente. */
     Staff(requiredModule = "checkin"),
     Company,
-    /** Conectar e acompanhar as geladeiras (Fase 9.3). Só o administrador. */
+    /**
+     * Conectar e acompanhar as geladeiras (Fase 9.3). De quem cuida da
+     * operação: o admin da empresa ou quem a opera (Fase 16, O8).
+     */
     Fridges,
+    /**
+     * O painel de quem opera geladeiras em várias empresas (Fase 16): a ronda
+     * e a lista de empresas. Não depende de empresa ativa nenhuma.
+     */
+    Operator,
     Profile,
 }

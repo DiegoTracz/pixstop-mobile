@@ -130,6 +130,13 @@ object ApiConfig {
         /** Indicação (Fase 14): o meu link e quem veio por ele. */
         const val REFERRALS = "referrals"
 
+        // ── Operador de geladeiras (Fase 16) ──────────────────────────────
+        /** Todas as portas de todas as empresas numa lista só. */
+        const val OPERATOR_ROUND = "operator/round"
+
+        /** As empresas dele, com o que está fora do ar e o que está acabando. */
+        const val OPERATOR_COMPANIES = "operator/companies"
+
         // ── Notificações e push ───────────────────────────────────────────
         const val NOTIFICATIONS = "notifications"
         const val NOTIFICATIONS_READ_ALL = "notifications/read-all"

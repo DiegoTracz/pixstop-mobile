@@ -30,11 +30,23 @@ object RoleHelper {
     /**
      * O que entra no menu lateral, na ordem em que aparece.
      */
-    fun drawer(company: ActiveCompany?): List<Destination> =
-        listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Rewards, Destination.Team, Destination.Staff, Destination.Company, Destination.Fridges)
-            .filter { canOpen(it, company) }
+    fun drawer(company: ActiveCompany?, isOperator: Boolean = false): List<Destination> =
+        listOf(
+            Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Rewards,
+            Destination.Team, Destination.Staff, Destination.Company, Destination.Fridges,
+            // O painel do operador não é da empresa ativa: é de quem faz parte
+            // de um operador, e atravessa todas elas (Fase 16, O8).
+            Destination.Operator,
+        ).filter { canOpen(it, company, isOperator) }
 
-    fun canOpen(destination: Destination, company: ActiveCompany?): Boolean {
+    fun canOpen(destination: Destination, company: ActiveCompany?, isOperator: Boolean = false): Boolean {
+        // O painel do operador é a exceção: não se responde a partir da
+        // empresa ativa, porque quem opera atravessa várias e pode estar
+        // olhando qualquer uma delas (Fase 16, O8).
+        if (destination == Destination.Operator) {
+            return isOperator
+        }
+
         // Sem empresa ativa não há plano nem papel; a navegação já leva a
         // pessoa a entrar numa antes de chegar a qualquer uma destas telas.
         if (company == null) {
@@ -59,7 +71,9 @@ object RoleHelper {
             // Recompensas também são novas: só com o módulo declarado.
             Destination.Rewards -> "vouchers" in company.modules
             Destination.Company -> company.role.isAdmin
-            Destination.Fridges -> company.role.isAdmin
+            // Geladeira é operação, e quem opera cuida dela sem administrar a
+            // empresa (Fase 16, O8) — o mesmo corte que o servidor faz.
+            Destination.Fridges -> company.canManageOperation
             else -> true
         }
     }
