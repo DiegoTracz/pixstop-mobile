@@ -145,6 +145,7 @@ private fun AppIconType.toSFSymbolName(): String = when (this) {
 
     // Auth
     AppIconType.Lock -> "lock.fill"
+    AppIconType.LockOpen -> "lock.open.fill"
     AppIconType.Email -> "envelope.fill"
     AppIconType.Visibility -> "eye.fill"
     AppIconType.VisibilityOff -> "eye.slash.fill"
@@ -157,6 +158,10 @@ private fun AppIconType.toSFSymbolName(): String = when (this) {
     AppIconType.Share -> "square.and.arrow.up"
     AppIconType.QrCodeScanner -> "qrcode.viewfinder"
     AppIconType.Camera -> "camera.fill"
+    AppIconType.Wifi -> "wifi"
+    AppIconType.WifiOff -> "wifi.slash"
+    AppIconType.Bulb -> "lightbulb.fill"
+    AppIconType.Box -> "shippingbox.fill"
     AppIconType.CameraSwitch -> "arrow.triangle.2.circlepath.camera"
 
     // Status

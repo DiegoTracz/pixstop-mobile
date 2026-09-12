@@ -35,6 +35,7 @@ actual fun AppIcon(
 
         // Auth
         AppIconType.Lock -> Icons.Filled.Lock
+        AppIconType.LockOpen -> Icons.Filled.LockOpen
         AppIconType.Email -> Icons.Filled.Email
         AppIconType.Visibility -> Icons.Filled.Visibility
         AppIconType.VisibilityOff -> Icons.Filled.VisibilityOff
@@ -47,6 +48,10 @@ actual fun AppIcon(
         AppIconType.Share -> Icons.Filled.Share
         AppIconType.QrCodeScanner -> Icons.Filled.QrCodeScanner
         AppIconType.Camera -> Icons.Filled.PhotoCamera
+        AppIconType.Wifi -> Icons.Filled.Wifi
+        AppIconType.WifiOff -> Icons.Filled.WifiOff
+        AppIconType.Bulb -> Icons.Filled.Lightbulb
+        AppIconType.Box -> Icons.Filled.Inventory2
         AppIconType.CameraSwitch -> Icons.Filled.Cameraswitch
         AppIconType.Remove -> Icons.Filled.Remove
 

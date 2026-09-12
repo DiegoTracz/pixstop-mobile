@@ -72,6 +72,10 @@ fun FridgeLamp(
  * geladeira, e a tela é pigmento sobre o escuro do tema. O que precisa ser
  * igual é o *significado* — vermelho é sem rede nos dois lugares.
  */
+/** A cor desta luz, para quem precisa dela fora da lâmpada — uma amostra num card, por exemplo. */
+@Composable
+fun FridgeLight.toSwatch(): Color = toPixColor()
+
 @Composable
 private fun FridgeLight.toPixColor(): Color = when (this) {
     FridgeLight.Red -> PixColors.Pink

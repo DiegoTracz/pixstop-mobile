@@ -37,6 +37,10 @@ import com.pixstop.mobile.domain.model.FridgeLight
 import com.pixstop.mobile.domain.model.FridgeDevice
 import com.pixstop.mobile.domain.model.FridgePresence
 import com.pixstop.mobile.domain.model.WifiNetwork
+import com.pixstop.mobile.ui.components.SensorCard
+import com.pixstop.mobile.ui.components.LedSheet
+import com.pixstop.mobile.ui.components.AppIconType
+import com.pixstop.mobile.ui.components.toSwatch
 import com.pixstop.mobile.ui.components.FridgeLamp
 import com.pixstop.mobile.ui.components.IrRemote
 import com.pixstop.mobile.ui.components.PixelButton
@@ -109,12 +113,27 @@ fun ConnectFridgeScreen(
                         )
 
                         ConnectStep.Done -> DoneStep(state, viewModel)
-                        ConnectStep.Color -> ColorStep(state, viewModel)
                         ConnectStep.Detail -> DetailStep(state, viewModel)
                     }
                 }
             }
         }
+    }
+
+    // A gaveta da fita vale em qualquer passo: no fim da instalação e na
+    // geladeira já instalada, é a mesma coisa que se abre.
+    if (state.ledSheetOpen) {
+        LedSheet(
+            led = state.led,
+            picked = state.pickedColor,
+            pressing = state.pressing,
+            lastSent = state.lastSent,
+            online = state.led.online,
+            onChooseProfile = viewModel::chooseProfile,
+            onPress = viewModel::pressKey,
+            onSave = viewModel::saveColor,
+            onDismiss = viewModel::closeColorSheet,
+        )
     }
 }
 
@@ -156,7 +175,14 @@ private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
         Text("Aguardando ativação", style = PixTypography.sectionTitle, color = PixColors.Yellow)
 
         state.pendingDevices.forEach { device ->
-            DeviceRow(device = device, action = "Conectar", onClick = { viewModel.choose(device) })
+            SensorCard(
+                icon = AppIconType.Lock,
+                label = device.formattedCode?.let { "Código $it" } ?: "Aguardando ativação",
+                value = device.name,
+                accent = PixColors.Yellow,
+                detail = "Toque para conectar: ligue a geladeira e entre na rede dela",
+                onClick = { viewModel.choose(device) },
+            )
         }
     }
 
@@ -167,13 +193,28 @@ private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
         Text("Instaladas", style = PixTypography.sectionTitle, color = PixColors.Gray300)
 
         others.forEach { device ->
-            // Tocar na geladeira abre o que ela está sentindo; o botão
-            // continua sendo o caminho para reinstalá-la do zero.
-            DeviceRow(
-                device = device,
-                action = "Reinstalar",
-                onClick = { viewModel.choose(device) },
-                onRowClick = { viewModel.openDetail(device) },
+            // Uma geladeira instalada abre o que ela está sentindo. Reinstalar
+            // apaga as credenciais e recomeça do código: é coisa de dentro,
+            // nas configurações dela, não de um botão ao lado do nome.
+            SensorCard(
+                icon = if (device.isOnline) AppIconType.Wifi else AppIconType.WifiOff,
+                // O nome do equipamento só entra quando diz algo novo: em
+                // geral ele é igual ao da geladeira, e repetir o mesmo nome
+                // duas vezes na mesma carta não informa nada.
+                label = device.applianceName?.takeIf { it != device.name } ?: "Instalada",
+                value = device.name,
+                accent = when (device.presence) {
+                    FridgePresence.Online -> PixColors.Green
+                    FridgePresence.Pending -> PixColors.Yellow
+                    FridgePresence.Offline -> PixColors.Gray500
+                    FridgePresence.Revoked -> PixColors.Pink
+                },
+                detail = buildString {
+                    append(device.presence.label)
+                    if (device.doorOpen == true) append(" · porta aberta")
+                    device.signalStrength?.takeIf { device.isOnline }?.let { append(" · ").append(it).append(" dBm") }
+                },
+                onClick = { viewModel.openDetail(device) },
             )
         }
     }
@@ -398,226 +439,127 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
         Text(it, style = PixTypography.caption, color = PixColors.Gray300)
     }
 
-    // O primeiro quadro responde "ela está viva?", que é o que decide se
-    // vale a pena olhar o resto. "Ativa" é outra pergunta — se ela já foi
-    // provisionada —, e misturar as duas faz uma geladeira desligada da
-    // tomada parecer saudável.
-    SensorRow(
+    // O primeiro mostrador responde "ela está viva?", que é o que decide se
+    // vale a pena olhar o resto.
+    SensorCard(
+        icon = if (device.isOnline) AppIconType.Wifi else AppIconType.WifiOff,
         label = "Conexão",
         value = device.presence.label,
-        color = if (device.isOnline) PixColors.Green else PixColors.Pink,
+        accent = if (device.isOnline) PixColors.Green else PixColors.Pink,
+        detail = if (device.isOnline) "Falando com o servidor agora" else "Sem dar notícia; confira a tomada e o WiFi",
     )
 
-    device.provisioningLabel?.takeIf { device.presence != FridgePresence.Pending }?.let {
-        SensorRow(label = "Ativação", value = it)
-    }
-
-    SensorRow(
+    // A porta é o mostrador que mais importa de longe: cadeado aberto é o
+    // que faz alguém levantar e ir olhar.
+    SensorCard(
+        icon = if (device.doorOpen == true) AppIconType.LockOpen else AppIconType.Lock,
         label = "Porta",
         value = device.doorLabel,
-        color = if (device.doorOpen == true) PixColors.Yellow else PixColors.Gray100,
+        accent = when (device.doorOpen) {
+            true -> PixColors.Yellow
+            false -> PixColors.Green
+            null -> PixColors.Gray500
+        },
+        detail = when (device.doorOpen) {
+            true -> "Aberta agora — passados 45 s a geladeira avisa"
+            false -> "Trancada, à espera de uma compra"
+            null -> "Esta geladeira não tem sensor de porta ligado"
+        },
     )
 
     device.signalLabel?.let {
-        SensorRow(
+        SensorCard(
+            icon = AppIconType.Wifi,
             label = "Sinal do WiFi",
             value = it,
-            color = if ((device.signalStrength ?: 0) < -75) PixColors.Yellow else PixColors.Gray100,
+            accent = if ((device.signalStrength ?: 0) < -75) PixColors.Yellow else PixColors.Cyan,
+            detail = if ((device.signalStrength ?: 0) < -75) {
+                "Fraco: é daqui que começam as quedas. Aproxime o roteador"
+            } else {
+                "Chega bem onde ela está"
+            },
         )
     }
 
-    SensorRow(label = "Câmera", value = device.cameraLabel)
-
-    device.firmwareVersion?.let { SensorRow(label = "Versão", value = it) }
-    device.localIp?.let { SensorRow(label = "Endereço na rede", value = it) }
-
-    // A fita não é sensor, mas é o que a pessoa mais mexe depois de
-    // instalada — e daqui se chega ao controle sem reinstalar nada.
-    SensorRow(
+    // A fita é a única carta que leva a algum lugar: bater nela abre o
+    // controle, sem tirar a pessoa desta tela.
+    SensorCard(
+        icon = AppIconType.Bulb,
         label = "Fita LED",
         value = if (state.led.profileId != null) state.led.colorLabel else "Sem controle escolhido",
+        accent = PixColors.Cyan,
+        swatch = state.led.profileId?.let { FridgeLight.from(state.led.color).toSwatch() },
+        detail = if (state.led.profileId != null) {
+            "A cor de descanso. Toque para abrir o controle"
+        } else {
+            "Toque para dizer qual controle veio com esta fita"
+        },
+        onClick = { viewModel.openColorStep(device) },
+    )
+
+    SensorCard(
+        icon = AppIconType.Camera,
+        label = "Câmera",
+        value = device.cameraLabel,
+        accent = if (device.cameraKind == "none" || device.cameraKind == null) PixColors.Gray500 else PixColors.Cyan,
+        detail = "Toda abertura da porta vira vídeo, com ou sem compra",
     )
 
     device.stock?.let { stock ->
-        SensorRow(label = "Produtos aqui dentro", value = "${stock.inAppliance}")
+        SensorCard(
+            icon = AppIconType.Box,
+            label = "Dentro dela",
+            value = if (stock.inAppliance == 1) "1 produto" else "${stock.inAppliance} produtos",
+            accent = if (stock.inAppliance == 0) PixColors.Yellow else PixColors.Green,
+            detail = stock.nextStep,
+        )
     }
 
-    Spacer(Modifier.height(4.dp))
+    device.provisioningLabel?.takeIf { device.presence != FridgePresence.Pending }?.let {
+        SensorCard(
+            icon = AppIconType.Check,
+            label = "Ativação",
+            value = it,
+            accent = PixColors.Green,
+            detail = buildString {
+                append("Versão ")
+                append(device.firmwareVersion ?: "desconhecida")
+                device.localIp?.let { ip -> append(" · ").append(ip) }
+            },
+        )
+    }
 
-    PixelButton(
-        text = "Cor da fita",
-        onClick = { viewModel.openColorStep(device) },
-        enabled = device.isOnline,
-        modifier = Modifier.fillMaxWidth(),
-    )
+    Spacer(Modifier.height(8.dp))
 
-    PixelButton(
-        text = "Atualizar",
+    // A reinstalação mora aqui, e não na lista: ela apaga as credenciais da
+    // geladeira e recomeça do código. Não é coisa para ficar ao lado do nome,
+    // a um toque de distância de quem só queria ver o estado dela.
+    Text("Configurações", style = PixTypography.sectionTitle, color = PixColors.Gray300)
+
+    SensorCard(
+        icon = AppIconType.Refresh,
+        label = "Estado",
+        value = "Atualizar agora",
+        accent = PixColors.Gray500,
+        detail = "Pergunta de novo à geladeira o que ela está sentindo",
         onClick = viewModel::refreshDetail,
-        isLoading = state.isWorking,
-        modifier = Modifier.fillMaxWidth(),
     )
 
-    PixelButton(text = "Voltar às geladeiras", onClick = viewModel::restart, modifier = Modifier.fillMaxWidth())
-}
-
-/** Uma leitura da geladeira: o nome à esquerda, o que ela diz à direita. */
-@Composable
-private fun SensorRow(label: String, value: String, color: Color = PixColors.Gray100) {
-    Row(
-        modifier = Modifier.fillMaxWidth().border(1.dp, PixColors.Gray700).padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(label, style = PixTypography.caption, color = PixColors.Gray400, modifier = Modifier.weight(1f))
-        Text(value, style = PixTypography.bodySecondary, color = color)
-    }
-}
-
-/**
- * O passo da fita: o controle de verdade, na tela (Fase 9.10, etapa A).
- *
- * Aperta, a geladeira acende, e o que ficou aceso é o que se salva. Quem
- * não tem fita sai por "Agora não" e a geladeira fica no arco-íris lento,
- * que já é uma cor que serve.
- */
-@Composable
-private fun ColorStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
-    Text("A fita LED", style = PixTypography.sectionTitle, color = PixColors.Cyan)
-
-    Text(
-        "Aperte como no controle de verdade: a geladeira acende na hora. O que ficar aceso é o que ela mostra quando não está acontecendo nada.",
-        style = PixTypography.caption,
-        color = PixColors.Gray300,
+    SensorCard(
+        icon = AppIconType.Settings,
+        label = "Instalação",
+        value = "Reinstalar",
+        accent = PixColors.Yellow,
+        detail = "Gera um código novo e refaz a conexão com o WiFi. A geladeira sai do ar até terminar",
+        onClick = { viewModel.choose(device) },
     )
-
-    if (state.led.profiles.isEmpty()) {
-        Text(
-            "Nenhum controle no catálogo ainda. Um controle novo se mapeia uma vez, no painel, e vale para toda fita igual.",
-            style = PixTypography.bodyMuted,
-            color = PixColors.Gray300,
-        )
-    } else {
-        Text("Qual controle veio com esta fita?", style = PixTypography.inputLabel, color = PixColors.Gray100)
-
-        state.led.profiles.forEach { profile ->
-            ProfileRow(
-                name = profile.name,
-                keys = profile.keys.size,
-                selected = profile.id == state.led.profileId,
-                onClick = { viewModel.chooseProfile(profile.id) },
-            )
-        }
-    }
-
-    if (state.led.profileId != null) {
-        Spacer(Modifier.height(4.dp))
-
-        // O controle fica no meio da tela, como ficaria na mão.
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            IrRemote(
-                available = state.led.availableKeys,
-                onPress = { viewModel.pressKey(it.slug) },
-                enabled = state.canPressKeys,
-                busy = state.pressing,
-                picked = state.pickedColor,
-                lastSent = state.lastSent,
-            )
-        }
-
-        // O aviso da tecla enviada já sai na faixa do topo; aqui fica só a
-        // regra, que vale o tempo todo.
-        Text(
-            "Brilho, tons e os programas piscantes também funcionam — só não servem de repouso.",
-            style = PixTypography.caption,
-            color = PixColors.Gray400,
-        )
-
-        FridgeLamp(
-            light = FridgeLight.from(state.currentColor),
-            label = if (state.pickedColor != null) "Vai ficar assim" else "Está assim",
-            hint = state.led.colors.firstOrNull { it.value == state.currentColor }?.label,
-        )
-    }
-
-    if (!state.led.online) {
-        Text(
-            "A geladeira está fora do ar: as cores só se escolhem com ela ligada, porque é nela que você vê.",
-            style = PixTypography.bodyMuted,
-            color = PixColors.Yellow,
-        )
-    }
 
     PixelButton(
-        text = "Salvar esta cor",
-        onClick = viewModel::saveColor,
-        enabled = state.canSaveColor,
+        text = "Voltar às geladeiras",
+        onClick = viewModel::restart,
+        variant = PixelButtonVariant.Secondary,
         modifier = Modifier.fillMaxWidth(),
     )
-
-    PixelButton(text = "Agora não", onClick = viewModel::skipColor, modifier = Modifier.fillMaxWidth())
-}
-
-@Composable
-private fun ProfileRow(name: String, keys: Int, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(if (selected) 2.dp else 1.dp, if (selected) PixColors.Cyan else PixColors.Gray600)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(name, style = PixTypography.bodySecondary, color = PixColors.Gray100)
-            Text("$keys teclas mapeadas", style = PixTypography.caption, color = PixColors.Gray400)
-        }
-
-        if (selected) Text("✓", style = PixTypography.sectionTitle, color = PixColors.Cyan)
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// Peças
-// ─────────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun DeviceRow(
-    device: FridgeDevice,
-    action: String,
-    onClick: () -> Unit,
-    onRowClick: (() -> Unit)? = null,
-) {
-    val color = when (device.presence) {
-        FridgePresence.Online -> PixColors.Green
-        FridgePresence.Pending -> PixColors.Yellow
-        FridgePresence.Offline -> PixColors.Gray400
-        FridgePresence.Revoked -> PixColors.Pink
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, PixColors.Gray600)
-            .then(if (onRowClick != null) Modifier.clickable(onClick = onRowClick) else Modifier)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(device.name, style = PixTypography.bodySecondary, color = PixColors.Gray100)
-            Text(
-                buildString {
-                    append(device.presence.label)
-                    device.applianceName?.let { append(" · ").append(it) }
-                    device.signalStrength?.takeIf { device.isOnline }?.let { append(" · ").append(it).append(" dBm") }
-                },
-                style = PixTypography.caption,
-                color = color,
-            )
-        }
-
-        PixelButton(text = action, onClick = onClick, variant = PixelButtonVariant.Secondary)
-    }
 }
 
 @Composable

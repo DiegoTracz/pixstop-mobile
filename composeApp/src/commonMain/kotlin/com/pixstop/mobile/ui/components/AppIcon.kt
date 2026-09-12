@@ -39,6 +39,8 @@ enum class AppIconType {
 
     // Auth
     Lock,
+    /** Cadeado aberto: a porta da geladeira destravada, e o contrário do Lock. */
+    LockOpen,
     Email,
     Visibility,
     VisibilityOff,
@@ -51,6 +53,13 @@ enum class AppIconType {
     Share,
     QrCodeScanner,
     Camera,
+    /** A geladeira na rede, e a mesma sem rede. */
+    Wifi,
+    WifiOff,
+    /** A fita LED acesa. */
+    Bulb,
+    /** O que há dentro da geladeira. */
+    Box,
     CameraSwitch,
     Remove,
 
