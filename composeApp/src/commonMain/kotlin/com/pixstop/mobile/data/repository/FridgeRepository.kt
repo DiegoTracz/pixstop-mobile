@@ -1,17 +1,23 @@
 package com.pixstop.mobile.data.repository
 
 import com.pixstop.mobile.core.config.ApiConfig
+import com.pixstop.mobile.core.network.safeBytes
 import com.pixstop.mobile.core.network.safeCall
 import com.pixstop.mobile.data.remote.dto.FridgeDeviceDto
+import com.pixstop.mobile.data.remote.dto.DoorSessionDto
 import com.pixstop.mobile.data.remote.dto.IrProfileDto
+import com.pixstop.mobile.data.remote.dto.LiveWindowDto
 import com.pixstop.mobile.data.remote.dto.LedSettingsDto
 import com.pixstop.mobile.data.remote.dto.PressKeyRequest
 import com.pixstop.mobile.data.remote.dto.SaveLedRequest
+import com.pixstop.mobile.data.remote.dto.UnlockResultDto
 import com.pixstop.mobile.data.remote.dto.StoreFridgeRequest
 import com.pixstop.mobile.domain.model.FridgeDevice
 import com.pixstop.mobile.domain.model.FridgePresence
 import com.pixstop.mobile.domain.model.FridgeStock
+import com.pixstop.mobile.domain.model.DoorSessionSummary
 import com.pixstop.mobile.domain.model.IrProfile
+import com.pixstop.mobile.domain.model.LiveWindow
 import com.pixstop.mobile.domain.model.LedColorOption
 import com.pixstop.mobile.domain.model.LedSettings
 import com.pixstop.mobile.domain.model.Outcome
@@ -82,7 +88,54 @@ class FridgeRepository(private val client: HttpClient) {
                 setBody(SaveLedRequest(color = color, irProfileId = profileId))
             }
         }.map { it.toDomain() }
+
+    /**
+     * Abre a geladeira como admin (Fase 9.10, etapa B).
+     *
+     * Não é a abertura de uma compra: esta serve para conferir se a trava
+     * responde, e fica registrada com o nome de quem apertou.
+     */
+    suspend fun unlock(deviceId: Long): Outcome<Unit> =
+        safeCall<UnlockResultDto>(TAG) {
+            client.post(ApiConfig.Endpoints.companyDeviceUnlock(deviceId))
+        }.map { }
+
+    /** Abre a janela da câmera: enquanto ela durar, a geladeira manda quadros. */
+    suspend fun openLive(deviceId: Long): Outcome<LiveWindow> =
+        safeCall<LiveWindowDto>(TAG) {
+            client.post(ApiConfig.Endpoints.companyDeviceLive(deviceId))
+        }.map { LiveWindow(windowSeconds = it.windowSeconds, hasFrame = it.hasFrame, frameAgeSeconds = it.frameAgeSeconds) }
+
+    /**
+     * O último quadro que a geladeira mandou, em bytes.
+     *
+     * Vem pelo cliente autenticado, e não por uma URL solta: a imagem da
+     * geladeira de uma empresa não pode ser aberta por quem tem o endereço.
+     */
+    suspend fun frame(deviceId: Long): Outcome<ByteArray> =
+        safeBytes(TAG) {
+            client.get(ApiConfig.Endpoints.companyDeviceFrame(deviceId))
+        }
+
+    /** As últimas aberturas da porta desta geladeira. */
+    suspend fun sessions(applianceId: Long): Outcome<List<DoorSessionSummary>> =
+        safeCall<List<DoorSessionDto>>(TAG) {
+            client.get(ApiConfig.Endpoints.companyApplianceSessions(applianceId))
+        }.map { list -> list.map { it.toDomain() } }
 }
+
+private fun DoorSessionDto.toDomain() = DoorSessionSummary(
+    id = id,
+    openedAt = openedAt,
+    durationSeconds = durationSeconds,
+    isOpen = isOpen,
+    hasOrder = hasOrder,
+    orderTransactionId = orderTransactionId,
+    hasCover = hasCover,
+    verdictLabel = verdictLabel,
+    isFlag = isFlag,
+    observations = observations,
+)
 
 private fun LedSettingsDto.toDomain() = LedSettings(
     color = color,
@@ -106,6 +159,7 @@ private fun FridgeDeviceDto.toDomain() = FridgeDevice(
     firmwareVersion = firmwareVersion,
     doorOpen = doorOpen,
     applianceName = appliance?.name,
+    applianceId = appliance?.id,
     localIp = localIp,
     cameraKind = cameraKind,
     provisioningLabel = provisioningLabel,

@@ -10,6 +10,7 @@ import com.pixstop.mobile.domain.model.Outcome
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readRawBytes
 import kotlinx.serialization.json.Json
 
 /**
@@ -50,6 +51,26 @@ suspend inline fun <reified T> safeCall(
         AppLogger.w("Resposta sem dados: ${envelope.error?.message ?: envelope.message}", tag = tag)
         Outcome.Failure(envelope.toDomainError())
     }
+}
+
+/**
+ * Para o que não é JSON: uma imagem, um arquivo.
+ *
+ * O `safeCall` desembrulha o envelope da API, e uma foto não tem envelope —
+ * ela é o corpo inteiro. O tratamento de erro continua igual, porque uma
+ * geladeira offline responde 404 aqui do mesmo jeito.
+ */
+suspend fun safeBytes(
+    tag: String = "API",
+    block: suspend () -> HttpResponse,
+): Outcome<ByteArray> = runCatchingNetwork(tag) {
+    val response = block()
+
+    if (!response.status.isOk()) {
+        return@runCatchingNetwork Outcome.Failure(response.toDomainError(tag))
+    }
+
+    Outcome.Success(response.readRawBytes())
 }
 
 /**

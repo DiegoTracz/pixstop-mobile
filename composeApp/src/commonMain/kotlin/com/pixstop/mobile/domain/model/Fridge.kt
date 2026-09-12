@@ -39,6 +39,8 @@ data class FridgeDevice(
     val firmwareVersion: String?,
     val doorOpen: Boolean?,
     val applianceName: String?,
+    /** As aberturas são do equipamento, não do aparelho que abre a trava. */
+    val applianceId: Long? = null,
     /** O endereço dela na rede da empresa: serve ao suporte, não ao app. */
     val localIp: String? = null,
     /** `picamera`, `usb`, `none` — o que ela tem de olho. */
@@ -143,3 +145,48 @@ enum class PortalMode {
         }
     }
 }
+
+
+/**
+ * Uma abertura da porta, como a tela da geladeira a mostra (Fase 9.10).
+ *
+ * Toda abertura vira registro, com ou sem compra: é isso que responde "quem
+ * abriu isso às três da manhã?" — e a análise por imagem diz se o que saiu
+ * de dentro bate com o que foi pago.
+ */
+data class DoorSessionSummary(
+    val id: String,
+    val openedAt: String,
+    val durationSeconds: Int?,
+    val isOpen: Boolean,
+    val hasOrder: Boolean,
+    val orderTransactionId: String?,
+    val hasCover: Boolean,
+    val verdictLabel: String?,
+    /** A abertura que merece uma olhada humana. */
+    val isFlag: Boolean,
+    val observations: String?,
+) {
+    /** "12 s", "1 min 20 s" — o tempo que a porta ficou aberta. */
+    val durationLabel: String
+        get() = when {
+            isOpen -> "Aberta agora"
+            durationSeconds == null -> "—"
+            durationSeconds < 60 -> "${durationSeconds}s"
+            else -> "${durationSeconds / 60} min ${durationSeconds % 60}s"
+        }
+
+    /** O que aconteceu ali, numa frase. */
+    val summary: String
+        get() = buildString {
+            append(if (hasOrder) "Com compra" else "Sem compra")
+            verdictLabel?.let { append(" · ").append(it) }
+        }
+}
+
+/** A janela da câmera aberta pelo app: enquanto ela dura, chegam quadros. */
+data class LiveWindow(
+    val windowSeconds: Int,
+    val hasFrame: Boolean,
+    val frameAgeSeconds: Long?,
+)

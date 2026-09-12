@@ -204,6 +204,17 @@ object ApiConfig {
         /** Uma tecla do controle, apertada no app. */
         fun companyDeviceIrSend(id: Long) = "company/devices/$id/ir-send"
 
+        /** Abrir a geladeira como admin (Fase 9.10, etapa B). */
+        fun companyDeviceUnlock(id: Long) = "company/devices/$id/unlock"
+
+        /** A janela da câmera e o quadro de agora (etapa D). */
+        fun companyDeviceLive(id: Long) = "company/devices/$id/live"
+
+        fun companyDeviceFrame(id: Long) = "company/devices/$id/live.jpg"
+
+        /** As últimas aberturas da geladeira (etapa C). */
+        fun companyApplianceSessions(id: Long) = "company/appliances/$id/sessions"
+
         fun teamMembers(departmentId: Long) = "team/$departmentId/members"
 
         fun teamHistory(departmentId: Long) = "team/$departmentId/history"

@@ -41,6 +41,8 @@ import com.pixstop.mobile.ui.components.SensorCard
 import com.pixstop.mobile.ui.components.LedSheet
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.toSwatch
+import com.pixstop.mobile.ui.components.CameraSheet
+import com.pixstop.mobile.ui.components.SessionsSheet
 import com.pixstop.mobile.ui.components.FridgeLamp
 import com.pixstop.mobile.ui.components.IrRemote
 import com.pixstop.mobile.ui.components.PixelButton
@@ -133,6 +135,18 @@ fun ConnectFridgeScreen(
             onPress = viewModel::pressKey,
             onSave = viewModel::saveColor,
             onDismiss = viewModel::closeColorSheet,
+        )
+    }
+
+    if (state.cameraSheetOpen) {
+        CameraSheet(frame = state.frame, onDismiss = viewModel::closeCamera)
+    }
+
+    if (state.sessionsSheetOpen) {
+        SessionsSheet(
+            sessions = state.sessions,
+            isLoading = state.isWorking,
+            onDismiss = viewModel::closeSessions,
         )
     }
 }
@@ -497,17 +511,42 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
         onClick = { viewModel.openColorStep(device) },
     )
 
+    // Abrir é a conferência da trava, não uma compra: não cobra ninguém e
+    // fica registrada com o nome de quem apertou.
+    SensorCard(
+        icon = AppIconType.LockOpen,
+        label = "Trava",
+        value = if (state.unlocking) "Abrindo…" else "Abrir a geladeira",
+        accent = if (device.isOnline) PixColors.Green else PixColors.Gray500,
+        detail = "Destrava por um instante para você conferir. Sem compra e sem cobrança",
+        onClick = if (device.isOnline && !state.unlocking) viewModel::unlock else null,
+    )
+
     SensorCard(
         icon = AppIconType.Camera,
         label = "Câmera",
         value = device.cameraLabel,
         accent = if (device.cameraKind == "none" || device.cameraKind == null) PixColors.Gray500 else PixColors.Cyan,
-        detail = "Toda abertura da porta vira vídeo, com ou sem compra",
+        detail = if (device.isOnline) {
+            "Toque para ver o que ela está enxergando agora"
+        } else {
+            "Toda abertura da porta vira vídeo, com ou sem compra"
+        },
+        onClick = if (device.isOnline && device.cameraKind != "none") viewModel::openCamera else null,
+    )
+
+    SensorCard(
+        icon = AppIconType.Box,
+        label = "Aberturas",
+        value = "Ver as últimas",
+        accent = PixColors.Cyan,
+        detail = "Quem abriu, por quanto tempo, e o que a análise achou",
+        onClick = viewModel::openSessions,
     )
 
     device.stock?.let { stock ->
         SensorCard(
-            icon = AppIconType.Box,
+            icon = AppIconType.Store,
             label = "Dentro dela",
             value = if (stock.inAppliance == 1) "1 produto" else "${stock.inAppliance} produtos",
             accent = if (stock.inAppliance == 0) PixColors.Yellow else PixColors.Green,

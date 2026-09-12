@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.pixstop.mobile.data.remote.SetupPortalClient
 import com.pixstop.mobile.data.repository.FridgeRepository
 import com.pixstop.mobile.domain.access.FridgeNetworkConnector
+import com.pixstop.mobile.domain.model.DoorSessionSummary
 import com.pixstop.mobile.domain.model.FridgeDevice
 import com.pixstop.mobile.domain.model.FridgePresence
 import com.pixstop.mobile.domain.model.LedSettings
+import com.pixstop.mobile.domain.model.LiveWindow
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.PortalMode
 import com.pixstop.mobile.domain.model.PortalStatus
@@ -84,6 +86,16 @@ data class ConnectFridgeUiState(
      * ela estava, que é a tela da geladeira com o resto dos mostradores.
      */
     val ledSheetOpen: Boolean = false,
+    /** A gaveta da câmera está aberta, e a janela dela está sendo renovada. */
+    val cameraSheetOpen: Boolean = false,
+    /** O último quadro que a geladeira mandou. */
+    val frame: ByteArray? = null,
+    val liveWindow: LiveWindow? = null,
+    /** A gaveta das aberturas. */
+    val sessionsSheetOpen: Boolean = false,
+    val sessions: List<DoorSessionSummary> = emptyList(),
+    /** A trava está sendo acionada agora. */
+    val unlocking: Boolean = false,
 ) {
     /** Só quem ainda espera o código aparece para conectar. */
     val pendingDevices: List<FridgeDevice> get() = devices.filter { it.presence == FridgePresence.Pending }
@@ -397,6 +409,94 @@ class ConnectFridgeViewModel(
     }
 
     /* ─────────────────────────────────────────────────────────────────
+     * Abrir, ver e conferir (Fase 9.10, etapas B, C e D)
+     *
+     * O que se faz de pé na frente da geladeira, e que antes só existia no
+     * computador: destravar para ver se a trava responde, olhar pela câmera
+     * se ela aponta para o lugar certo, e conferir se a última abertura foi
+     * normal.
+     * ───────────────────────────────────────────────────────────────── */
+
+    /**
+     * Abre a trava agora. Não é compra: não cobra ninguém e não conta como
+     * retirada — é a conferência, e fica registrada com o nome de quem pediu.
+     */
+    fun unlock() {
+        val device = _uiState.value.chosen ?: return
+
+        _uiState.update { it.copy(unlocking = true, error = null, message = null) }
+
+        viewModelScope.launch {
+            when (val result = fridges.unlock(device.id)) {
+                is Outcome.Success -> _uiState.update {
+                    it.copy(unlocking = false, message = "A trava abriu. Puxe a porta nos próximos segundos.")
+                }
+                is Outcome.Failure -> _uiState.update { it.copy(unlocking = false, error = result.error.message) }
+            }
+        }
+    }
+
+    /**
+     * Abre a gaveta da câmera e mantém a janela viva enquanto ela estiver
+     * aberta. A geladeira só transmite para quem está olhando: fechada a
+     * gaveta, ninguém renova e ela para sozinha.
+     */
+    fun openCamera() {
+        val device = _uiState.value.chosen ?: return
+
+        _uiState.update { it.copy(cameraSheetOpen = true, error = null) }
+
+        watcher?.cancel()
+        watcher = viewModelScope.launch {
+            while (_uiState.value.cameraSheetOpen) {
+                when (val result = fridges.openLive(device.id)) {
+                    is Outcome.Success -> _uiState.update { it.copy(liveWindow = result.value) }
+                    is Outcome.Failure -> {
+                        _uiState.update { it.copy(cameraSheetOpen = false, error = result.error.message) }
+
+                        return@launch
+                    }
+                }
+
+                // O quadro chega a cada dois segundos; renovar a janela a
+                // cada cinco quadros basta para ela não vencer no meio.
+                repeat(CAMERA_TICKS) {
+                    delay(FRAME_INTERVAL_MS)
+
+                    if (!_uiState.value.cameraSheetOpen) return@launch
+
+                    (fridges.frame(device.id) as? Outcome.Success)?.let { frame ->
+                        _uiState.update { it.copy(frame = frame.value) }
+                    }
+                }
+            }
+        }
+    }
+
+    fun closeCamera() {
+        watcher?.cancel()
+        _uiState.update { it.copy(cameraSheetOpen = false, liveWindow = null, frame = null) }
+    }
+
+    /** As últimas aberturas da geladeira: a porta tem memória. */
+    fun openSessions() {
+        val applianceId = _uiState.value.chosen?.applianceId ?: return
+
+        _uiState.update { it.copy(sessionsSheetOpen = true, isWorking = true, error = null) }
+
+        viewModelScope.launch {
+            when (val result = fridges.sessions(applianceId)) {
+                is Outcome.Success -> _uiState.update { it.copy(sessions = result.value, isWorking = false) }
+                is Outcome.Failure -> _uiState.update { it.copy(isWorking = false, error = result.error.message) }
+            }
+        }
+    }
+
+    fun closeSessions() {
+        _uiState.update { it.copy(sessionsSheetOpen = false) }
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
      * A fita LED (Fase 9.10, etapa A)
      *
      * Quem instala está de pé na frente da geladeira. Escolhe o controle,
@@ -530,5 +630,9 @@ class ConnectFridgeViewModel(
         const val SILENT_TOLERANCE = 8
         const val SERVER_POLL_MS = 5_000L
         const val SERVER_POLLS = 24
+
+        /** Quantos quadros antes de renovar a janela de 30 s da câmera. */
+        const val CAMERA_TICKS = 5
+        const val FRAME_INTERVAL_MS = 2_000L
     }
 }

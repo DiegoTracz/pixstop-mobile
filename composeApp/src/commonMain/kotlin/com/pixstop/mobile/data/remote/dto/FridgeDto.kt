@@ -88,3 +88,36 @@ data class SaveLedRequest(
 /** Uma tecla apertada no celular. */
 @Serializable
 data class PressKeyRequest(val command: String)
+
+
+/** A janela da câmera, aberta pelo app (Fase 9.10, etapa D). */
+@Serializable
+data class LiveWindowDto(
+    @SerialName("live_until") val liveUntil: String? = null,
+    @SerialName("window_seconds") val windowSeconds: Int = 30,
+    @SerialName("has_frame") val hasFrame: Boolean = false,
+    @SerialName("frame_age_seconds") val frameAgeSeconds: Long? = null,
+)
+
+/** Uma abertura da porta, resumida (Fase 9.10, etapa C). */
+@Serializable
+data class DoorSessionDto(
+    val id: String,
+    @SerialName("opened_at") val openedAt: String,
+    @SerialName("duration_seconds") val durationSeconds: Int? = null,
+    @SerialName("is_open") val isOpen: Boolean = false,
+    @SerialName("has_order") val hasOrder: Boolean = false,
+    @SerialName("order_transaction_id") val orderTransactionId: String? = null,
+    @SerialName("has_cover") val hasCover: Boolean = false,
+    val verdict: String? = null,
+    @SerialName("verdict_label") val verdictLabel: String? = null,
+    @SerialName("is_flag") val isFlag: Boolean = false,
+    val observations: String? = null,
+)
+
+/** O que o pulso devolve: o número do comando que a geladeira vai executar. */
+@Serializable
+data class UnlockResultDto(
+    @SerialName("command_id") val commandId: Int = 0,
+    @SerialName("pulse_ms") val pulseMs: Int = 400,
+)
