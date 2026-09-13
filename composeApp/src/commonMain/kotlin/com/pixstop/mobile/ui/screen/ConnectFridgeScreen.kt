@@ -162,7 +162,7 @@ private const val VISIBLE_NETWORKS = 5
 private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
     Text("Nova geladeira", style = PixTypography.sectionTitle, color = PixColors.Cyan)
     Text(
-        "O sistema gera o código de ativação. Sem nome, ela nasce como Pixstop 01. Depois é só ligar a geladeira na tomada.",
+        "O sistema gera o código de ativação. Sem nome, ela nasce como Pixelstop 01. Depois é só ligar a geladeira na tomada.",
         style = PixTypography.caption,
         color = PixColors.Gray300,
     )
@@ -171,7 +171,7 @@ private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
         value = state.newName,
         onValueChange = viewModel::updateName,
         label = "Nome (opcional)",
-        placeholder = "Pixstop 01",
+        placeholder = "Pixelstop 01",
         modifier = Modifier.fillMaxWidth(),
         enabled = !state.isWorking,
     )
