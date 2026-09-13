@@ -27,7 +27,7 @@ interface FridgeNetworkConnector {
 
 /**
  * Onde o sistema não deixa o app trocar de rede: a tela pede que a pessoa
- * entre na `Pixstop-Setup` à mão, e o resto segue igual.
+ * entre na `Pixelstop-Setup` à mão, e o resto segue igual.
  */
 class ManualFridgeNetworkConnector : FridgeNetworkConnector {
 

@@ -21,7 +21,7 @@ private const val TAG = "FridgeNetwork"
  * A rede pedida assim é do app, não do aparelho: não tem internet, não
  * aparece como a rede do celular, e some quando o app solta. Enquanto ela
  * está presa ao processo, todo pedido HTTP do app sai por ela — por isso a
- * tela só volta a falar com o servidor Pixstop depois de `leave()`.
+ * tela só volta a falar com o servidor Pixelstop depois de `leave()`.
  */
 class AndroidFridgeNetworkConnector(context: Context) : FridgeNetworkConnector {
 

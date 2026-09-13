@@ -63,11 +63,10 @@ class UnlockTicketTest {
 
         // É por este nome que o app separa uma geladeira da outra na copa.
         //
-        // Continua "Pixstop" mesmo depois de a marca virar Pixelstop, e isso
-        // é de propósito: quem anuncia este nome é o Pi, e há um instalado em
-        // produção. Trocar aqui antes de trocar no agente faria o app deixar
-        // de achar as geladeiras que já existem. Muda junto com o SSID.
-        assertEquals("Pixstop NHMB", ticket?.advertisedName)
+        // Este nome é contrato com o agente do Pi, que o anuncia por Bluetooth:
+        // mudou nos dois no mesmo commit. Só existe Pi na bancada, então não há
+        // geladeira antiga para deixar de ser achada.
+        assertEquals("Pixelstop NHMB", ticket?.advertisedName)
     }
 
     @Test

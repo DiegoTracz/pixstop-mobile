@@ -103,7 +103,7 @@ data class ConnectFridgeUiState(
     val code: String? get() = chosen?.activationCode
 
     /**
-     * O nome é opcional: em branco, o servidor batiza de "Pixstop 01". Um
+     * O nome é opcional: em branco, o servidor batiza de "Pixelstop 01". Um
      * nome de uma letra, porém, é engano de digitação — e a lista com vinte
      * geladeiras chamadas "a" não ajuda ninguém.
      */
@@ -151,7 +151,7 @@ data class ConnectFridgeUiState(
     }
 
     companion object {
-        const val HOTSPOT_SSID = "Pixstop-Setup"
+        const val HOTSPOT_SSID = "Pixelstop-Setup"
         const val HOTSPOT_PASSWORD = "pixstop123"
         const val PORTAL_HOST = "10.42.0.1"
     }
@@ -160,7 +160,7 @@ data class ConnectFridgeUiState(
 /**
  * Conectar uma geladeira (Fase 9.3).
  *
- * O celular fala com dois lados que nunca se enxergam: o servidor Pixstop,
+ * O celular fala com dois lados que nunca se enxergam: o servidor Pixelstop,
  * pela internet, e a geladeira, pela rede que ela mesma cria. Enquanto o app
  * está preso à rede da geladeira não há internet, então o servidor só volta a
  * ser consultado depois de `leave()`.

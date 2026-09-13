@@ -25,11 +25,11 @@ data class UnlockTicket(
     val expiresAt: Long?,
 ) {
     /**
-     * O nome que a geladeira anuncia: `Pixstop` mais os quatro primeiros
+     * O nome que a geladeira anuncia: `Pixelstop` mais os quatro primeiros
      * caracteres do identificador. É o que separa uma geladeira da outra numa
      * copa com duas.
      */
-    val advertisedName: String get() = "Pixstop " + deviceIdentifier.take(NAME_PREFIX_LENGTH)
+    val advertisedName: String get() = "Pixelstop " + deviceIdentifier.take(NAME_PREFIX_LENGTH)
 
     companion object {
         /** Quantos caracteres do identificador cabem no nome anunciado. */
