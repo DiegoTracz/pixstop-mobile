@@ -1,6 +1,6 @@
 <!--
     Ícone do app (foreground) — fallback vector.
-    Os PNGs em mipmap-* contêm o texto "Pixelstop" renderizado com Press Start 2P.
+    Os PNGs em mipmap-* contêm o símbolo da marca, o P que solta pixels com Press Start 2P.
     Este vector é usado apenas como fallback em dispositivos que não usam PNGs.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
