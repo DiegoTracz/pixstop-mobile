@@ -52,6 +52,8 @@ import org.koin.compose.viewmodel.koinViewModel
 fun OperatorScreen(
     onBack: () -> Unit,
     onOpenCompany: (String) -> Unit = {},
+    /** Em análise: o painel abre vazio, e a tela diz por quê (O8/P5). */
+    isPending: Boolean = false,
     viewModel: OperatorViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -61,6 +63,18 @@ fun OperatorScreen(
             title = state.round?.operatorName ?: state.companies?.operatorName ?: "Operador",
             onBack = onBack,
         )
+
+        if (isPending) {
+            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                SensorCard(
+                    icon = AppIconType.Info,
+                    label = "Conta em análise",
+                    value = "Ainda não liberada",
+                    detail = "Você recebe um aviso quando a liberação sair. Até lá, não há empresas para repor.",
+                    accent = PixColors.Yellow,
+                )
+            }
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),

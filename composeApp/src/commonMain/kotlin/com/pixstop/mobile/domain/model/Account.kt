@@ -40,6 +40,14 @@ data class OperatorAccount(
     val name: String,
     val role: String?,
     val seesMoney: Boolean,
+    /**
+     * Esperando a liberação da plataforma (Fase 16, O8/P5).
+     *
+     * O painel abre assim mesmo, e vem vazio: quem espera ainda não tem
+     * empresa nenhuma. A tela diz isso, em vez de deixar a pessoa achando
+     * que o app quebrou.
+     */
+    val isPending: Boolean = false,
 ) {
     val isOwner: Boolean get() = role == "owner"
 }

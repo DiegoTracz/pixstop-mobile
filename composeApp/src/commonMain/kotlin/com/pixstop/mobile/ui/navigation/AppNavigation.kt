@@ -375,8 +375,11 @@ fun AppNavigation() {
         }
 
         composable(Routes.OPERATOR) {
+            val session by sessionViewModel.uiState.collectAsState()
+
             OperatorScreen(
                 onBack = { navController.popBackStack() },
+                isPending = session.account?.operator?.isPending == true,
                 // Tocar numa empresa é entrar nela: daí as telas de geladeira
                 // e estoque passam a falar dessa, como na web (Fase 16, O8).
                 onOpenCompany = { companyId ->

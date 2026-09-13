@@ -29,7 +29,7 @@ fun MeDto.toDomain(): Account = Account(
     memberships = tenants.map { it.toDomain() },
     activeCompany = activeTenant?.toDomain(),
     hasPendingConsent = hasPendingConsent,
-    operator = operator?.let { OperatorAccount(it.id, it.name, it.role, it.seesMoney) },
+    operator = operator?.let { OperatorAccount(it.id, it.name, it.role, it.seesMoney, it.isPending) },
 )
 
 fun MembershipDto.toDomain(): Membership = Membership(

@@ -26,6 +26,8 @@ data class OperatorAccountDto(
     val name: String,
     val role: String? = null,
     @SerialName("sees_money") val seesMoney: Boolean = false,
+    /** Esperando a liberação da plataforma: o painel abre, mas vazio. */
+    @SerialName("is_pending") val isPending: Boolean = false,
 )
 
 @Serializable
