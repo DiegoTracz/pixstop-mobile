@@ -98,7 +98,7 @@ private fun schemeFor(palette: PixPalette) = if (palette.isDark) {
 }
 
 /**
- * O tema do Pixstop, retro 8-bit, agora nos dois modos.
+ * O tema do Pixelstop, retro 8-bit, agora nos dois modos.
  */
 @Composable
 fun AppTheme(

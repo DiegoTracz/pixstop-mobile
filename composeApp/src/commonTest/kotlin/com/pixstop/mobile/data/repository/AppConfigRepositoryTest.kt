@@ -19,7 +19,7 @@ class AppConfigRepositoryTest {
 
     private val body = """
         {"success":true,"data":{
-          "app_name":"Pixstop",
+          "app_name":"Pixelstop",
           "cart":{"reservation_minutes":7,"pix_expiration_minutes":45,"low_stock_threshold":3},
           "payment":{"max_installments":6,"public_key":"APP_USR-abc","is_sandbox":true},
           "pixels":{"pixels_per_real":50},

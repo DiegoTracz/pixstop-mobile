@@ -72,7 +72,7 @@ android {
             buildConfigField("Boolean", "IS_PRODUCTION", "false")
 
             // Nome do app diferente para local
-            resValue("string", "app_name", "Pixstop Local")
+            resValue("string", "app_name", "Pixelstop Local")
 
             // Esquema dos deep links, um por ambiente: os três apps podem
             // conviver no mesmo aparelho sem disputar `pixstop://`.
@@ -97,7 +97,7 @@ android {
             buildConfigField("Boolean", "IS_PRODUCTION", "false")
 
             // Nome do app diferente para staging
-            resValue("string", "app_name", "Pixstop Staging")
+            resValue("string", "app_name", "Pixelstop Staging")
 
             manifestPlaceholders["deepLinkScheme"] = "pixstop-staging"
 
@@ -114,7 +114,7 @@ android {
             buildConfigField("Boolean", "IS_PRODUCTION", "true")
 
             // Nome do app de produção
-            resValue("string", "app_name", "Pixstop")
+            resValue("string", "app_name", "Pixelstop")
 
             manifestPlaceholders["deepLinkScheme"] = "pixstop"
 

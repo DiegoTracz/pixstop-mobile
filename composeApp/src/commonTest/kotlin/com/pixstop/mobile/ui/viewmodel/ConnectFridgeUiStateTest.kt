@@ -153,7 +153,7 @@ class ConnectFridgeUiStateTest {
     fun `criar aceita nome em branco, recusa nome curto e nao pode estar ocupado`() {
         val state = ConnectFridgeUiState(isLoading = false)
 
-        // Em branco o servidor batiza de "Pixstop 01"; duas letras é engano.
+        // Em branco o servidor batiza de "Pixelstop 01"; duas letras é engano.
         assertTrue(state.canCreate)
         assertFalse(state.copy(newName = "Ge").canCreate)
         assertTrue(state.copy(newName = "Geladeira").canCreate)

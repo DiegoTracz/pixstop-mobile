@@ -13,13 +13,13 @@ class HtmlTextTest {
 
     @Test
     fun `remove as tags e mantem o texto`() {
-        val html = "<h2>1. Objeto</h2><p>Os presentes Termos regulam o uso da <strong>Pixstop</strong>.</p>"
+        val html = "<h2>1. Objeto</h2><p>Os presentes Termos regulam o uso da <strong>Pixelstop</strong>.</p>"
 
         val text = HtmlText.toPlainText(html)
 
         assertFalse(text.contains("<"), text)
         assertTrue(text.contains("1. Objeto"), text)
-        assertTrue(text.contains("uso da Pixstop."), text)
+        assertTrue(text.contains("uso da Pixelstop."), text)
     }
 
     @Test

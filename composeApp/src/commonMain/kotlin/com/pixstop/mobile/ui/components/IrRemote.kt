@@ -41,7 +41,7 @@ private val PixelShadow = Color(0xFF1A1D24)
  * O controle de 24 teclas desenhado na tela (Fase 9.10, etapa A).
  *
  * A disposição é a do controle físico, tecla por tecla: quem o tem na mão
- * reconhece sem procurar. O acabamento é o do resto do Pixstop — borda reta,
+ * reconhece sem procurar. O acabamento é o do resto do Pixelstop — borda reta,
  * sombra sólida sem desfoque, e a tecla **afunda** quando apertada, que é o
  * que dá peso de teclado 8-bit a um controle desenhado.
  *
@@ -130,7 +130,7 @@ private fun RemoteButton(
                 .size(48.dp)
                 .background(face)
                 // A cor escolhida fica com a borda em ciano, que é a cor de
-                // seleção do Pixstop inteiro.
+                // seleção do Pixelstop inteiro.
                 .border(2.dp, if (picked) PixColors.Cyan else Color(0x66000000))
                 .clickable(enabled = enabled, interactionSource = interaction, indication = null, onClick = onPress),
             contentAlignment = Alignment.Center,

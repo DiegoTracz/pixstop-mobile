@@ -28,7 +28,7 @@ object AppBranding {
      * - androidApp/src/main/res/values/strings.xml (nome abaixo do ícone)
      * - iosApp/iosApp/Info.plist (CFBundleDisplayName)
      */
-    const val APP_NAME = "Pixstop"
+    const val APP_NAME = "Pixelstop"
 
     // ══════════════════════════════════════════════════════════════════════════
     // 🎨 ÍCONE/LOGO DO APLICATIVO

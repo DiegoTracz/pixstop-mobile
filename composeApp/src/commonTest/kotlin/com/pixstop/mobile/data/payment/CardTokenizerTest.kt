@@ -29,7 +29,7 @@ class CardTokenizerTest {
 
     private val configBody = """
         {"success":true,"data":{
-          "app_name":"Pixstop",
+          "app_name":"Pixelstop",
           "cart":{"reservation_minutes":5,"pix_expiration_minutes":30,"low_stock_threshold":5},
           "payment":{"max_installments":12,"public_key":"APP_USR-abc","is_sandbox":false},
           "pixels":{"pixels_per_real":100},

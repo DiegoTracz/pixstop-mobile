@@ -11,7 +11,7 @@ import pixstop_mobile.composeapp.generated.resources.inter_regular
 import pixstop_mobile.composeapp.generated.resources.press_start_2p
 
 /**
- * Tipografia retro 8-bit do Pixstop.
+ * Tipografia retro 8-bit do Pixelstop.
  *
  * - Press Start 2P: títulos, labels, botões, badges (fonte 8-bit)
  * - Inter: texto corrido, descrições, valores de formulários

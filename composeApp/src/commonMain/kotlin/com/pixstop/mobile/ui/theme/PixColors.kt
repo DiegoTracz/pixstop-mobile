@@ -6,7 +6,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * A paleta do Pixstop, nos dois modos.
+ * A paleta do Pixelstop, nos dois modos.
  *
  * Os nomes são **papéis**, não cores literais: `Dark` é o chão da tela e
  * `Gray100` é o texto mais forte, tanto no escuro quanto no claro. Foi a
@@ -64,35 +64,35 @@ data class PixPalette(
 
 /** O escuro de sempre, do MOBILE_STYLE_GUIDE. */
 val PixDarkPalette = PixPalette(
-    Dark = Color(0xFF050816),
-    Darker = Color(0xFF030510),
+    Dark = Color(0xFF0B1020),
+    Darker = Color(0xFF060A14),
 
-    Cyan = Color(0xFF00F5D4),
-    Green = Color(0xFF00E676),
-    Yellow = Color(0xFFFFD700),
-    Orange = Color(0xFFFF9100),
-    Purple = Color(0xFF9D4EDD),
-    Pink = Color(0xFFFF6B9D),
-    Blue = Color(0xFF00B4D8),
+    Cyan = Color(0xFF5B8CFF),
+    Green = Color(0xFF3DDC97),
+    Yellow = Color(0xFFFFC93C),
+    Orange = Color(0xFFFF8A3D),
+    Purple = Color(0xFF5B8CFF),
+    Pink = Color(0xFFFF5C5C),
+    Blue = Color(0xFF5B8CFF),
 
-    Gray100 = Color(0xFFE2E8F0),
-    Gray200 = Color(0xFFCBD5E1),
-    Gray300 = Color(0xFF94A3B8),
-    Gray400 = Color(0xFF64748B),
-    Gray500 = Color(0xFF475569),
-    Gray600 = Color(0xFF334155),
-    Gray700 = Color(0xFF1E293B),
-    Gray800 = Color(0xFF0F172A),
-    Gray900 = Color(0xFF0A0F1A),
+    Gray100 = Color(0xFFEEF2F7),
+    Gray200 = Color(0xFFD3DBE6),
+    Gray300 = Color(0xFF9AA7BC),
+    Gray400 = Color(0xFF7C8AA0),
+    Gray500 = Color(0xFF5B6B82),
+    Gray600 = Color(0xFF2A3650),
+    Gray700 = Color(0xFF1B2540),
+    Gray800 = Color(0xFF131B2E),
+    Gray900 = Color(0xFF0F1626),
 
-    CyanShadow = Color(0xFF0A7D6E),
-    YellowDim = Color(0x80FFD700),
-    CyanAlpha10 = Color(0x1A00F5D4),
-    CyanAlpha20 = Color(0x3300F5D4),
-    CyanAlpha40 = Color(0x6600F5D4),
-    GreenAlpha20 = Color(0x3300E676),
-    PinkAlpha20 = Color(0x33FF6B9D),
-    PinkAlpha40 = Color(0x66FF6B9D),
+    CyanShadow = Color(0xFF2B55D6),
+    YellowDim = Color(0x80FFC93C),
+    CyanAlpha10 = Color(0x1A5B8CFF),
+    CyanAlpha20 = Color(0x335B8CFF),
+    CyanAlpha40 = Color(0x665B8CFF),
+    GreenAlpha20 = Color(0x333DDC97),
+    PinkAlpha20 = Color(0x33FF5C5C),
+    PinkAlpha40 = Color(0x66FF5C5C),
 
     isDark = true,
 )
@@ -105,35 +105,35 @@ val PixDarkPalette = PixPalette(
  * reconhecível, e o texto se lê.
  */
 val PixLightPalette = PixPalette(
-    Dark = Color(0xFFF1F5F9),
+    Dark = Color(0xFFF4F6FA),
     Darker = Color(0xFFFFFFFF),
 
-    Cyan = Color(0xFF06776A),
-    Green = Color(0xFF0F8F4E),
-    Yellow = Color(0xFF9A6B00),
-    Orange = Color(0xFFC25E00),
-    Purple = Color(0xFF7B2CBF),
-    Pink = Color(0xFFC2185B),
-    Blue = Color(0xFF0077A3),
+    Cyan = Color(0xFF2B55D6),
+    Green = Color(0xFF0E7C53),
+    Yellow = Color(0xFF7A5200),
+    Orange = Color(0xFFB4530A),
+    Purple = Color(0xFF2B55D6),
+    Pink = Color(0xFFC62828),
+    Blue = Color(0xFF2B55D6),
 
     Gray100 = Color(0xFF0F172A),
     Gray200 = Color(0xFF1E293B),
-    Gray300 = Color(0xFF475569),
-    Gray400 = Color(0xFF64748B),
-    Gray500 = Color(0xFF94A3B8),
-    Gray600 = Color(0xFFB6C2D2),
-    Gray700 = Color(0xFFD9E1EA),
+    Gray300 = Color(0xFF3D4B60),
+    Gray400 = Color(0xFF5B6B82),
+    Gray500 = Color(0xFFA8B4C4),
+    Gray600 = Color(0xFFD3DBE6),
+    Gray700 = Color(0xFFE9EEF5),
     Gray800 = Color(0xFFFFFFFF),
-    Gray900 = Color(0xFFE7EDF3),
+    Gray900 = Color(0xFFF4F6FA),
 
-    CyanShadow = Color(0xFF9AD3C9),
-    YellowDim = Color(0x809A6B00),
-    CyanAlpha10 = Color(0x1A06776A),
-    CyanAlpha20 = Color(0x3306776A),
-    CyanAlpha40 = Color(0x6606776A),
-    GreenAlpha20 = Color(0x330F8F4E),
-    PinkAlpha20 = Color(0x33C2185B),
-    PinkAlpha40 = Color(0x66C2185B),
+    CyanShadow = Color(0xFFA9C0F5),
+    YellowDim = Color(0x807A5200),
+    CyanAlpha10 = Color(0x1A2B55D6),
+    CyanAlpha20 = Color(0x332B55D6),
+    CyanAlpha40 = Color(0x662B55D6),
+    GreenAlpha20 = Color(0x330E7C53),
+    PinkAlpha20 = Color(0x33C62828),
+    PinkAlpha40 = Color(0x66C62828),
 
     isDark = false,
 )

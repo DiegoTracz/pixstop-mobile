@@ -98,7 +98,7 @@ fun CardForm(
 
         Text(
             text = "Os dados do cartão vão direto ao processador de pagamento. " +
-                "O Pixstop não guarda o número.",
+                "O Pixelstop não guarda o número.",
             style = PixTypography.caption,
             color = PixColors.Gray400,
         )

@@ -62,6 +62,11 @@ class UnlockTicketTest {
         val ticket = UnlockTicket.parse(ticketOf("""{"kid":"k","dev":"NHMBE0CXJ5","exp":"2026-09-09T18:10:00+00:00"}"""))
 
         // É por este nome que o app separa uma geladeira da outra na copa.
+        //
+        // Continua "Pixstop" mesmo depois de a marca virar Pixelstop, e isso
+        // é de propósito: quem anuncia este nome é o Pi, e há um instalado em
+        // produção. Trocar aqui antes de trocar no agente faria o app deixar
+        // de achar as geladeiras que já existem. Muda junto com o SSID.
         assertEquals("Pixstop NHMB", ticket?.advertisedName)
     }
 

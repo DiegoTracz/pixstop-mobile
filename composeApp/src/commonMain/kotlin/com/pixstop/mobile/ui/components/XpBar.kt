@@ -30,7 +30,7 @@ import com.pixstop.mobile.ui.theme.PixTypography
  * Diz três coisas, e só três: em que nível a pessoa está, quanto falta para
  * o próximo, e o que o próximo paga. É o que transforma "5% de cashback" em
  * algo que se acompanha — e é desenhada em blocos, não numa linha contínua,
- * porque nenhum canto do Pixstop é redondo.
+ * porque nenhum canto do Pixelstop é redondo.
  */
 @Composable
 fun XpBar(

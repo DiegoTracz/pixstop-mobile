@@ -24,7 +24,7 @@ private const val TAG = "Portal"
  * Conversa com a geladeira no modo de configuração (Fase 9.3).
  *
  * É a mesma API que a página em `http://10.42.0.1` usa. Não passa pelo
- * servidor Pixstop: o celular está na rede da geladeira, sem internet, e o
+ * servidor Pixelstop: o celular está na rede da geladeira, sem internet, e o
  * cliente HTTP daqui não manda o token de sessão para lugar nenhum.
  *
  * O `host` é configurável para a bancada: num PC, o agente simulado sobe em
@@ -81,7 +81,7 @@ class SetupPortalClient(private val client: HttpClient) {
             AppLogger.w("Portal em $host não respondeu: ${error.message}", tag = TAG)
             Outcome.Failure(
                 DomainError.Offline(
-                    "Não consegui falar com a geladeira em $host. O celular está na rede Pixstop-Setup?",
+                    "Não consegui falar com a geladeira em $host. O celular está na rede Pixelstop-Setup?",
                 ),
             )
         }

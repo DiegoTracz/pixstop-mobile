@@ -12,7 +12,7 @@ import com.pixstop.mobile.BuildKonfig
  */
 object AppLogger {
 
-    private const val DEFAULT_TAG = "Pixstop"
+    private const val DEFAULT_TAG = "Pixelstop"
 
     init {
         Logger.setMinSeverity(if (BuildKonfig.DEBUG) Severity.Debug else Severity.Info)
