@@ -11,14 +11,23 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * A moeda de pixel do sistema, desenhada bloco a bloco.
+ * A moeda do sistema é um pixel: o mesmo quadrado amarelo que fecha o símbolo
+ * da marca.
  *
- * É o mesmo desenho do `PixelCoinIcon.vue` da web — duas moedas quadradas
- * sobrepostas com um "P" na da frente — em uma grade de 16×16 para os blocos
- * caírem sempre em pixels inteiros.
+ * Eram duas moedas douradas sobrepostas com um "P" gravado, em seis tons fora
+ * da paleta. Parecia dinheiro de jogo e não tinha relação nenhuma com a logo.
+ * Agora é a mesma coisa em todo lugar — no ponto do símbolo, no saldo e no
+ * extrato — e é isso que dá ao quadrado amarelo o valor de "isto é dinheiro".
+ *
+ * Sem borda, sem cifrão, sem gravação: um pixel é um pixel. O brilho no canto
+ * é o que o faz parecer aceso em vez de pintado. É o mesmo desenho do
+ * `PixelCoinIcon.vue` da web.
+ *
+ * @param stacked dois pixels empilhados, para quando o número é saldo e não
+ *   unidade.
  */
 @Composable
-fun PixelCoin(modifier: Modifier = Modifier, size: Dp = 16.dp) {
+fun PixelCoin(modifier: Modifier = Modifier, size: Dp = 16.dp, stacked: Boolean = false) {
     Canvas(modifier = modifier.then(Modifier.size(size))) {
         val unit = this.size.width / GRID
 
@@ -30,29 +39,21 @@ fun PixelCoin(modifier: Modifier = Modifier, size: Dp = 16.dp) {
             )
         }
 
-        // Moeda de trás, deslocada para dar profundidade.
-        block(4, 0, 12, 12, EdgeDark)
-        block(5, 1, 10, 10, BackFill)
-        block(5, 1, 10, 2, BackShine)
-
-        // Moeda da frente.
-        block(0, 4, 12, 12, EdgeDark)
-        block(1, 5, 10, 10, FrontFill)
-        block(1, 5, 10, 3, FrontShine)
-
-        // O "P" gravado na moeda da frente.
-        block(4, 7, 1, 6, Engraving)
-        block(5, 7, 3, 1, Engraving)
-        block(8, 8, 1, 2, Engraving)
-        block(5, 10, 3, 1, Engraving)
+        if (stacked) {
+            // O de trás, apagado: dois pixels dizem saldo, um diz unidade.
+            block(5, 0, 11, 11, PixelDim)
+            block(0, 5, 11, 11, Pixel)
+            block(0, 5, 3, 3, Shine)
+        } else {
+            block(2, 2, 12, 12, Pixel)
+            block(2, 2, 3, 3, Shine)
+        }
     }
 }
 
 private const val GRID = 16f
 
-private val EdgeDark = Color(0xFFB45309)
-private val BackFill = Color(0xFFD97706)
-private val BackShine = Color(0x80EAB308)
-private val FrontFill = Color(0xFFFACC15)
-private val FrontShine = Color(0x99FDE047)
-private val Engraving = Color(0xFF92400E)
+/** O amarelo do pixel, o brilho do canto e a versão apagada do de trás. */
+private val Pixel = Color(0xFFFFC93C)
+private val Shine = Color(0xFFFFF1A8)
+private val PixelDim = Color(0x73FFC93C)
