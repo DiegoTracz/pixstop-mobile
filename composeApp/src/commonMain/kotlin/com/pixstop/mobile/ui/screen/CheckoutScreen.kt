@@ -218,8 +218,14 @@ fun CheckoutScreen(
                             )
 
                             Text(
-                                text = "Mínimo de ${checkout.minPixelsRedeem} pixels, " +
-                                    "até ${checkout.maxDiscountPercentage.toInt()}% da compra.",
+                                text = if (checkout.walletPixelsAsMoney > 0) {
+                                    "Mínimo de ${checkout.minPixelsRedeem} pixels. Seus ${checkout.walletPixelsAsMoney} " +
+                                        "pixels comprados pagam a compra inteira; o teto de " +
+                                        "${checkout.maxDiscountPercentage.toInt()}% vale para os de bônus."
+                                } else {
+                                    "Mínimo de ${checkout.minPixelsRedeem} pixels, " +
+                                        "até ${checkout.maxDiscountPercentage.toInt()}% da compra."
+                                },
                                 style = PixTypography.caption,
                                 color = PixColors.Gray400,
                             )

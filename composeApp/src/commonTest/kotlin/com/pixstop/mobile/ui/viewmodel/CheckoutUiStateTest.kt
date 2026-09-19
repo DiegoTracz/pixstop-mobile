@@ -24,6 +24,7 @@ class CheckoutUiStateTest {
     ) = Checkout(
         productsTotal = 10.0,
         walletPixels = 0,
+        walletPixelsAsMoney = 0,
         walletBalance = balance,
         maxPixels = 0,
         pixelsPerReal = 100,

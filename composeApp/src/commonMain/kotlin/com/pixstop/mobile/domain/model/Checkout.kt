@@ -7,6 +7,8 @@ package com.pixstop.mobile.domain.model
 data class Checkout(
     val productsTotal: Double,
     val walletPixels: Int,
+    /** Pixels comprados: pagam a compra inteira, fora do teto de desconto. */
+    val walletPixelsAsMoney: Int,
     val walletBalance: Double,
     val maxPixels: Int,
     val pixelsPerReal: Int,

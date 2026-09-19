@@ -37,7 +37,12 @@ data class ApplianceDto(
 data class CheckoutTotalsDto(val products: Double = 0.0, val cost: Double = 0.0)
 
 @Serializable
-data class CheckoutWalletDto(val pixels: Int = 0, val balance: Double = 0.0)
+data class CheckoutWalletDto(
+    val pixels: Int = 0,
+    /** Quanto da carteira é pixel comprado: paga a compra inteira, sem o teto. */
+    @SerialName("pixels_as_money") val pixelsAsMoney: Int = 0,
+    val balance: Double = 0.0,
+)
 
 /**
  * Regras da empresa. Vêm do servidor porque cada uma configura as suas — o app

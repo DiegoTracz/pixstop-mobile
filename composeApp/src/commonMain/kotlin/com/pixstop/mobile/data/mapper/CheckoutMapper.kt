@@ -26,6 +26,7 @@ import com.pixstop.mobile.domain.model.UnlockTicket
 fun CheckoutDto.toDomain() = Checkout(
     productsTotal = totals.products,
     walletPixels = wallet.pixels,
+    walletPixelsAsMoney = wallet.pixelsAsMoney,
     walletBalance = wallet.balance,
     maxPixels = checkout.maxPixels,
     pixelsPerReal = checkout.pixelsPerReal,
