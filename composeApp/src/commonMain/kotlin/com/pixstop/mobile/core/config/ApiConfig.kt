@@ -68,7 +68,7 @@ object ApiConfig {
      * ├─────────────────────┼──────────────────────────────────────────┤
      * │ Local               │ NGROK_URL do local.properties            │
      * │ Staging             │ https://staging.pixstop.com.br/api       │
-     * │ Produção            │ https://pixstop.com.br/api               │
+     * │ Produção            │ https://pixelstop.com.br/api             │
      * └─────────────────────┴──────────────────────────────────────────┘
      *
      * Para dev local com ngrok, adicione no local.properties:

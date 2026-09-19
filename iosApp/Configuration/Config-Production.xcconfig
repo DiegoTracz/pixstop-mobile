@@ -1,7 +1,7 @@
 // Production Configuration
 TEAM_ID=
 
-PRODUCT_NAME=PixStop
+PRODUCT_NAME=Pixelstop
 PRODUCT_BUNDLE_IDENTIFIER=com.pixstop.mobile$(TEAM_ID)
 
 CURRENT_PROJECT_VERSION=1

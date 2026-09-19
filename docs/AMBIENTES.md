@@ -8,7 +8,7 @@ O projeto utiliza o plugin **[BuildKonfig](https://github.com/yshrsmz/BuildKonfi
 
 | Propriedade                     | Local                               | Staging                              | Produção                         |
 |---------------------------------|--------------------------------------|--------------------------------------|----------------------------------|
-| **URL da API**                  | `http://10.0.2.2:8010/api`           | `https://staging.pixstop.com.br/api` | `https://pixstop.com.br/api`     |
+| **URL da API**                  | `http://10.0.2.2:8010/api`           | `https://staging.pixstop.com.br/api` | `https://pixelstop.com.br/api`     |
 | **Application ID (Android)**    | `com.pixstop.mobile.local`           | `com.pixstop.mobile.staging`         | `com.pixstop.mobile`             |
 | **Bundle ID (iOS)**             | `com.pixstop.mobile.local`           | `com.pixstop.mobile.staging`         | `com.pixstop.mobile`             |
 | **Nome do App**                 | Pixstop Local                        | Pixstop Staging                      | Pixstop                          |
@@ -76,8 +76,8 @@ Basta selecionar o **Build Variant** no painel lateral — o ambiente é detecta
 | `localRelease`        | Local      | Release | `http://10.0.2.2:8010/api`             |
 | `stagingDebug`        | Staging    | Debug   | `https://staging.pixstop.com.br/api`   |
 | `stagingRelease`      | Staging    | Release | `https://staging.pixstop.com.br/api`   |
-| `productionDebug`     | Produção   | Debug   | `https://pixstop.com.br/api`           |
-| `productionRelease`   | Produção   | Release | `https://pixstop.com.br/api`           |
+| `productionDebug`     | Produção   | Debug   | `https://pixelstop.com.br/api`           |
+| `productionRelease`   | Produção   | Release | `https://pixelstop.com.br/api`           |
 
 > ✅ **Não é necessário** passar `-Penvironment=` manualmente. A detecção é automática pelo nome da task.
 
@@ -109,7 +109,7 @@ O ambiente é controlado pela variável `APP_ENVIRONMENT` no Build Settings:
 |---|---|---|
 | `local` | Local (padrão Debug) | `NGROK_URL` do `local.properties` |
 | `staging` | Staging | `https://staging.pixstop.com.br/api` |
-| `production` | Produção (padrão Release) | `https://pixstop.com.br/api` |
+| `production` | Produção (padrão Release) | `https://pixelstop.com.br/api` |
 
 > ✅ **Debug** usa `local` por padrão. **Release** usa `production` por padrão.
 

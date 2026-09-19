@@ -1,7 +1,7 @@
 // Staging Configuration
 TEAM_ID=
 
-PRODUCT_NAME=PixStop Staging
+PRODUCT_NAME=Pixelstop Staging
 PRODUCT_BUNDLE_IDENTIFIER=com.pixstop.mobile.staging$(TEAM_ID)
 
 CURRENT_PROJECT_VERSION=1

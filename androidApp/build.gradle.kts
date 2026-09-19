@@ -110,7 +110,7 @@ android {
             dimension = "environment"
 
             // URL da API de Produção
-            buildConfigField("String", "API_BASE_URL", "\"https://pixstop.com.br/api\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://pixelstop.com.br/api\"")
             buildConfigField("Boolean", "IS_PRODUCTION", "true")
 
             // Nome do app de produção

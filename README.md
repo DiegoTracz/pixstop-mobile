@@ -69,7 +69,7 @@ No **Android Studio**, selecione o Build Variant no painel lateral:
 |-----------------------|------------|----------------------------------------|
 | `localDebug`          | Local      | `NGROK_URL` do `local.properties`      |
 | `stagingDebug`        | Staging    | `https://staging.pixstop.com.br/api`   |
-| `productionDebug`     | Produção   | `https://pixstop.com.br/api`           |
+| `productionDebug`     | Produção   | `https://pixelstop.com.br/api`           |
 
 > O ambiente é detectado **automaticamente** — não precisa passar flags.
 
