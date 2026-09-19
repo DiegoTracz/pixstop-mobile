@@ -23,7 +23,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -41,7 +43,8 @@ import java.util.concurrent.Executors
 @Composable
 actual fun QrCodeScannerScreen(
     onCodeScanned: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    instruction: String,
 ) {
     val context = LocalContext.current
     var hasCameraPermission by remember {
@@ -130,18 +133,23 @@ actual fun QrCodeScannerScreen(
             )
         }
 
-        // Bottom instruction
+        // A instrução embaixo: o fundo vai até a borda, mas o texto fica acima
+        // da barra de navegação do celular, senão os botões do sistema o cobrem.
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .background(PixColors.Dark.copy(alpha = 0.8f))
+                .navigationBarsPadding()
                 .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
+            // A mesma fonte pixel da barra de cima, menor e com entrelinha
+            // folgada: a frase é longa, e a fonte pixel é larga.
             Text(
-                text = "Aponte a câmera para o QR Code da empresa",
-                style = PixTypography.bodyMuted
+                text = instruction,
+                style = PixTypography.sectionTitle.copy(fontSize = 10.sp, lineHeight = 18.sp),
+                textAlign = TextAlign.Center,
             )
         }
 

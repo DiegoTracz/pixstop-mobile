@@ -263,7 +263,7 @@ private fun CompanyCodeSection(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            text = "Aponte para o QR Code que a empresa mandou. É ele que liga sua conta à geladeira.",
+            text = "Aponte para o QR Code na geladeira. É ele que liga sua conta a ela.",
             style = PixTypography.bodyMuted
         )
 

@@ -84,7 +84,7 @@ fun JoinCompanyScreen(
         )
 
         Text(
-            text = "Peça o código ao administrador da sua empresa, ou aponte a câmera para o QR impresso.",
+            text = "Aponte a câmera para o QR Code na geladeira, ou peça o código ao administrador da sua empresa.",
             style = PixTypography.caption,
             color = PixColors.Gray300,
             textAlign = TextAlign.Center,

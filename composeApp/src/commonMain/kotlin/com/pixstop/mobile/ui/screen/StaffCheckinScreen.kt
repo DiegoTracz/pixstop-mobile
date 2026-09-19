@@ -59,6 +59,7 @@ fun StaffCheckinScreen(
                 if (raw.contains("/v/")) viewModel.onVoucherCodeChange(raw) else viewModel.onQueryChange(raw)
             },
             onDismiss = { scannerOpen = false },
+            instruction = "Aponte a câmera para o QR Code da pessoa ou do voucher",
         )
         return
     }
