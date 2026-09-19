@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,6 +36,7 @@ import com.pixstop.mobile.ui.components.DiscountTag
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelCoin
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.XpBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
@@ -67,7 +67,7 @@ fun HomeFeed(
 ) {
     if (state.isLoading) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = PixColors.Cyan)
+            PixelLoader()
         }
 
         return

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.Order
 import com.pixstop.mobile.domain.model.OrderStatus
+import com.pixstop.mobile.ui.components.PixelEmptyState
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
@@ -46,13 +47,13 @@ fun OrdersScreen(
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.orders.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = state.error ?: "Você ainda não fez nenhum pedido.",
-                    style = if (state.error != null) PixTypography.errorText else PixTypography.bodyMuted,
+                PixelEmptyState(
+                    message = state.error ?: "Você ainda não fez nenhum pedido.",
+                    isError = state.error != null,
                 )
             }
 

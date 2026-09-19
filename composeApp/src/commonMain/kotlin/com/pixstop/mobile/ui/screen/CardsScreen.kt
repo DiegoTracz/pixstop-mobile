@@ -28,6 +28,8 @@ import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonVariant
+import com.pixstop.mobile.ui.components.PixelEmptyState
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
@@ -61,13 +63,12 @@ fun CardsScreen(
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.isEmpty -> Box(modifier = Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    text = "Nenhum cartão guardado. Marque \"salvar cartão\" ao pagar um pedido e ele aparece aqui.",
-                    style = PixTypography.bodyMuted,
+                PixelEmptyState(
+                    message = "Nenhum cartão guardado. Marque \"salvar cartão\" ao pagar um pedido e ele aparece aqui.",
                 )
             }
 

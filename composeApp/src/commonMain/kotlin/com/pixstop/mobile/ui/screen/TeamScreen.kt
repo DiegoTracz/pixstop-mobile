@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,7 +32,9 @@ import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelCoin
+import com.pixstop.mobile.ui.components.PixelEmptyState
 import com.pixstop.mobile.ui.components.PixelInput
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
@@ -69,13 +70,13 @@ fun TeamScreen(
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.departments.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = state.error ?: "Você não gere nenhum departamento.",
-                    style = if (state.error != null) PixTypography.errorText else PixTypography.bodyMuted,
+                PixelEmptyState(
+                    message = state.error ?: "Você não gere nenhum departamento.",
+                    isError = state.error != null,
                 )
             }
 

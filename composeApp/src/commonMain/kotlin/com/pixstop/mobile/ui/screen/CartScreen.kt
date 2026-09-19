@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,10 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.CartLine
+import com.pixstop.mobile.domain.model.MascotFace
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonVariant
+import com.pixstop.mobile.ui.components.PixelEmptyState
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
@@ -63,13 +65,14 @@ fun CartScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.cart.isEmpty -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = state.error ?: "Seu carrinho está vazio.",
-                    style = if (state.error != null) PixTypography.errorText else PixTypography.bodyMuted,
+                PixelEmptyState(
+                    message = state.error ?: "Seu carrinho está vazio.",
+                    isError = state.error != null,
+                    face = MascotFace.Up,
                 )
             }
 
@@ -141,16 +144,17 @@ fun CartDrawerSheet(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.cart.isEmpty -> Box(
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(20.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = state.error ?: "Seu carrinho está vazio.",
-                    style = if (state.error != null) PixTypography.errorText else PixTypography.bodyMuted,
+                PixelEmptyState(
+                    message = state.error ?: "Seu carrinho está vazio.",
+                    isError = state.error != null,
+                    face = MascotFace.Up,
                 )
             }
 

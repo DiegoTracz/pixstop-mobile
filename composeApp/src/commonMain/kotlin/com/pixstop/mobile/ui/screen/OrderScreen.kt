@@ -32,20 +32,29 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import com.pixstop.mobile.domain.model.FitaState
+import com.pixstop.mobile.domain.model.MascotFace
+import com.pixstop.mobile.domain.model.MascotState
 import com.pixstop.mobile.domain.model.Order
 import com.pixstop.mobile.domain.model.OrderStatus
+import com.pixstop.mobile.domain.model.PickupStatus
+import com.pixstop.mobile.domain.model.of
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelCoin
 import com.pixstop.mobile.ui.components.LevelBadge
+import com.pixstop.mobile.ui.components.PixelEmptyState
+import com.pixstop.mobile.ui.components.PixelLoader
+import com.pixstop.mobile.ui.components.PixelMascot
 import com.pixstop.mobile.ui.components.decodeBase64Image
 import com.pixstop.mobile.domain.model.OrderXp
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.formatMoney
+import com.pixstop.mobile.ui.components.toSwatch
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.domain.model.FridgeLight
@@ -88,11 +97,11 @@ fun OrderScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.order == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = state.error ?: "Pedido não encontrado.", style = PixTypography.errorText)
+                PixelEmptyState(message = state.error ?: "Pedido não encontrado.", isError = true)
             }
 
             else -> {
@@ -213,28 +222,12 @@ private fun StatusHeader(order: Order, state: OrderUiState) {
         else -> PixColors.Yellow
     }
 
-    val icon = when (order.status) {
-        OrderStatus.Paid, OrderStatus.Delivered -> AppIconType.Check
-        OrderStatus.Canceled -> AppIconType.Close
-        else -> AppIconType.Info
-    }
-
     Column(
         modifier = Modifier.fillMaxWidth().border(2.dp, color).background(PixColors.Darker).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            modifier = Modifier.size(48.dp).background(color),
-            contentAlignment = Alignment.Center,
-        ) {
-            AppIcon(
-                icon = icon,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = PixColors.Dark,
-            )
-        }
+        OrderMascot(order, state)
 
         Text(text = order.statusLabel, style = PixTypography.sectionTitle, color = color)
 
@@ -259,6 +252,36 @@ private fun StatusHeader(order: Order, state: OrderUiState) {
                 )
             }
         }
+    }
+}
+
+/**
+ * O mascote do pedido. Pago, ele é a fita na mão: o rosto vem do que está
+ * acontecendo na retirada e a cor é a mesma da lâmpada logo abaixo, que é a
+ * que a porta mostra. Antes de pagar, ele espera em ciclo RGB; com o Pix
+ * vencido, fica preocupado; cancelado, apaga.
+ */
+@Composable
+private fun OrderMascot(order: Order, state: OrderUiState) {
+    when (order.status) {
+        OrderStatus.Paid -> {
+            val light = FridgeLight.of(state.pickup, state.pickup.restingLight, state.isTalkingToFridge)
+            PixelMascot(
+                fita = FitaState.of(state.pickup, state.isTalkingToFridge, windowExpired = state.unlockSecondsLeft == 0L),
+                face = if (state.pickup.status == PickupStatus.PickedUp) MascotFace.Happy else null,
+                color = if (light != FridgeLight.Off) light.toSwatch() else null,
+                size = 72.dp,
+                decorative = true,
+            )
+        }
+
+        OrderStatus.Delivered -> PixelMascot(state = MascotState.Idle, face = MascotFace.Happy, size = 72.dp, decorative = true)
+        OrderStatus.Canceled -> PixelMascot(state = MascotState.Offline, size = 72.dp, decorative = true)
+        else -> PixelMascot(
+            state = if (state.isExpired) MascotState.Warning else MascotState.Loading,
+            size = 72.dp,
+            decorative = true,
+        )
     }
 }
 

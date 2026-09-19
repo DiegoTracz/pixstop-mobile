@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -28,8 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.checkout.PaymentMethod
+import com.pixstop.mobile.domain.model.MascotState
 import com.pixstop.mobile.domain.model.SavedCard
 import com.pixstop.mobile.ui.components.CardForm
+import com.pixstop.mobile.ui.components.PixelEmptyState
+import com.pixstop.mobile.ui.components.PixelMascot
 import com.pixstop.mobile.ui.viewmodel.CardMode
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
@@ -37,6 +39,7 @@ import com.pixstop.mobile.domain.model.FridgeLight
 import com.pixstop.mobile.ui.components.FridgeLamp
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelCoin
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
@@ -68,11 +71,11 @@ fun CheckoutScreen(
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.checkout == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = state.error ?: "Não foi possível abrir o fechamento.", style = PixTypography.errorText)
+                PixelEmptyState(message = state.error ?: "Não foi possível abrir o fechamento.", isError = true)
             }
 
             else -> {
@@ -280,8 +283,16 @@ fun CheckoutScreen(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    // A recusa do pagamento: o mascote pisca vermelho três vezes ao lado
+                    // da mensagem, e a mensagem é quem diz o que fazer.
                     state.error?.let {
-                        Text(text = it, style = PixTypography.errorText)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            PixelMascot(state = MascotState.Error, size = 40.dp, decorative = true)
+                            Text(text = it, style = PixTypography.errorText)
+                        }
                     }
 
                     if (state.missingMoney) {

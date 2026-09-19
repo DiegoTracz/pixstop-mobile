@@ -35,6 +35,7 @@ import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.DiscountTag
 import com.pixstop.mobile.ui.components.PixelBalance
 import com.pixstop.mobile.ui.components.PixelInput
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelPrice
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
@@ -133,7 +134,7 @@ fun ShopScreen(
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.error != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

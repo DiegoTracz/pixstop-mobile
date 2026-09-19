@@ -33,6 +33,8 @@ import com.pixstop.mobile.domain.model.Ranking
 import com.pixstop.mobile.domain.model.XpEntry
 import com.pixstop.mobile.ui.components.LevelBadge
 import com.pixstop.mobile.ui.components.PixelCoin
+import com.pixstop.mobile.ui.components.PixelEmptyState
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.SegmentedBar
 import com.pixstop.mobile.ui.theme.PixColors
@@ -73,13 +75,13 @@ fun ProgressScreen(
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.progression == null -> Box(modifier = Modifier.fillMaxSize().padding(20.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    text = state.error ?: "A progressão por XP ainda não está ligada nesta empresa.",
-                    style = if (state.error != null) PixTypography.errorText else PixTypography.bodyMuted,
+                PixelEmptyState(
+                    message = state.error ?: "A progressão por XP ainda não está ligada nesta empresa.",
+                    isError = state.error != null,
                 )
             }
 

@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.data.remote.dto.ReferralDto
 import com.pixstop.mobile.domain.model.PixelEntry
 import com.pixstop.mobile.ui.components.PixelCoin
+import com.pixstop.mobile.ui.components.PixelEmptyState
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
@@ -77,13 +79,13 @@ fun PixelHistoryScreen(
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.entries.isEmpty() -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = state.error ?: "Nenhuma movimentação ainda.",
-                    style = if (state.error != null) PixTypography.errorText else PixTypography.bodyMuted,
+                PixelEmptyState(
+                    message = state.error ?: "Nenhuma movimentação ainda.",
+                    isError = state.error != null,
                 )
             }
 

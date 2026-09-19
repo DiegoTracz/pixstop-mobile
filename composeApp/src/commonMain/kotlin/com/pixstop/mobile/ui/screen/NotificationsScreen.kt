@@ -26,11 +26,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.AppNotification
+import com.pixstop.mobile.domain.model.MascotFace
 import com.pixstop.mobile.domain.notification.NotificationRouter
 import com.pixstop.mobile.domain.notification.NotificationTarget
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelButtonVariant
+import com.pixstop.mobile.ui.components.PixelEmptyState
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
@@ -93,7 +96,7 @@ fun NotificationsScreen(
 
         when {
             state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PixColors.Cyan)
+                PixelLoader()
             }
 
             state.items.isEmpty() -> EmptyState(error = state.error, onRetry = viewModel::refresh)
@@ -171,23 +174,23 @@ private fun NotificationRow(
 
 @Composable
 private fun EmptyState(error: String?, onRetry: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = error ?: "Nenhum aviso por aqui.",
-            style = if (error != null) PixTypography.errorText else PixTypography.bodyMuted,
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        PixelEmptyState(
+            message = error ?: "Nenhum aviso por aqui.",
+            isError = error != null,
+            face = MascotFace.Closed,
+            action = if (error != null) {
+                {
+                    PixelButton(
+                        text = "Tentar de novo",
+                        onClick = onRetry,
+                        variant = PixelButtonVariant.Secondary,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            } else {
+                null
+            },
         )
-
-        if (error != null) {
-            PixelButton(
-                text = "Tentar de novo",
-                onClick = onRetry,
-                variant = PixelButtonVariant.Secondary,
-                modifier = Modifier.padding(top = 16.dp),
-            )
-        }
     }
 }

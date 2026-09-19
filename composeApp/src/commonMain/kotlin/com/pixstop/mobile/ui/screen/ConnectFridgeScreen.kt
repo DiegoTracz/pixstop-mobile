@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -37,6 +36,7 @@ import com.pixstop.mobile.domain.model.FridgeLight
 import com.pixstop.mobile.domain.model.FridgeDevice
 import com.pixstop.mobile.domain.model.FridgePresence
 import com.pixstop.mobile.domain.model.WifiNetwork
+import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.SensorCard
 import com.pixstop.mobile.ui.components.LedSheet
 import com.pixstop.mobile.ui.components.AppIconType
@@ -84,7 +84,7 @@ fun ConnectFridgeScreen(
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when {
                 state.isLoading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = PixColors.Cyan)
+                    PixelLoader()
                 }
 
                 // A barra de navegação do aparelho fica por cima do que a
@@ -247,7 +247,7 @@ private fun CodeStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
         contentAlignment = Alignment.Center,
     ) {
         if (state.isWorking) {
-            CircularProgressIndicator(color = PixColors.Cyan)
+            PixelLoader()
         } else {
             Text(
                 text = device.formattedCode ?: "— — —",
@@ -397,7 +397,7 @@ private fun NetworkStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
 @Composable
 private fun WaitingStep(title: String, detail: String) {
     Box(modifier = Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = PixColors.Cyan)
+        PixelLoader()
     }
     Text(title, style = PixTypography.sectionTitle, color = PixColors.Cyan, modifier = Modifier.fillMaxWidth())
     Text(detail, style = PixTypography.caption, color = PixColors.Gray300)
