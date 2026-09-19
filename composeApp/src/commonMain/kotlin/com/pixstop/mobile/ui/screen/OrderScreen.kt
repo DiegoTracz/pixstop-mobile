@@ -412,7 +412,7 @@ private fun XpEarned(xp: OrderXp) {
 }
 
 @Composable
-private fun PixBlock(
+internal fun PixBlock(
     code: String,
     qrCodeBase64: String?,
     secondsLeft: Long?,

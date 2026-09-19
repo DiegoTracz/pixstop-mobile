@@ -8,6 +8,8 @@ import com.pixstop.mobile.data.remote.dto.CategoryDto
 import com.pixstop.mobile.data.remote.dto.PixelBalanceDto
 import com.pixstop.mobile.data.remote.dto.ProductDto
 import com.pixstop.mobile.data.remote.dto.ShopApplianceDto
+import com.pixstop.mobile.data.remote.dto.TopupOfferDto
+import com.pixstop.mobile.data.remote.dto.WalletTopupDto
 import com.pixstop.mobile.domain.model.Appliance
 import com.pixstop.mobile.domain.model.ApplianceChoice
 import com.pixstop.mobile.domain.model.Cart
@@ -16,6 +18,9 @@ import com.pixstop.mobile.domain.model.Category
 import com.pixstop.mobile.domain.model.PixelWallet
 import com.pixstop.mobile.domain.model.Presence
 import com.pixstop.mobile.domain.model.Product
+import com.pixstop.mobile.domain.model.TopupMethod
+import com.pixstop.mobile.domain.model.TopupOffer
+import com.pixstop.mobile.domain.model.WalletTopup
 
 fun CategoryDto.toDomain() = Category(id = id, name = name, productsCount = productsCount)
 
@@ -63,6 +68,32 @@ fun PixelBalanceDto.toDomain() = PixelWallet(
     maxDiscountPercentage = maxDiscountPercentage,
     cashbackPercentage = cashbackPercentage,
     enabled = enabled,
+    topup = topup?.toDomain() ?: TopupOffer.Off,
+)
+
+fun TopupOfferDto.toDomain() = TopupOffer(
+    enabled = enabled,
+    reason = reason,
+    min = min,
+    max = max,
+    presets = presets,
+    pixelsPerReal = pixelsPerReal,
+    cardFeePercentage = cardFee.percentage,
+    cardFeeFixed = cardFee.fixed,
+)
+
+fun WalletTopupDto.toDomain() = WalletTopup(
+    id = id,
+    pixels = pixels,
+    amount = amount,
+    cardFee = cardFee,
+    charged = charged,
+    method = if (paymentMethod == TopupMethod.Card.apiValue) TopupMethod.Card else TopupMethod.Pix,
+    credited = credited,
+    refused = refused,
+    pixCode = pix?.qrCode,
+    pixQrCodeBase64 = pix?.qrCodeBase64,
+    pixExpiresAt = IsoInstant.toEpochMillis(pix?.expiresAt),
 )
 
 /**

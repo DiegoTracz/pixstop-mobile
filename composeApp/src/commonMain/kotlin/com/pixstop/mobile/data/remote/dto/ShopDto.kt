@@ -83,6 +83,58 @@ data class PixelBalanceDto(
     @SerialName("max_discount_percentage") val maxDiscountPercentage: Double = 0.0,
     @SerialName("cashback_percentage") val cashbackPercentage: Double = 0.0,
     val enabled: Boolean = true,
+    val topup: TopupOfferDto? = null,
+)
+
+/**
+ * A compra de pixels oferecida nesta empresa, e por que não quando não dá.
+ */
+@Serializable
+data class TopupOfferDto(
+    val enabled: Boolean = false,
+    val reason: String? = null,
+    val min: Int = 10,
+    val max: Int = 500,
+    val presets: List<Int> = emptyList(),
+    @SerialName("pixels_per_real") val pixelsPerReal: Int = 100,
+    @SerialName("card_fee") val cardFee: TopupFeeDto = TopupFeeDto(),
+)
+
+@Serializable
+data class TopupFeeDto(val percentage: Double = 0.0, val fixed: Double = 0.0)
+
+/**
+ * Uma compra de pixels: quanto, quanto custou e em que pé está.
+ */
+@Serializable
+data class WalletTopupDto(
+    val id: Long,
+    val pixels: Int,
+    val amount: Double,
+    @SerialName("card_fee") val cardFee: Double = 0.0,
+    val charged: Double,
+    @SerialName("payment_method") val paymentMethod: String,
+    val status: String,
+    val credited: Boolean = false,
+    val refused: Boolean = false,
+    @SerialName("status_detail") val statusDetail: String? = null,
+    val pix: TopupPixDto? = null,
+)
+
+@Serializable
+data class TopupPixDto(
+    @SerialName("qr_code") val qrCode: String,
+    @SerialName("qr_code_base64") val qrCodeBase64: String? = null,
+    @SerialName("expires_at") val expiresAt: String? = null,
+)
+
+@Serializable
+data class WalletTopupRequest(
+    val amount: Int,
+    @SerialName("payment_method") val paymentMethod: String,
+    @SerialName("card_token") val cardToken: String? = null,
+    @SerialName("doc_type") val docType: String? = null,
+    @SerialName("doc_number") val docNumber: String? = null,
 )
 
 /**

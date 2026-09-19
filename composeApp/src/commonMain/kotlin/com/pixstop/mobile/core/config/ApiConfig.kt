@@ -191,6 +191,10 @@ object ApiConfig {
 
         // ── Pixels ────────────────────────────────────────────────────────
         const val PIXELS_BALANCE = "pixels/balance"
+
+        /** Comprar pixels para a carteira (docs/plans/CARTEIRA_PIXELS.md no servidor). */
+        const val PIXELS_TOPUPS = "pixels/topups"
+        fun pixelTopup(id: Long) = "pixels/topups/$id"
         const val PIXELS_HISTORY = "pixels/history"
         const val PIXELS_PROGRESS = "pixels/progress"
         const val PIXELS_XP_HISTORY = "pixels/xp-history"

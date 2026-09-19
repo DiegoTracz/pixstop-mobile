@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.data.remote.dto.ReferralDto
 import com.pixstop.mobile.domain.model.PixelEntry
+import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelCoin
 import com.pixstop.mobile.ui.components.PixelEmptyState
 import com.pixstop.mobile.ui.components.PixelLoader
@@ -46,9 +47,16 @@ import org.koin.compose.viewmodel.koinViewModel
 fun PixelHistoryScreen(
     onBack: () -> Unit,
     memberCode: String? = null,
+    onBuyPixels: (() -> Unit)? = null,
+    /** Muda quando uma compra de pixels entra: a carteira recarrega. */
+    walletVersion: Int = 0,
     viewModel: PixelHistoryViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(walletVersion) {
+        if (walletVersion > 0) viewModel.refresh()
+    }
     val listState = rememberLazyListState()
 
     val shouldLoadMore by remember {
@@ -72,6 +80,23 @@ fun PixelHistoryScreen(
             reserved = state.wallet.reserved,
             expiringSoon = state.wallet.expiringSoon,
         )
+
+        // Comprar pixels (docs/plans/CARTEIRA_PIXELS.md no servidor, P2):
+        // desligada, a razão aparece no lugar do botão.
+        if (onBuyPixels != null && !state.isLoading) {
+            val offer = state.wallet.topup
+            if (offer.enabled) {
+                PixelButton(
+                    text = "Comprar pixels",
+                    onClick = onBuyPixels,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                )
+            } else {
+                offer.reason?.let {
+                    Text(text = it, style = PixTypography.caption, modifier = Modifier.padding(horizontal = 20.dp))
+                }
+            }
+        }
 
         memberCode?.let { MemberCodeCard(it) }
 

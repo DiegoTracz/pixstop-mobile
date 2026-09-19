@@ -4,6 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -13,6 +16,7 @@ import com.pixstop.mobile.domain.access.Destination
 import com.pixstop.mobile.domain.access.RoleHelper
 import com.pixstop.mobile.domain.notification.NotificationTarget
 import com.pixstop.mobile.data.repository.AuthRepository
+import com.pixstop.mobile.ui.screen.BuyPixelsScreen
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
 import com.pixstop.mobile.ui.screen.LegalConsentScreen
@@ -169,6 +173,9 @@ fun AppNavigation() {
             }
         }
     }
+
+    // Muda quando uma compra de pixels entra, para a carteira recarregar.
+    var walletVersion by remember { mutableIntStateOf(0) }
 
     NavHost(
         navController = navController,
@@ -328,6 +335,16 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() },
                 // O código do balcão só existe onde há visita registrada.
                 memberCode = session.account?.user?.memberCode?.takeIf { session.company?.hasModule("checkin") == true },
+                onBuyPixels = { navController.navigate(Routes.BUY_PIXELS) },
+                walletVersion = walletVersion,
+            )
+        }
+
+        composable(Routes.BUY_PIXELS) {
+            BuyPixelsScreen(
+                onBack = { navController.popBackStack() },
+                // A carteira que abriu a compra recarrega quando os pixels entram.
+                onCredited = { walletVersion++ },
             )
         }
 

@@ -9,15 +9,21 @@ import com.pixstop.mobile.data.remote.dto.CategoryDto
 import com.pixstop.mobile.data.remote.dto.Page
 import com.pixstop.mobile.data.remote.dto.PixelBalanceDto
 import com.pixstop.mobile.data.remote.dto.ProductDto
+import com.pixstop.mobile.data.remote.dto.WalletTopupDto
+import com.pixstop.mobile.data.remote.dto.WalletTopupRequest
 import com.pixstop.mobile.domain.model.ApplianceChoice
 import com.pixstop.mobile.domain.model.Category
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.PixelWallet
 import com.pixstop.mobile.domain.model.Product
+import com.pixstop.mobile.domain.model.TopupMethod
+import com.pixstop.mobile.domain.model.WalletTopup
 import com.pixstop.mobile.domain.model.map
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 
 private const val TAG = "Shop"
 
@@ -65,6 +71,27 @@ class ShopRepository(private val client: HttpClient) {
         safeCall<ApplianceChoiceDto>(TAG) {
             client.get(ApiConfig.Endpoints.SHOP_APPLIANCES)
         }.map { it.toDomain() }
+
+    /**
+     * Compra pixels para a carteira. Pix volta pendente, com o código; cartão
+     * aprovado já volta creditado. O dinheiro vai para quem vende na empresa.
+     */
+    suspend fun buyPixels(
+        reais: Int,
+        method: TopupMethod,
+        cardToken: String? = null,
+        documentType: String? = null,
+        documentNumber: String? = null,
+    ): Outcome<WalletTopup> =
+        safeCall<WalletTopupDto>(TAG) {
+            client.post(ApiConfig.Endpoints.PIXELS_TOPUPS) {
+                setBody(WalletTopupRequest(reais, method.apiValue, cardToken, documentType, documentNumber))
+            }
+        }.map { it.toDomain() }
+
+    /** Em que pé está a compra; o servidor pergunta ao gateway e credita se já caiu. */
+    suspend fun pixelTopup(id: Long): Outcome<WalletTopup> =
+        safeCall<WalletTopupDto>(TAG) { client.get(ApiConfig.Endpoints.pixelTopup(id)) }.map { it.toDomain() }
 
     suspend fun pixelWallet(): Outcome<PixelWallet> =
         safeCall<PixelBalanceDto>(TAG) { client.get(ApiConfig.Endpoints.PIXELS_BALANCE) }.map { it.toDomain() }

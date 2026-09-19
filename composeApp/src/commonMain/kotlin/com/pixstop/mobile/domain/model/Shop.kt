@@ -69,11 +69,60 @@ data class PixelWallet(
     val maxDiscountPercentage: Double,
     val cashbackPercentage: Double,
     val enabled: Boolean,
+    /** Comprar pixels para a carteira nesta empresa. */
+    val topup: TopupOffer = TopupOffer.Off,
 ) {
     companion object {
         val Empty = PixelWallet(0, 0, 0, 0, 100, 0, 0.0, 0.0, enabled = false)
     }
 }
+
+/**
+ * A compra de pixels, como o servidor a oferece nesta empresa.
+ *
+ * R$ 1 compra [pixelsPerReal] pixels. Os comprados pagam a compra inteira e
+ * não vencem. Desligada, [reason] diz por quê (a empresa não usa pixels ou
+ * ainda não recebe pagamentos).
+ */
+data class TopupOffer(
+    val enabled: Boolean,
+    val reason: String?,
+    val min: Int,
+    val max: Int,
+    val presets: List<Int>,
+    val pixelsPerReal: Int,
+    val cardFeePercentage: Double,
+    val cardFeeFixed: Double,
+) {
+    /** O que o cartão cobra em cima de [reais]; o Pix não cobra nada. */
+    fun cardFeeFor(reais: Int): Double = kotlin.math.round((reais * cardFeePercentage + cardFeeFixed * 100)) / 100.0
+
+    fun accepts(reais: Int?): Boolean = reais != null && reais in min..max
+
+    companion object {
+        val Off = TopupOffer(false, null, 10, 500, emptyList(), 100, 0.0, 0.0)
+    }
+}
+
+enum class TopupMethod(val apiValue: String) { Pix("pix"), Card("card") }
+
+/**
+ * Uma compra de pixels em andamento ou concluída.
+ */
+data class WalletTopup(
+    val id: Long,
+    val pixels: Int,
+    val amount: Double,
+    val cardFee: Double,
+    val charged: Double,
+    val method: TopupMethod,
+    val credited: Boolean,
+    val refused: Boolean,
+    val pixCode: String?,
+    val pixQrCodeBase64: String?,
+    /** Instante em que o Pix vence, em epoch de milissegundos. */
+    val pixExpiresAt: Long?,
+)
 
 /**
  * A geladeira de onde a pessoa vai tirar o produto (Fase 9.5).

@@ -31,6 +31,9 @@ object Routes {
     /** Carteira e extrato de pixels. */
     const val PIXELS = "pixels"
 
+    /** Comprar pixels para a carteira. */
+    const val BUY_PIXELS = "pixels/buy"
+
     /** Progressão por XP: nível, o que falta e o histórico. */
     const val PROGRESS = "progress"
 
