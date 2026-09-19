@@ -15,10 +15,9 @@ que foi feito nos apps irmãos. O detalhe de cada armadilha está lá:
 | Segurança dos dados | `docs/PRIVACIDADE-E-DADOS.md` | `docs/30-PRIVACIDADE-E-DADOS.md` |
 | Resposta ao App Review | `docs/APP-REVIEW-NOTAS.md` | — |
 
-O estado abaixo foi levantado do código em 19/09/2026, no branch
-`feat/geladeira-bluetooth` — **16 commits à frente do `main`**, com todo o
-rebrand Pixelstop. O build de loja sai desse código, então o primeiro passo é
-integrá-lo ao `main`.
+O estado abaixo foi levantado do código em 19/09/2026. O branch
+`feat/geladeira-bluetooth`, com todo o rebrand Pixelstop, foi integrado ao
+`main` no mesmo dia — o build de loja sai do `main`.
 
 | Item | Valor hoje |
 |---|---|
@@ -159,7 +158,7 @@ de revisão das duas lojas.
 
 - [ ] Decisões 1 e 2 tomadas
 - [ ] Bloqueadores 1–5 resolvidos
-- [ ] `feat/geladeira-bluetooth` integrado ao `main`
+- [x] `feat/geladeira-bluetooth` integrado ao `main` (19/09)
 - [ ] Versão `1.0.0` (versionCode 1) no `gradle.properties`
 - [ ] `./gradlew :androidApp:bundleProductionRelease` assinado e testado num aparelho
 - [ ] Ícone 512×512 e gráfico de destaque 1024×500
@@ -465,7 +464,7 @@ Destino: `docs/imagens/loja/` e `docs/imagens/loja-ios/`.
 ## Ordem sugerida
 
 1. Decisões 1–3.
-2. Integrar o branch ao `main` (a URL já foi corrigida).
+2. ~~Integrar o branch ao `main` e corrigir a URL~~ — feito em 19/09.
 3. Backend: política 1.1.0, termos, e-mail de suporte, contas de revisão.
 4. Keystore, build release, teste no aparelho.
 5. Vitrine, capturas, ícone e destaque.
