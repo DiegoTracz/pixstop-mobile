@@ -42,15 +42,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.pixstop.mobile.domain.model.AccountUser
 import com.pixstop.mobile.domain.access.Destination
 import com.pixstop.mobile.domain.access.RoleHelper
 import com.pixstop.mobile.domain.model.ActiveCompany
+import com.pixstop.mobile.domain.model.MascotState
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.BottomNavItem
 import com.pixstop.mobile.ui.components.CompanySwitcherSheet
 import com.pixstop.mobile.ui.components.PixelBottomNav
+import com.pixstop.mobile.ui.components.PixelMascot
 import com.pixstop.mobile.ui.components.PixelTopBar
 import com.pixstop.mobile.ui.components.PlayerHud
 import com.pixstop.mobile.ui.components.PlayerMenuHeader
@@ -147,8 +150,8 @@ fun HomeScreen(
     // desaparece em dois segundos e meio é pior do que não existir: a pessoa
     // lê, estica o dedo, e o toque cai na barra de navegação que estava
     // embaixo. O prazo é o tempo de ler e alcançar.
-    LaunchedEffect(cart.message) {
-        if (cart.message != null) {
+    LaunchedEffect(cart.message, cart.addError) {
+        if (cart.message != null || cart.addError != null) {
             delay(CART_NOTICE_MILLIS)
             cartViewModel.dismissMessage()
         }
@@ -248,8 +251,10 @@ fun HomeScreen(
             },
             bottomBar = {
                 Column {
-                    cart.message?.let { text ->
-                        CartNotice(text = text, onOpenCart = openCartDrawer)
+                    // A recusa vence o sucesso: as duas nunca vêm juntas, mas se
+                    // viessem, o que a pessoa precisa saber é que não entrou.
+                    (cart.addError ?: cart.message)?.let { text ->
+                        CartNotice(text = text, isError = cart.addError != null, onOpenCart = openCartDrawer)
                     }
 
                     PixelBottomNav(
@@ -308,38 +313,58 @@ fun HomeScreen(
     }
 }
 
-/**
- * "Adicionado ao carrinho", com o caminho para o carrinho ao lado.
- *
- * Antes só o número do ícone mudava: quem tocou no botão não tinha como
- * saber se o toque pegou sem procurar o contador no canto da tela.
- */
 /** Quanto o aviso do carrinho fica no ar. Tem um botão dentro: precisa dar tempo de tocar. */
 private const val CART_NOTICE_MILLIS = 6_000L
 
+/**
+ * O aviso do carrinho, logo acima da barra de navegação.
+ *
+ * Antes só o número do ícone mudava, e depois veio uma faixa verde lisa que
+ * não parecia do app. Agora é o painel de sempre: fundo escuro, borda de 2 dp
+ * na cor do que aconteceu, o mascote dizendo o mesmo, título na fonte pixel e
+ * a frase na fonte de texto, que é a que se lê de relance.
+ *
+ * Deu certo, é verde e "no carrinho". Não deu (quase sempre o estoque acabou
+ * e não cabe mais uma), é vermelho e a frase do servidor diz quanto resta.
+ * O caminho para o carrinho fica nos dois casos.
+ */
 @Composable
-private fun CartNotice(text: String, onOpenCart: () -> Unit) {
+private fun CartNotice(text: String, isError: Boolean, onOpenCart: () -> Unit) {
+    val accent = if (isError) PixColors.Pink else PixColors.Green
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(PixColors.Green)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .border(2.dp, accent)
+            .background(PixColors.Darker)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Fonte de texto, não a de rótulo: a pixelada de 6sp em cima do
-        // verde vivo é bonita e ilegível, e este aviso existe para ser lido
-        // de relance.
-        Text(text = text, style = PixTypography.bodyRegular, color = PixColors.Dark)
+        PixelMascot(
+            state = if (isError) MascotState.Error else MascotState.Success,
+            size = 36.dp,
+            decorative = true,
+        )
+
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = if (isError) "NÃO DEU" else "NO CARRINHO!",
+                style = PixTypography.sectionTitle.copy(fontSize = 10.sp),
+                color = accent,
+            )
+            Text(text = text, style = PixTypography.bodySecondary)
+        }
 
         Text(
-            text = "Ver carrinho",
-            style = PixTypography.bodyRegular,
-            color = PixColors.Dark,
+            text = "VER",
+            style = PixTypography.buttonTextSm,
+            color = PixColors.Cyan,
             modifier = Modifier
-                .border(2.dp, PixColors.Dark)
-                .clickable(onClick = onOpenCart)
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+                .border(2.dp, PixColors.Cyan)
+                .clickable(onClickLabel = "Ver carrinho", onClick = onOpenCart)
+                .padding(horizontal = 10.dp, vertical = 8.dp),
         )
     }
 }

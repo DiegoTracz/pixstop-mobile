@@ -22,6 +22,12 @@ data class CartUiState(
     val busyItemId: Long? = null,
     val error: String? = null,
     val message: String? = null,
+    /**
+     * A recusa de um "adicionar": sem estoque para mais uma, quase sempre. É
+     * dita na hora, no aviso de onde a pessoa tocou, e não mora em `error`,
+     * senão reaparecia solta ao abrir o carrinho, sem contexto.
+     */
+    val addError: String? = null,
     /** Pedido de produto de outra geladeira, esperando a pessoa decidir. */
     val conflict: ApplianceConflict? = null,
     /** Instante do relógio do aparelho, para o contador da reserva. */
@@ -115,12 +121,12 @@ class CartViewModel(
 
     fun add(productId: Long, quantity: Int = 1, applianceId: Long? = null, onAdded: () -> Unit = {}) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(error = null, message = null, conflict = null)
+            _uiState.value = _uiState.value.copy(error = null, message = null, addError = null, conflict = null)
 
             when (val result = cart.add(productId, quantity, applianceId)) {
                 is Outcome.Success -> {
                     reload()
-                    _uiState.value = _uiState.value.copy(message = "Adicionado ao carrinho.")
+                    _uiState.value = _uiState.value.copy(message = addedNotice(_uiState.value.cart, productId))
                     onAdded()
                 }
 
@@ -134,7 +140,7 @@ class CartViewModel(
                             conflict = ApplianceConflict(error.message, applianceId, productId, quantity),
                         )
                     } else {
-                        _uiState.value = _uiState.value.copy(error = error.message)
+                        _uiState.value = _uiState.value.copy(addError = error.message)
                     }
                 }
             }
@@ -201,7 +207,7 @@ class CartViewModel(
     }
 
     fun dismissMessage() {
-        _uiState.value = _uiState.value.copy(message = null, error = null)
+        _uiState.value = _uiState.value.copy(message = null, error = null, addError = null)
     }
 
     private suspend fun reload() {
@@ -231,4 +237,15 @@ class CartViewModel(
             }
         }
     }
+}
+
+/**
+ * A frase do aviso de "entrou no carrinho": quantas unidades daquele produto
+ * estão lá agora. É o que mostra que tocar de novo somou, em vez de só repetir
+ * que deu certo. Sem o item à mão (o carrinho não recarregou), a frase de antes.
+ */
+internal fun addedNotice(cart: Cart, productId: Long): String {
+    val line = cart.items.firstOrNull { it.product.id == productId } ?: return "Adicionado ao carrinho."
+
+    return "${line.quantity} × ${line.product.name}"
 }

@@ -116,7 +116,7 @@ fun ProductDetailScreen(
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    cart.error?.let {
+                    (cart.addError ?: cart.error)?.let {
                         Text(text = it, style = PixTypography.errorText)
                     }
 

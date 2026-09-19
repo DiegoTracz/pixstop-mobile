@@ -93,4 +93,21 @@ class CartUiStateTest {
 
         assertEquals(3, state.itemCount)
     }
+
+    @Test
+    fun `o aviso de adicionado diz quantas unidades daquele produto ja estao no carrinho`() {
+        val cart = Cart(
+            items = listOf(linha(7, null).copy(quantity = 2)),
+            totalItems = 2,
+            total = 6.0,
+            reservationMinutes = 5,
+        )
+
+        assertEquals("2 × Água Mineral 500ml", addedNotice(cart, productId = 1))
+    }
+
+    @Test
+    fun `sem o item no carrinho o aviso volta a frase de sempre`() {
+        assertEquals("Adicionado ao carrinho.", addedNotice(Cart.Empty, productId = 1))
+    }
 }
