@@ -112,10 +112,11 @@ fun BuyPixelsScreen(
                                 secondsLeft = state.pixSecondsLeft,
                                 onCopy = { clipboard.setText(AnnotatedString(topup.pixCode.orEmpty())) },
                             )
-                            PixelLoader(
-                                modifier = Modifier.fillMaxWidth(),
-                                message = "Assim que o pagamento cair, os pixels entram na carteira.",
-                                size = 40.dp,
+                            // O PixBlock já diz que está esperando o pagamento; aqui
+                            // só o que muda nesta compra: para onde vão os pixels.
+                            Text(
+                                text = "Assim que o pagamento cair, os pixels entram na carteira.",
+                                style = PixTypography.bodySecondary,
                             )
                             PixelButton(
                                 text = "Escolher outro valor",
