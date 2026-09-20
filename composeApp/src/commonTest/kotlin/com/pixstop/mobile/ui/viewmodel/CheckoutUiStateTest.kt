@@ -19,13 +19,11 @@ class CheckoutUiStateTest {
     private fun checkout(
         gateway: Boolean = true,
         cards: List<SavedCard> = emptyList(),
-        balance: Double = 0.0,
         publicKey: Boolean = true,
     ) = Checkout(
         productsTotal = 10.0,
         walletPixels = 0,
         walletPixelsAsMoney = 0,
-        walletBalance = balance,
         maxPixels = 0,
         pixelsPerReal = 100,
         minPixelsRedeem = 100,
@@ -102,7 +100,7 @@ class CheckoutUiStateTest {
     fun `sem gateway nao ha PIX nem cartao`() {
         val state = CheckoutUiState(checkout = checkout(gateway = false, cards = listOf(cartao)))
 
-        assertEquals(listOf(PaymentMethod.Balance), state.availableMethods)
+        assertEquals(listOf(PaymentMethod.Pixels), state.availableMethods)
     }
 
     @Test
@@ -128,11 +126,8 @@ class CheckoutUiStateTest {
         assertTrue(comCartao.canChooseInstallments)
         assertFalse(comCartao.copy(method = PaymentMethod.Money).canChooseInstallments)
 
-        // Saldo cobrindo tudo: não sobra nada para o cartão parcelar.
-        val semCobranca = comCartao.copy(
-            checkout = checkout(cards = listOf(cartao), balance = 50.0),
-            useBalance = true,
-        )
+        // Pixels cobrindo tudo: não sobra nada para o cartão parcelar.
+        val semCobranca = comCartao.copy(pixels = 1_000)
 
         assertFalse(semCobranca.canChooseInstallments)
     }

@@ -17,7 +17,6 @@ import androidx.compose.ui.window.Dialog
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelInput
-import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.CompanyAction
@@ -55,16 +54,10 @@ fun CompanyActionDialog(
                 PixelInput(
                     value = state.amountText,
                     onValueChange = onAmountChange,
-                    label = if (action is CompanyAction.AdjustBalance) "Valor em reais" else "Quantidade de pixels",
-                    placeholder = if (action is CompanyAction.AdjustBalance) "0,00" else "0",
+                    label = "Quantidade de pixels",
+                    placeholder = "0",
                     enabled = !state.isWorking,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = if (action is CompanyAction.AdjustBalance) {
-                            KeyboardType.Decimal
-                        } else {
-                            KeyboardType.Number
-                        },
-                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -110,7 +103,6 @@ private fun title(action: CompanyAction): String = when (action) {
     is CompanyAction.ApproveOrder -> "Aprovar pedido"
     is CompanyAction.CancelOrder -> "Cancelar pedido"
     is CompanyAction.ToggleUser -> if (action.member.isActive) "Remover acesso" else "Liberar acesso"
-    is CompanyAction.AdjustBalance -> if (action.credit) "Creditar saldo" else "Debitar saldo"
     is CompanyAction.AllocatePixels -> "Alocar pixels"
     is CompanyAction.DistributePixels -> "Dar pixels"
 }
@@ -124,19 +116,13 @@ private fun explanation(action: CompanyAction): String = when (action) {
             "Quem comprou vai ler o motivo."
 
     is CompanyAction.CancelOrder ->
-        "O estoque volta para a vitrine e os pixels e o saldo voltam para quem comprou. " +
+        "O estoque volta para a vitrine e os pixels voltam para quem comprou. " +
             "O que foi pago em dinheiro é estornado pelo gateway."
 
     is CompanyAction.ToggleUser -> if (action.member.isActive) {
         "${action.member.name} perde o acesso a esta empresa e os pixels dela voltam para o cofre."
     } else {
         "${action.member.name} volta a ter acesso a esta empresa."
-    }
-
-    is CompanyAction.AdjustBalance -> if (action.credit) {
-        "O valor entra no saldo de ${action.member.name}, que hoje é de ${formatMoney(action.member.balance)}."
-    } else {
-        "O valor sai do saldo de ${action.member.name}, que hoje é de ${formatMoney(action.member.balance)}."
     }
 
     is CompanyAction.AllocatePixels ->
@@ -158,7 +144,6 @@ private fun confirmLabel(action: CompanyAction): String = when (action) {
     is CompanyAction.ApproveOrder -> "Aprovar"
     is CompanyAction.CancelOrder -> "Cancelar pedido"
     is CompanyAction.ToggleUser -> if (action.member.isActive) "Remover" else "Liberar"
-    is CompanyAction.AdjustBalance -> if (action.credit) "Creditar" else "Debitar"
     is CompanyAction.AllocatePixels -> "Alocar"
     is CompanyAction.DistributePixels -> "Distribuir"
 }
@@ -166,6 +151,5 @@ private fun confirmLabel(action: CompanyAction): String = when (action) {
 private fun isDestructive(action: CompanyAction): Boolean = when (action) {
     is CompanyAction.CancelOrder -> true
     is CompanyAction.ToggleUser -> action.member.isActive
-    is CompanyAction.AdjustBalance -> !action.credit
     else -> false
 }

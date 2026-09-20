@@ -42,7 +42,6 @@ class OrderRepository(private val client: HttpClient) {
     suspend fun place(
         method: PaymentMethod,
         pixels: Int,
-        balance: Double,
         savedCardId: Long? = null,
         installments: Int? = null,
         cardToken: String? = null,
@@ -58,7 +57,6 @@ class OrderRepository(private val client: HttpClient) {
                     OrderStoreRequest(
                         paymentMethod = method.apiValue,
                         pixels = pixels.takeIf { it > 0 },
-                        balance = balance.takeIf { it > 0 },
                         // Tudo de cartão só sai quando o método é cartão;
                         // mandá-los no PIX faria o servidor guardar parcelas de
                         // um pagamento à vista.

@@ -33,7 +33,6 @@ sealed interface CompanyAction {
     data class ApproveOrder(val order: CompanyOrder) : CompanyAction
     data class CancelOrder(val order: CompanyOrder) : CompanyAction
     data class ToggleUser(val member: CompanyMember) : CompanyAction
-    data class AdjustBalance(val member: CompanyMember, val credit: Boolean) : CompanyAction
     data class AllocatePixels(val department: Department) : CompanyAction
     data class DistributePixels(val members: List<CompanyMember>) : CompanyAction
 }
@@ -55,7 +54,6 @@ data class CompanyUiState(
 ) {
     val amount: Int get() = amountText.toIntOrNull() ?: 0
 
-    val money: Double get() = amountText.replace(',', '.').toDoubleOrNull() ?: 0.0
 
     val chosenMembers: List<CompanyMember> get() = members.filter { it.id in chosen }
 
@@ -66,15 +64,13 @@ data class CompanyUiState(
         get() = pending is CompanyAction.ApproveOrder || pending is CompanyAction.CancelOrder
 
     val needsAmount: Boolean
-        get() = pending is CompanyAction.AdjustBalance ||
-            pending is CompanyAction.AllocatePixels ||
+        get() = pending is CompanyAction.AllocatePixels ||
             pending is CompanyAction.DistributePixels
 
     val canConfirm: Boolean
         get() = when {
             isWorking -> false
             needsReason -> reason.trim().length >= MIN_REASON
-            pending is CompanyAction.AdjustBalance -> money > 0
             needsAmount -> amount > 0
             else -> pending != null
         }
@@ -150,12 +146,7 @@ class CompanyViewModel(private val company: CompanyRepository) : ViewModel() {
     }
 
     fun onAmountChange(value: String) {
-        val filtered = if (_uiState.value.pending is CompanyAction.AdjustBalance) {
-            // Saldo é em reais: vírgula e ponto passam, o resto não.
-            value.filter { it.isDigit() || it == ',' || it == '.' }.take(10)
-        } else {
-            value.filter { it.isDigit() }.take(7)
-        }
+        val filtered = value.filter { it.isDigit() }.take(7)
 
         _uiState.value = _uiState.value.copy(amountText = filtered, error = null)
     }
@@ -189,13 +180,6 @@ class CompanyViewModel(private val company: CompanyRepository) : ViewModel() {
                         is Outcome.Success -> Outcome.Success(Unit)
                         is Outcome.Failure -> Outcome.Failure(toggled.error)
                     }
-
-                is CompanyAction.AdjustBalance -> company.adjustBalance(
-                    userIds = listOf(action.member.id),
-                    action = if (action.credit) "add" else "subtract",
-                    amount = state.money,
-                    reason = state.reason,
-                )
 
                 is CompanyAction.AllocatePixels ->
                     company.allocateToDepartment(action.department.id, state.amount, state.reason)
@@ -237,9 +221,6 @@ class CompanyViewModel(private val company: CompanyRepository) : ViewModel() {
         is CompanyAction.CancelOrder -> "Pedido cancelado."
         is CompanyAction.ToggleUser ->
             if (action.member.isActive) "Acesso removido." else "Acesso liberado."
-
-        is CompanyAction.AdjustBalance ->
-            if (action.credit) "Saldo creditado." else "Saldo debitado."
 
         is CompanyAction.AllocatePixels -> "${state.amount} pixels na verba de ${action.department.name}."
         is CompanyAction.DistributePixels ->

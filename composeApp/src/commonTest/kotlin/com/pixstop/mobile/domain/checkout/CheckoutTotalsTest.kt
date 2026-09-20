@@ -14,11 +14,10 @@ import kotlin.test.assertTrue
 class CheckoutTotalsTest {
 
     @Test
-    fun `sem pixels nem saldo, tudo vira dinheiro`() {
+    fun `sem pixels, tudo vira dinheiro`() {
         val total = CheckoutTotals.calculate(products = 6.0, method = PaymentMethod.Money)
 
         assertEquals(6.0, total.money)
-        assertEquals(0.0, total.balance)
         assertEquals(0.0, total.pixelsDiscount)
         assertEquals(6.0, total.charged)
         assertTrue(total.needsGateway)
@@ -42,26 +41,13 @@ class CheckoutTotalsTest {
     }
 
     @Test
-    fun `no metodo saldo o saldo cobre o que sobrou`() {
-        val total = CheckoutTotals.calculate(products = 9.0, method = PaymentMethod.Balance, pixelsToRedeem = 200)
+    fun `o que os pixels nao cobrem e cobrado`() {
+        // O saldo em reais saiu (P4): sobrar significa pagar.
+        val total = CheckoutTotals.calculate(products = 9.0, method = PaymentMethod.Money, pixelsToRedeem = 200)
 
         assertEquals(2.0, total.pixelsDiscount)
-        assertEquals(7.0, total.balance)
-        assertEquals(0.0, total.money)
-        assertFalse(total.needsGateway)
-    }
-
-    @Test
-    fun `saldo escolhido nunca cobre mais do que falta`() {
-        val total = CheckoutTotals.calculate(
-            products = 6.0,
-            method = PaymentMethod.Mixed,
-            pixelsToRedeem = 200,
-            balanceToUse = 50.0,
-        )
-
-        assertEquals(4.0, total.balance, "só sobravam R$ 4,00 depois dos pixels")
-        assertEquals(0.0, total.money)
+        assertEquals(7.0, total.money)
+        assertTrue(total.needsGateway)
     }
 
     @Test
@@ -69,7 +55,7 @@ class CheckoutTotalsTest {
         val semDinheiro = CheckoutTotals.calculate(
             products = 6.0,
             method = PaymentMethod.Card,
-            balanceToUse = 6.0,
+            pixelsToRedeem = 600,
             cardFeePercentage = 4.99,
             cardFeeFixed = 0.39,
         )

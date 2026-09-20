@@ -116,7 +116,6 @@ fun CheckoutScreen(
                             MethodOption(
                                 method = method,
                                 selected = state.method == method,
-                                balance = checkout.walletBalance,
                                 onClick = { viewModel.onMethodChange(method) },
                             )
                         }
@@ -232,25 +231,11 @@ fun CheckoutScreen(
                         }
                     }
 
-                    if (checkout.walletBalance > 0 && state.method != PaymentMethod.Balance) {
-                        Section(title = "Saldo") {
-                            Toggle(
-                                label = "Usar meu saldo de ${formatMoney(checkout.walletBalance)}",
-                                checked = state.useBalance,
-                                onToggle = { viewModel.onUseBalanceChange(!state.useBalance) },
-                            )
-                        }
-                    }
-
                     Section(title = "Resumo") {
                         SummaryLine("Produtos", formatMoney(totals.products))
 
                         if (totals.pixelsDiscount > 0) {
                             SummaryLine("Pixels", "−${formatMoney(totals.pixelsDiscount)}", PixColors.Yellow)
-                        }
-
-                        if (totals.balance > 0) {
-                            SummaryLine("Saldo", "−${formatMoney(totals.balance)}", PixColors.Green)
                         }
 
                         if (totals.cardFee > 0) {
@@ -337,11 +322,9 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 private fun MethodOption(
     method: PaymentMethod,
     selected: Boolean,
-    balance: Double,
     onClick: () -> Unit,
 ) {
     val label = when (method) {
-        PaymentMethod.Balance -> "Saldo (${formatMoney(balance)})"
         PaymentMethod.Money -> "PIX"
         PaymentMethod.Card -> "Cartão"
         PaymentMethod.Pixels -> "Só pixels"

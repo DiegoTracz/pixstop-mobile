@@ -17,7 +17,6 @@ data class CompanyDashboard(
     val membersActive: Int,
     val corporatePixels: Int,
     val departmentPixels: Int,
-    val companyBalance: Double,
 )
 
 data class TopProduct(val name: String, val quantity: Int, val revenue: Double)
@@ -52,6 +51,5 @@ data class CompanyMember(
     val email: String?,
     val role: CompanyRole,
     val isActive: Boolean,
-    val balance: Double,
     val pixelAvailable: Int,
 )

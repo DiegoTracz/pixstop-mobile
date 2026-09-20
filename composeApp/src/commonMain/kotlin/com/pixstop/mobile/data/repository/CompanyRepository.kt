@@ -4,7 +4,6 @@ import com.pixstop.mobile.core.config.ApiConfig
 import com.pixstop.mobile.core.network.safeCall
 import com.pixstop.mobile.core.network.safeCallPaged
 import com.pixstop.mobile.data.remote.dto.AllocateRequest
-import com.pixstop.mobile.data.remote.dto.BalanceRequest
 import com.pixstop.mobile.data.remote.dto.CompanyDashboardDto
 import com.pixstop.mobile.data.remote.dto.CompanyOrderDto
 import com.pixstop.mobile.data.remote.dto.CompanyUserDto
@@ -85,18 +84,6 @@ class CompanyRepository(private val client: HttpClient) {
             client.post(ApiConfig.Endpoints.companyUserToggle(userId)) { setBody(ToggleRequest(returnPixels)) }
         }.map { it.isActive }
 
-    suspend fun adjustBalance(
-        userIds: List<Long>,
-        action: String,
-        amount: Double,
-        reason: String?,
-    ): Outcome<Unit> =
-        safeCall<JsonElement>(TAG) {
-            client.post(ApiConfig.Endpoints.COMPANY_BALANCE) {
-                setBody(BalanceRequest(userIds, action, amount, reason?.takeIf { it.isNotBlank() }))
-            }
-        }.map { }
-
     /** Move pixels do cofre da empresa para a verba de um departamento. */
     suspend fun allocateToDepartment(departmentId: Long, amount: Int, reason: String?): Outcome<Unit> =
         safeCall<JsonElement>(TAG) {
@@ -133,7 +120,6 @@ private fun CompanyDashboardDto.toDomain() = CompanyDashboard(
     membersActive = members.active,
     corporatePixels = wallet.corporatePixels,
     departmentPixels = wallet.departmentPixels,
-    companyBalance = wallet.companyBalance,
 )
 
 private fun CompanyOrderDto.toDomain() = CompanyOrder(
@@ -157,7 +143,6 @@ private fun CompanyUserDto.toDomain() = CompanyMember(
     email = email,
     role = CompanyRole.from(role),
     isActive = isActive,
-    balance = balance,
     pixelAvailable = pixelAvailable,
 )
 

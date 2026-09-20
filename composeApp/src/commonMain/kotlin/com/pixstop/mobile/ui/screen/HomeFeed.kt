@@ -85,7 +85,6 @@ fun HomeFeed(
         item {
             WalletCard(
                 wallet = state.wallet,
-                balance = company?.balance ?: 0.0,
                 onClick = onOpenPixels,
             )
         }
@@ -181,7 +180,7 @@ private fun Greeting(greeting: String, name: String?, company: String?) {
  * tem, nenhum preço abaixo significa alguma coisa.
  */
 @Composable
-private fun WalletCard(wallet: PixelWallet, balance: Double, onClick: () -> Unit) {
+private fun WalletCard(wallet: PixelWallet, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -196,12 +195,6 @@ private fun WalletCard(wallet: PixelWallet, balance: Double, onClick: () -> Unit
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(text = "SALDO", style = PixTypography.badgeText, color = PixColors.Gray400)
-
-                Text(text = formatMoney(balance), style = PixTypography.pageTitle, color = PixColors.Green)
-            }
-
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(2.dp),

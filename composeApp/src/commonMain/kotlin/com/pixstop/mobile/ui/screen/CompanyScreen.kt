@@ -91,8 +91,6 @@ fun CompanyScreen(
                         chosen = state.chosen,
                         onToggleChosen = viewModel::toggleChosen,
                         onDistribute = { viewModel.ask(CompanyAction.DistributePixels(state.chosenMembers)) },
-                        onCredit = { viewModel.ask(CompanyAction.AdjustBalance(it, credit = true)) },
-                        onDebit = { viewModel.ask(CompanyAction.AdjustBalance(it, credit = false)) },
                         onToggleAccess = { viewModel.ask(CompanyAction.ToggleUser(it)) },
                     )
 
@@ -181,7 +179,6 @@ private fun SummarySection(dashboard: CompanyDashboard) {
             Card(title = "O que a empresa tem") {
                 Line("Pixels no cofre", dashboard.corporatePixels.toString(), PixColors.Yellow)
                 Line("Pixels nos times", dashboard.departmentPixels.toString(), PixColors.Yellow)
-                Line("Saldo distribuído", formatMoney(dashboard.companyBalance), PixColors.Green)
                 Line("Pessoas ativas", "${dashboard.membersActive} de ${dashboard.membersTotal}")
             }
         }
@@ -295,8 +292,6 @@ private fun PeopleSection(
     chosen: Set<Long>,
     onToggleChosen: (Long) -> Unit,
     onDistribute: () -> Unit,
-    onCredit: (CompanyMember) -> Unit,
-    onDebit: (CompanyMember) -> Unit,
     onToggleAccess: (CompanyMember) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -330,8 +325,6 @@ private fun PeopleSection(
                     member = member,
                     checked = member.id in chosen,
                     onToggleChosen = { onToggleChosen(member.id) },
-                    onCredit = { onCredit(member) },
-                    onDebit = { onDebit(member) },
                     onToggleAccess = { onToggleAccess(member) },
                 )
             }
@@ -344,8 +337,6 @@ private fun MemberCard(
     member: CompanyMember,
     checked: Boolean,
     onToggleChosen: () -> Unit,
-    onCredit: () -> Unit,
-    onDebit: () -> Unit,
     onToggleAccess: () -> Unit,
 ) {
     Column(
@@ -379,7 +370,6 @@ private fun MemberCard(
             }
 
             Column(horizontalAlignment = Alignment.End) {
-                Text(text = formatMoney(member.balance), color = PixColors.Green)
 
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                     PixelCoin(size = 12.dp)
@@ -394,15 +384,6 @@ private fun MemberCard(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PixelButton(text = "+ Saldo", onClick = onCredit, buttonSize = PixelButtonSize.Small)
-
-            PixelButton(
-                text = "− Saldo",
-                onClick = onDebit,
-                variant = PixelButtonVariant.Secondary,
-                buttonSize = PixelButtonSize.Small,
-            )
-
             PixelButton(
                 text = if (member.isActive) "Desativar" else "Reativar",
                 onClick = onToggleAccess,

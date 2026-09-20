@@ -6,13 +6,12 @@ import kotlin.math.min
 import kotlin.math.roundToLong
 
 /**
- * Como o total se divide entre pixels, saldo e dinheiro.
+ * Como o total se divide entre pixels e dinheiro.
  */
 data class CheckoutBreakdown(
     val products: Double,
     val pixels: Int,
     val pixelsDiscount: Double,
-    val balance: Double,
     val money: Double,
     val cardFee: Double,
     val charged: Double,
@@ -27,7 +26,7 @@ data class CheckoutBreakdown(
  * Existe porque a tela precisa mostrar o desfecho antes de enviar, e uma conta
  * própria daria um número diferente do cobrado — o pior tipo de surpresa numa
  * tela de pagamento. As regras são as mesmas do `OrderTotalsCalculator`:
- * pixels viram desconto, saldo cobre o que sobrou, a taxa de cartão entra só
+ * pixels viram desconto, o que sobrou é cobrado, a taxa de cartão entra só
  * quando há dinheiro a cobrar, e a taxa de split é retida da empresa e nunca
  * somada a quem compra.
  */
@@ -37,7 +36,6 @@ object CheckoutTotals {
         products: Double,
         method: PaymentMethod,
         pixelsToRedeem: Int = 0,
-        balanceToUse: Double = 0.0,
         pixelsPerReal: Int = 100,
         cardFeePercentage: Double = 0.0,
         cardFeeFixed: Double = 0.0,
@@ -46,15 +44,9 @@ object CheckoutTotals {
         val pixelsDiscount = min(pixelsToMoney(pixelsToRedeem, pixelsPerReal), productsTotal)
         val remaining = round2(productsTotal - pixelsDiscount)
 
-        // No método "saldo", o saldo cobre tudo que sobrou; nos outros, cobre
-        // só o que a pessoa escolheu usar.
-        val balance = if (method == PaymentMethod.Balance) {
-            remaining
-        } else {
-            round2(min(max(balanceToUse, 0.0), remaining))
-        }
-
-        val money = round2(remaining - balance)
+        // O saldo em reais saiu (docs/plans/CARTEIRA_PIXELS.md, P4): a
+        // carteira é só de pixels, e o que os pixels não cobrem é cobrado.
+        val money = remaining
 
         val cardFee = if (money > 0 && method == PaymentMethod.Card) {
             round2(money * cardFeePercentage / 100 + cardFeeFixed)
@@ -66,7 +58,6 @@ object CheckoutTotals {
             products = productsTotal,
             pixels = pixelsToRedeem,
             pixelsDiscount = pixelsDiscount,
-            balance = balance,
             money = money,
             cardFee = cardFee,
             charged = round2(money + cardFee),
@@ -112,7 +103,6 @@ object CheckoutTotals {
  * Formas de pagamento aceitas pelo servidor.
  */
 enum class PaymentMethod(val apiValue: String) {
-    Balance("balance"),
     Pixels("pixels"),
     Money("money"),
     Card("card"),

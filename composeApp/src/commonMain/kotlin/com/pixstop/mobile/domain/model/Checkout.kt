@@ -9,7 +9,6 @@ data class Checkout(
     val walletPixels: Int,
     /** Pixels comprados: pagam a compra inteira, fora do teto de desconto. */
     val walletPixelsAsMoney: Int,
-    val walletBalance: Double,
     val maxPixels: Int,
     val pixelsPerReal: Int,
     val minPixelsRedeem: Int,

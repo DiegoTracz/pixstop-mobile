@@ -28,7 +28,6 @@ class OrderRepositoryTest {
         OrderRepository(api.clientReturning(orderBody)).place(
             method = PaymentMethod.Card,
             pixels = 0,
-            balance = 0.0,
             savedCardId = 4,
             installments = 3,
         )
@@ -45,7 +44,6 @@ class OrderRepositoryTest {
         OrderRepository(api.clientReturning(orderBody)).place(
             method = PaymentMethod.Card,
             pixels = 0,
-            balance = 0.0,
             savedCardId = 4,
             installments = 1,
         )
@@ -60,7 +58,6 @@ class OrderRepositoryTest {
         OrderRepository(api.clientReturning(orderBody)).place(
             method = PaymentMethod.Money,
             pixels = 0,
-            balance = 0.0,
             savedCardId = 4,
             installments = 6,
         )
@@ -70,18 +67,14 @@ class OrderRepositoryTest {
     }
 
     @Test
-    fun `pixels e saldo zerados nao entram no corpo`() = runTest {
+    fun `pixels zerados nao entram no corpo`() = runTest {
         val api = FakeApi()
 
         OrderRepository(api.clientReturning(orderBody)).place(
-            method = PaymentMethod.Balance,
+            method = PaymentMethod.Money,
             pixels = 0,
-            balance = 0.0,
         )
 
-        // Repare no dois-pontos: `balance` sozinho também é o valor de
-        // `payment_method`, e a busca crua acusaria um campo que não existe.
         assertFalse(api.lastBody.contains("\"pixels\":"), api.lastBody)
-        assertFalse(api.lastBody.contains("\"balance\":"), api.lastBody)
     }
 }

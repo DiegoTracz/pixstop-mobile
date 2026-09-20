@@ -23,7 +23,6 @@ class CompanyUiStateTest {
         email = "ana.costa@alpha.com",
         role = CompanyRole.Member,
         isActive = true,
-        balance = 150.0,
         pixelAvailable = 3_050,
     )
 
@@ -62,21 +61,9 @@ class CompanyUiStateTest {
     }
 
     @Test
-    fun `saldo aceita virgula como separador decimal`() {
+    fun `quantidade zerada nao libera o botao`() {
         val state = CompanyUiState(
-            pending = CompanyAction.AdjustBalance(ana, credit = true),
-            amountText = "12,50",
-            isLoading = false,
-        )
-
-        assertEquals(12.5, state.money)
-        assertTrue(state.canConfirm)
-    }
-
-    @Test
-    fun `saldo zerado nao libera o botao`() {
-        val state = CompanyUiState(
-            pending = CompanyAction.AdjustBalance(ana, credit = false),
+            pending = CompanyAction.AllocatePixels(vendas),
             amountText = "0",
             isLoading = false,
         )

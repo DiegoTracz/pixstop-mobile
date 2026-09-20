@@ -237,7 +237,6 @@ object ApiConfig {
         const val COMPANY_ORDERS = "company/orders"
         const val COMPANY_USERS = "company/users"
         const val COMPANY_DEPARTMENTS = "company/departments"
-        const val COMPANY_BALANCE = "company/users/balance"
         const val COMPANY_PIXELS_DISTRIBUTE = "company/pixels/distribute"
         const val COMPANY_PIXELS_HISTORY = "company/pixels/history"
 

@@ -22,9 +22,8 @@ import kotlin.math.min
 
 data class CheckoutUiState(
     val checkout: Checkout? = null,
-    val method: PaymentMethod = PaymentMethod.Balance,
+    val method: PaymentMethod = PaymentMethod.Money,
     val pixels: Int = 0,
-    val useBalance: Boolean = true,
     val cardMode: CardMode = CardMode.Saved,
     val savedCardId: Long? = null,
     val card: CardInput = CardInput("", "", "", "", ""),
@@ -47,10 +46,10 @@ data class CheckoutUiState(
      */
     val availableMethods: List<PaymentMethod>
         get() {
-            val checkout = checkout ?: return listOf(PaymentMethod.Balance)
+            val checkout = checkout ?: return listOf(PaymentMethod.Pixels)
 
             return buildList {
-                add(PaymentMethod.Balance)
+                if (checkout.pixelsEnabled) add(PaymentMethod.Pixels)
                 if (checkout.gatewayAvailable) add(PaymentMethod.Money)
                 if (canPayWithCard) add(PaymentMethod.Card)
             }
@@ -82,13 +81,12 @@ data class CheckoutUiState(
 
     val breakdown: CheckoutBreakdown
         get() {
-            val checkout = checkout ?: return CheckoutBreakdown(0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0)
+            val checkout = checkout ?: return CheckoutBreakdown(0.0, 0, 0.0, 0.0, 0.0, 0.0)
 
             return CheckoutTotals.calculate(
                 products = checkout.productsTotal,
                 method = method,
                 pixelsToRedeem = pixels,
-                balanceToUse = if (useBalance) checkout.walletBalance else 0.0,
                 pixelsPerReal = checkout.pixelsPerReal,
                 cardFeePercentage = checkout.cardFeePercentage,
                 cardFeeFixed = checkout.cardFeeFixed,
@@ -110,20 +108,24 @@ data class CheckoutUiState(
             )
         }
 
-    /** Cashback estimado sobre o que sai de saldo e dinheiro, nunca sobre pixels. */
+    /**
+     * Cashback estimado: sobre o dinheiro e sobre o pixel que a pessoa comprou
+     * (esse ela pagou), nunca sobre o de bônus (P3).
+     */
     val estimatedCashback: Int
         get() {
             val checkout = checkout ?: return 0
-            val base = breakdown.balance + breakdown.money
+            val boughtPixels = min(breakdown.pixels, checkout.walletPixelsAsMoney)
+            val base = breakdown.money + boughtPixels.toDouble() / checkout.pixelsPerReal
 
             return (base * checkout.cashbackPercentage / 100 * checkout.pixelsPerReal).toInt()
         }
 
     /**
-     * Falta dinheiro quando o método é saldo e o saldo não cobre tudo.
+     * Falta dinheiro quando o método é só pixels e eles não cobrem tudo.
      */
     val missingMoney: Boolean
-        get() = method == PaymentMethod.Balance &&
+        get() = method == PaymentMethod.Pixels &&
             checkout != null &&
             breakdown.charged > 0
 
@@ -189,8 +191,8 @@ class CheckoutViewModel(
                         isLoading = false,
                         checkout = checkout,
                         // Começa no que a empresa aceita e a pessoa tem.
-                        method = if (checkout.walletBalance > 0 || !checkout.gatewayAvailable) {
-                            PaymentMethod.Balance
+                        method = if (!checkout.gatewayAvailable && checkout.pixelsEnabled) {
+                            PaymentMethod.Pixels
                         } else {
                             PaymentMethod.Money
                         },
@@ -255,9 +257,6 @@ class CheckoutViewModel(
         _uiState.value = state.copy(pixels = min(value, state.maxPixels).coerceAtLeast(0), error = null)
     }
 
-    fun onUseBalanceChange(value: Boolean) {
-        _uiState.value = _uiState.value.copy(useBalance = value, error = null)
-    }
 
     /**
      * Fecha o pedido.
@@ -302,7 +301,6 @@ class CheckoutViewModel(
             val result = orders.place(
                 method = state.method,
                 pixels = state.pixels,
-                balance = state.breakdown.balance,
                 savedCardId = state.savedCardId.takeIf { state.cardMode == CardMode.Saved },
                 installments = state.installments,
                 cardToken = token,

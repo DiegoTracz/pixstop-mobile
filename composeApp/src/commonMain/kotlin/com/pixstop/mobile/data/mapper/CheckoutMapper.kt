@@ -27,7 +27,6 @@ fun CheckoutDto.toDomain() = Checkout(
     productsTotal = totals.products,
     walletPixels = wallet.pixels,
     walletPixelsAsMoney = wallet.pixelsAsMoney,
-    walletBalance = wallet.balance,
     maxPixels = checkout.maxPixels,
     pixelsPerReal = checkout.pixelsPerReal,
     minPixelsRedeem = checkout.minPixelsRedeem,
@@ -74,6 +73,8 @@ fun OrderDto.toDomain() = Order(
     paymentMethodLabel = paymentMethodLabel,
     productsTotal = totals.products,
     pixels = totals.pixels,
+    // Os pedidos antigos foram pagos com saldo, e sem esta linha a soma do
+    // pedido não fecha (docs/plans/CARTEIRA_PIXELS.md, P4).
     balance = totals.balance,
     money = totals.money,
     cardFee = totals.cardFee,

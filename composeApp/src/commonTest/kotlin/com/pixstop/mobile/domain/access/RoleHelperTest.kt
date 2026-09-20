@@ -33,7 +33,6 @@ class RoleHelperTest {
         logoUrl = null,
         role = role,
         isManager = isManager,
-        balance = 0.0,
         pixelBalance = 0,
         pixelAvailable = 0,
         department = null,

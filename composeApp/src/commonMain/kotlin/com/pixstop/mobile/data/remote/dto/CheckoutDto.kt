@@ -41,7 +41,6 @@ data class CheckoutWalletDto(
     val pixels: Int = 0,
     /** Quanto da carteira é pixel comprado: paga a compra inteira, sem o teto. */
     @SerialName("pixels_as_money") val pixelsAsMoney: Int = 0,
-    val balance: Double = 0.0,
 )
 
 /**
@@ -90,7 +89,6 @@ data class SavedCardDto(
 data class OrderStoreRequest(
     @SerialName("payment_method") val paymentMethod: String,
     val pixels: Int? = null,
-    val balance: Double? = null,
     /** Cartão já guardado, quando a escolha foi por um deles. */
     @SerialName("saved_card_id") val savedCardId: Long? = null,
     val installments: Int? = null,

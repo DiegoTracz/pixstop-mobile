@@ -43,7 +43,6 @@ data class CompanyMembersDto(val total: Int = 0, val active: Int = 0)
 data class CompanyWalletDto(
     @SerialName("corporate_pixels") val corporatePixels: Int = 0,
     @SerialName("department_pixels") val departmentPixels: Int = 0,
-    @SerialName("company_balance") val companyBalance: Double = 0.0,
 )
 
 @Serializable
@@ -69,20 +68,11 @@ data class CompanyUserDto(
     val email: String? = null,
     val role: String? = null,
     @SerialName("is_active") val isActive: Boolean = true,
-    val balance: Double = 0.0,
     @SerialName("pixel_available") val pixelAvailable: Int = 0,
 )
 
 @Serializable
 data class OrderActionRequest(val action: String, val reason: String)
-
-@Serializable
-data class BalanceRequest(
-    @SerialName("user_ids") val userIds: List<Long>,
-    val action: String,
-    val amount: Double,
-    val reason: String? = null,
-)
 
 @Serializable
 data class AllocateRequest(val amount: Int, val reason: String? = null)
