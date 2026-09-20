@@ -81,21 +81,15 @@ fun PixelHistoryScreen(
             expiringSoon = state.wallet.expiringSoon,
         )
 
-        // Comprar pixels (docs/plans/CARTEIRA_PIXELS.md no servidor, P2):
-        // desligada, a razão aparece no lugar do botão.
-        if (onBuyPixels != null && !state.isLoading) {
-            val offer = state.wallet.topup
-            if (offer.enabled) {
-                PixelButton(
-                    text = "Comprar pixels",
-                    onClick = onBuyPixels,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                )
-            } else {
-                offer.reason?.let {
-                    Text(text = it, style = PixTypography.caption, modifier = Modifier.padding(horizontal = 20.dp))
-                }
-            }
+        // Comprar pixels (docs/plans/CARTEIRA_PIXELS.md no servidor): quem
+        // compra é a empresa, então o servidor costuma não oferecer — e aí
+        // nem o botão nem uma explicação aparecem, porque não há o que fazer.
+        if (onBuyPixels != null && !state.isLoading && state.wallet.topup.enabled) {
+            PixelButton(
+                text = "Comprar pixels",
+                onClick = onBuyPixels,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+            )
         }
 
         memberCode?.let { MemberCodeCard(it) }
