@@ -226,6 +226,21 @@ object ApiConfig {
         /** As últimas aberturas da geladeira (etapa C). */
         fun companyApplianceSessions(id: Long) = "company/appliances/$id/sessions"
 
+        // ── A visita do repositor (docs/plans/CONCILIACAO_MOBILE.md) ──────
+
+        /**
+         * A lista para contar, **sem o saldo esperado**: a cegueira é do
+         * contrato, não do layout. Vem junto o que há no depósito, porque o
+         * passo seguinte da visita é abastecer.
+         */
+        fun companyCountSheet(applianceId: Long) = "company/appliances/$applianceId/count-sheet"
+
+        /** O envio da contagem. Idempotente pelo `client_id`. */
+        fun companyStockCounts(applianceId: Long) = "company/appliances/$applianceId/stock-counts"
+
+        /** A sugestão de motivo, ou o "contei errado" de uma linha. */
+        fun companyStockCountItem(countId: Long, productId: Long) = "company/stock-counts/$countId/items/$productId"
+
         fun teamMembers(departmentId: Long) = "team/$departmentId/members"
 
         fun teamHistory(departmentId: Long) = "team/$departmentId/history"

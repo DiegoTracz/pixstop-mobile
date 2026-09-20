@@ -66,6 +66,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ConnectFridgeScreen(
     onBack: () -> Unit,
+    /** A visita à prateleira daquela geladeira (CONCILIACAO_MOBILE.md). */
+    onVisit: (Long) -> Unit = {},
     viewModel: ConnectFridgeViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -115,7 +117,7 @@ fun ConnectFridgeScreen(
                         )
 
                         ConnectStep.Done -> DoneStep(state, viewModel)
-                        ConnectStep.Detail -> DetailStep(state, viewModel)
+                        ConnectStep.Detail -> DetailStep(state, viewModel, onVisit)
                     }
                 }
             }
@@ -444,7 +446,7 @@ private fun DoneStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
  * nenhuma delas cabe numa lista.
  */
 @Composable
-private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
+private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel, onVisit: (Long) -> Unit = {}) {
     val device = state.chosen ?: return
 
     Text(device.name, style = PixTypography.sectionTitle, color = PixColors.Cyan)
@@ -551,6 +553,20 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
             value = if (stock.inAppliance == 1) "1 produto" else "${stock.inAppliance} produtos",
             accent = if (stock.inAppliance == 0) PixColors.Yellow else PixColors.Green,
             detail = stock.nextStep,
+        )
+    }
+
+    // A visita à prateleira: contar o que está lá antes de abastecer. É a
+    // única conciliação que existe, porque o razão só enxerga venda —
+    // quem levou sem pagar não deixou lançamento nenhum nele.
+    device.applianceId?.let { applianceId ->
+        SensorCard(
+            icon = AppIconType.Check,
+            label = "Visita",
+            value = "Contar a prateleira",
+            accent = PixColors.Cyan,
+            detail = "Conte o que você está vendo; o esperado aparece depois",
+            onClick = { onVisit(applianceId) },
         )
     }
 

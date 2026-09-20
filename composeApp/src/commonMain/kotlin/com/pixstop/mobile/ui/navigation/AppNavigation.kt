@@ -19,6 +19,7 @@ import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.ui.screen.BuyPixelsScreen
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
+import com.pixstop.mobile.ui.screen.VisitScreen
 import com.pixstop.mobile.ui.screen.LegalConsentScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
 import com.pixstop.mobile.ui.screen.CartScreen
@@ -388,7 +389,19 @@ fun AppNavigation() {
         }
 
         composable(Routes.FRIDGES) {
-            ConnectFridgeScreen(onBack = { navController.popBackStack() })
+            ConnectFridgeScreen(
+                onBack = { navController.popBackStack() },
+                onVisit = { applianceId -> navController.navigate(Routes.visit(applianceId)) },
+            )
+        }
+
+        // A visita à prateleira (CONCILIACAO_MOBILE.md): contar, ver as
+        // diferenças, abastecer. Só se chega a ela a partir de uma geladeira.
+        composable("${Routes.VISIT}/{applianceId}") { entry ->
+            VisitScreen(
+                applianceId = entry.arguments?.getString("applianceId")?.toLongOrNull() ?: 0L,
+                onBack = { navController.popBackStack() },
+            )
         }
 
         composable(Routes.OPERATOR) {

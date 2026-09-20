@@ -60,6 +60,15 @@ object Routes {
     /** Conectar e acompanhar as geladeiras (Fase 9.3). */
     const val FRIDGES = "fridges"
 
+    /**
+     * A visita do repositor a uma geladeira: contar, ver as diferenças e
+     * abastecer (docs/plans/CONCILIACAO_MOBILE.md). Alcançada a partir de uma
+     * geladeira, nunca do menu: visita sem geladeira não existe.
+     */
+    const val VISIT = "visit"
+
+    fun visit(applianceId: Long) = "visit/$applianceId"
+
     /** O painel de quem opera geladeiras em várias empresas (Fase 16). */
     const val OPERATOR = "operator"
 

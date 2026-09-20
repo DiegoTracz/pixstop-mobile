@@ -3,6 +3,7 @@ package com.pixstop.mobile.core.di
 import com.pixstop.mobile.core.network.GatewayClientFactory
 import com.pixstop.mobile.core.network.HttpClientFactory
 import com.pixstop.mobile.core.notification.NotificationEventBus
+import com.pixstop.mobile.core.storage.CountDraftStore
 import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.core.storage.TokenManager
 import com.pixstop.mobile.data.payment.CardTokenizer
@@ -17,6 +18,7 @@ import com.pixstop.mobile.core.storage.ThemeStore
 import com.pixstop.mobile.data.repository.AvatarRepository
 import com.pixstop.mobile.data.repository.FridgeRepository
 import com.pixstop.mobile.data.repository.OperatorRepository
+import com.pixstop.mobile.data.repository.VisitRepository
 import com.pixstop.mobile.data.repository.NotificationRepository
 import com.pixstop.mobile.data.repository.OrderRepository
 import com.pixstop.mobile.data.repository.ProfileRepository
@@ -35,6 +37,7 @@ import com.pixstop.mobile.ui.viewmodel.HomeFeedViewModel
 import com.pixstop.mobile.ui.viewmodel.CompanyViewModel
 import com.pixstop.mobile.ui.viewmodel.ConnectFridgeViewModel
 import com.pixstop.mobile.ui.viewmodel.OperatorViewModel
+import com.pixstop.mobile.ui.viewmodel.VisitViewModel
 import com.pixstop.mobile.ui.viewmodel.PixelAvatarViewModel
 import com.pixstop.mobile.ui.viewmodel.NotificationsViewModel
 import com.pixstop.mobile.ui.viewmodel.OrderViewModel
@@ -100,6 +103,10 @@ val dataModule: Module = module {
     single { CompanyRepository(get()) }
     single { FridgeRepository(get()) }
     single { OperatorRepository(get()) }
+    single { VisitRepository(get()) }
+    // O rascunho da contagem vive no armazenamento comum: é conveniência, não
+    // credencial, e perdê-lo custa trinta linhas digitadas, não segurança.
+    single { CountDraftStore(Settings()) }
     single { AvatarRepository(get()) }
     // O `Settings` comum não está no grafo: quem precisa dele o constrói,
     // como o TokenManager faz logo acima.
@@ -136,6 +143,7 @@ val viewModelModule: Module = module {
     viewModel { CompanyViewModel(get()) }
     viewModel { ConnectFridgeViewModel(get(), get(), get()) }
     viewModel { OperatorViewModel(get()) }
+    viewModel { VisitViewModel(get(), get()) }
     viewModel { PixelAvatarViewModel(get()) }
 }
 
