@@ -9,11 +9,11 @@ import com.pixstop.mobile.BuildKonfig
  * ║  As URLs são configuradas automaticamente via BuildKonfig por ambiente.    ║
  * ║                                                                           ║
  * ║  Android:                                                                 ║
- * ║    - Staging:   Build variant "stagingDebug" ou "stagingRelease"           ║
+ * ║    - Local:     Build variant "localDebug" ou "localRelease"               ║
  * ║    - Produção:  Build variant "productionDebug" ou "productionRelease"     ║
  * ║                                                                           ║
  * ║  iOS:                                                                     ║
- * ║    - Staging:   ./gradlew ... -Penvironment=staging                       ║
+ * ║    - Local:     ./gradlew ... -Penvironment=local                          ║
  * ║    - Produção:  ./gradlew ... -Penvironment=production                    ║
  * ║                                                                           ║
  * ║  URLs configuradas em: composeApp/build.gradle.kts (seção BuildKonfig)    ║
@@ -30,11 +30,9 @@ object ApiConfig {
 
     enum class Environment {
         LOCAL,
-        STAGING,
         PRODUCTION;
 
         val isLocal: Boolean get() = this == LOCAL
-        val isStaging: Boolean get() = this == STAGING
         val isProduction: Boolean get() = this == PRODUCTION
     }
 
@@ -43,15 +41,11 @@ object ApiConfig {
      */
     val currentEnvironment: Environment = when (BuildKonfig.ENVIRONMENT) {
         "local" -> Environment.LOCAL
-        "staging" -> Environment.STAGING
         else -> Environment.PRODUCTION
     }
 
     /** Verifica se está em modo de produção */
     val isProduction: Boolean get() = BuildKonfig.IS_PRODUCTION
-
-    /** Verifica se está em modo de staging */
-    val isStaging: Boolean get() = currentEnvironment == Environment.STAGING
 
     /** Verifica se está em modo local (dev) */
     val isLocal: Boolean get() = currentEnvironment == Environment.LOCAL
@@ -66,8 +60,8 @@ object ApiConfig {
      * ┌─────────────────────┬──────────────────────────────────────────┐
      * │ Ambiente            │ URL                                      │
      * ├─────────────────────┼──────────────────────────────────────────┤
-     * │ Local               │ NGROK_URL do local.properties            │
-     * │ Staging             │ https://staging.pixstop.com.br/api       │
+     * │ Local (Android)     │ NGROK_URL, ou http://10.0.2.2:8010/api   │
+     * │ Local (iOS)         │ NGROK_URL, ou http://localhost:8010/api  │
      * │ Produção            │ https://pixelstop.com.br/api             │
      * └─────────────────────┴──────────────────────────────────────────┘
      *

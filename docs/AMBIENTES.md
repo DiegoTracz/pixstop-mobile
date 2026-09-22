@@ -1,4 +1,4 @@
-# 🔧 Configuração de Ambientes (Local / Staging / Produção)
+# 🔧 Configuração de Ambientes (Local / Produção)
 
 O projeto utiliza o plugin **[BuildKonfig](https://github.com/yshrsmz/BuildKonfig)** para gerar constantes de configuração em tempo de compilação, permitindo URLs e variáveis diferentes por ambiente — compartilhadas entre Android e iOS.
 
@@ -6,16 +6,26 @@ O projeto utiliza o plugin **[BuildKonfig](https://github.com/yshrsmz/BuildKonfi
 
 ## 📊 Resumo dos Ambientes
 
-| Propriedade                     | Local                               | Staging                              | Produção                         |
-|---------------------------------|--------------------------------------|--------------------------------------|----------------------------------|
-| **URL da API**                  | `http://10.0.2.2:8010/api`           | `https://staging.pixstop.com.br/api` | `https://pixelstop.com.br/api`     |
-| **Application ID (Android)**    | `com.pixstop.mobile.local`           | `com.pixstop.mobile.staging`         | `com.pixstop.mobile`             |
-| **Bundle ID (iOS)**             | `com.pixstop.mobile.local`           | `com.pixstop.mobile.staging`         | `com.pixstop.mobile`             |
-| **Nome do App**                 | Pixstop Local                        | Pixstop Staging                      | Pixstop                          |
-| **`BuildKonfig.IS_PRODUCTION`** | `false`                              | `false`                              | `true`                           |
-| **`BuildConfig.IS_PRODUCTION`** | `false`                              | `false`                              | `true`                           |
+| Propriedade                     | Local                                                        | Produção                       |
+|---------------------------------|--------------------------------------------------------------|--------------------------------|
+| **URL da API (Android)**        | `http://10.0.2.2:8010/api`                                    | `https://pixelstop.com.br/api` |
+| **URL da API (iOS)**            | `http://localhost:8010/api`                                   | `https://pixelstop.com.br/api` |
+| **Application ID (Android)**    | `com.pixstop.mobile.local`                                    | `com.pixstop.mobile`           |
+| **Bundle ID (iOS)**             | `com.pixstop.mobile`                                          | `com.pixstop.mobile`           |
+| **Nome do App**                 | Pixelstop Local                                               | Pixelstop                      |
+| **`BuildKonfig.IS_PRODUCTION`** | `false`                                                       | `true`                         |
+| **`BuildConfig.IS_PRODUCTION`** | `false`                                                       | `true`                         |
 
-> ⚠️ IDs diferentes = as 3 versões podem ser instaladas no mesmo dispositivo simultaneamente.
+> ⚠️ IDs diferentes no Android = as duas versões convivem no mesmo aparelho.
+>
+> **O emulador do Android e o simulador do iPhone não enxergam o Sail pelo mesmo
+> endereço.** O emulador roda numa máquina virtual e chega ao computador por
+> `10.0.2.2`; o simulador roda no próprio macOS e chega por `localhost`. O
+> BuildKonfig gera a URL certa para cada alvo — `NGROK_URL`, quando existe, vale
+> para os dois.
+>
+> Não há mais ambiente de **staging**: `staging.pixstop.com.br` não resolve, e o
+> multi-tenant atende em `pixelstop.com.br`.
 
 ---
 
@@ -37,7 +47,7 @@ curl -s http://127.0.0.1:8010/api/config | head -c 80
 
 ### Aparelho físico
 
-O aparelho não alcança `10.0.2.2`. Duas saídas, na ordem de preferência:
+O aparelho não alcança `10.0.2.2` nem o `localhost` do simulador. Duas saídas, na ordem de preferência:
 
 1. **Mesma rede local** — descubra o IP da máquina (`hostname -I`) e ponha no
    `local.properties`:
@@ -57,8 +67,8 @@ ele serve para qualquer URL de desenvolvimento, não só para o ngrok.
 
 ### Por que o HTTP puro funciona só aqui
 
-Desde a API 28 o Android bloqueia tráfego sem TLS. Os flavors `local` e
-`staging` liberam a exceção, e mesmo assim só para os endereços listados em
+Desde a API 28 o Android bloqueia tráfego sem TLS. O flavor `local` libera a
+exceção, e mesmo assim só para os endereços listados em
 `androidApp/src/main/res/xml/network_security_config.xml`. Em **produção** o
 arquivo é outro e não abre exceção nenhuma — nem por engano.
 
@@ -74,8 +84,6 @@ Basta selecionar o **Build Variant** no painel lateral — o ambiente é detecta
 |-----------------------|------------|---------|----------------------------------------|
 | `localDebug`          | Local      | Debug   | `http://10.0.2.2:8010/api`             |
 | `localRelease`        | Local      | Release | `http://10.0.2.2:8010/api`             |
-| `stagingDebug`        | Staging    | Debug   | `https://staging.pixstop.com.br/api`   |
-| `stagingRelease`      | Staging    | Release | `https://staging.pixstop.com.br/api`   |
 | `productionDebug`     | Produção   | Debug   | `https://pixelstop.com.br/api`           |
 | `productionRelease`   | Produção   | Release | `https://pixelstop.com.br/api`           |
 
@@ -86,9 +94,6 @@ Basta selecionar o **Build Variant** no painel lateral — o ambiente é detecta
 ```shell
 # Local (usa NGROK_URL do local.properties)
 ./gradlew :androidApp:assembleLocalDebug
-
-# Staging
-./gradlew :androidApp:assembleStagingDebug
 
 # Produção
 ./gradlew :androidApp:assembleProductionRelease
@@ -107,8 +112,7 @@ O ambiente é controlado pela variável `APP_ENVIRONMENT` no Build Settings:
 
 | Valor | Ambiente | URL usada |
 |---|---|---|
-| `local` | Local (padrão Debug) | `NGROK_URL` do `local.properties` |
-| `staging` | Staging | `https://staging.pixstop.com.br/api` |
+| `local` | Local (padrão Debug) | `NGROK_URL`, ou `http://localhost:8010/api` |
 | `production` | Produção (padrão Release) | `https://pixelstop.com.br/api` |
 
 > ✅ **Debug** usa `local` por padrão. **Release** usa `production` por padrão.
@@ -118,9 +122,6 @@ O ambiente é controlado pela variável `APP_ENVIRONMENT` no Build Settings:
 ```shell
 # Local
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 -Penvironment=local
-
-# Staging
-./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 -Penvironment=staging
 
 # Produção
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 -Penvironment=production
@@ -178,9 +179,7 @@ internal object BuildKonfig {
 | O que alterar                | Arquivo                          | Linha aprox. |
 |------------------------------|----------------------------------|--------------|
 | URL de **local** (ngrok)     | `local.properties`               | `NGROK_URL=` |
-| URL de **staging**           | `composeApp/build.gradle.kts`    | bloco `when` do `baseUrl` |
 | URL de **produção**          | `composeApp/build.gradle.kts`    | bloco `when` do `baseUrl` |
-| URL de staging (Android)     | `androidApp/build.gradle.kts`    | flavor `staging` → `buildConfigField` |
 | URL de produção (Android)    | `androidApp/build.gradle.kts`    | flavor `production` → `buildConfigField` |
 
 ---
@@ -191,10 +190,6 @@ internal object BuildKonfig {
 // Verificações simples
 if (ApiConfig.isLocal) {
     // Lógica de dev local (ex: logs detalhados)
-}
-
-if (ApiConfig.isStaging) {
-    // Lógica de staging (ex: badge, banner de teste)
 }
 
 if (ApiConfig.isProduction) {
@@ -222,7 +217,6 @@ composeApp/build.gradle.kts                       → BuildKonfig config + flavo
 androidApp/build.gradle.kts                       → Product Flavors + buildConfigField
 composeApp/src/commonMain/.../ApiConfig.kt        → Consome BuildKonfig (compartilhado)
 composeApp/src/commonMain/.../HttpClientFactory.kt→ Usa ApiConfig.baseUrl
-iosApp/Configuration/Config-Staging.xcconfig      → Config iOS staging
 iosApp/Configuration/Config-Production.xcconfig   → Config iOS produção
 ```
 

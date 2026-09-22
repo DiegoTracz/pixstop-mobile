@@ -130,9 +130,6 @@ android {
         create("local") {
             dimension = "environment"
         }
-        create("staging") {
-            dimension = "environment"
-        }
         create("production") {
             dimension = "environment"
         }
@@ -149,14 +146,14 @@ dependencies {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// 🔧 BuildKonfig - Configuração de Ambientes (Staging / Production)
+// 🔧 BuildKonfig - Configuração de Ambientes (Local / Production)
 // ══════════════════════════════════════════════════════════════════════════
 // O ambiente é detectado AUTOMATICAMENTE pelo Build Variant selecionado:
-//   - stagingDebug / stagingRelease     → staging
+//   - localDebug / localRelease           → local
 //   - productionDebug / productionRelease → production
 //
 // Também pode ser forçado via terminal:
-//   ./gradlew :androidApp:assembleStagingDebug -Penvironment=staging
+//   ./gradlew :androidApp:assembleLocalDebug -Penvironment=local
 //
 // Para dev com ngrok, passe a URL via Gradle property:
 //   ./gradlew ... -PapiUrl=https://xxxx.ngrok-free.app/api
@@ -172,7 +169,6 @@ fun detectEnvironmentFromTask(): String {
 
     return when {
         taskNames.any { it.contains("local") } -> "local"
-        taskNames.any { it.contains("staging") } -> "staging"
         taskNames.any { it.contains("production") || it.contains("prod") } -> "production"
         else -> "production" // padrão
     }
@@ -196,11 +192,19 @@ val ngrokUrl: String = try {
     } else ""
 } catch (_: Exception) { "" }
 
+// 10.0.2.2:8010 é o Sail da máquina visto de dentro do emulador do Android; o
+// simulador do iPhone roda na própria máquina e alcança o mesmo Sail em
+// localhost. Em aparelho físico nenhum dos dois serve — use NGROK_URL no
+// local.properties, que tem precedência sobre ambos.
+fun localUrlFor(host: String) = if (ngrokUrl.isNotEmpty()) ngrokUrl else host
+
 val baseUrl = customApiUrl ?: when (environment) {
-    // 10.0.2.2:8010 é o Sail da máquina visto de dentro do emulador. Em
-    // aparelho físico, use NGROK_URL no local.properties.
-    "local" -> if (ngrokUrl.isNotEmpty()) ngrokUrl else "http://10.0.2.2:8010/api"
-    "staging" -> "https://staging.pixstop.com.br/api"
+    "local" -> localUrlFor("http://10.0.2.2:8010/api")
+    else -> "https://pixelstop.com.br/api"
+}
+
+val iosBaseUrl = customApiUrl ?: when (environment) {
+    "local" -> localUrlFor("http://localhost:8010/api")
     else -> "https://pixelstop.com.br/api"
 }
 
@@ -220,5 +224,13 @@ buildkonfig {
         // Versão vinda do gradle.properties, a mesma que o androidApp usa.
         buildConfigField(STRING, "APP_VERSION_NAME", project.property("app.versionName") as String)
         buildConfigField(STRING, "APP_BUILD_NUMBER", project.property("app.versionCode") as String)
+    }
+
+    targetConfigs {
+        listOf("iosArm64", "iosSimulatorArm64").forEach { iosTarget ->
+            create(iosTarget) {
+                buildConfigField(STRING, "BASE_URL", iosBaseUrl)
+            }
+        }
     }
 }
