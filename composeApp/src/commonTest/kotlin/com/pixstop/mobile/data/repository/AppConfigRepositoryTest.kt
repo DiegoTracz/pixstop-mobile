@@ -30,7 +30,7 @@ class AppConfigRepositoryTest {
     """.trimIndent()
 
     @Test
-    fun `comeca nos padroes embutidos, antes de qualquer resposta`() {
+    fun `comeca nos padroes embutidos antes de qualquer resposta`() {
         val repository = AppConfigRepository(FakeApi().clientReturning(body))
 
         assertEquals(AppConfig.Defaults, repository.config.value)

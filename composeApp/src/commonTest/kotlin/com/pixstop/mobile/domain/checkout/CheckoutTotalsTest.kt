@@ -107,7 +107,7 @@ class CheckoutTotalsTest {
     }
 
     @Test
-    fun `metodo desconhecido cai em dinheiro, nunca em cartao`() {
+    fun `metodo desconhecido cai em dinheiro nunca em cartao`() {
         assertEquals(PaymentMethod.Money, PaymentMethod.from("carteira-nova"))
         assertEquals(PaymentMethod.Card, PaymentMethod.from("card"))
     }

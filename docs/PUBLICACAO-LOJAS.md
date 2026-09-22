@@ -22,11 +22,12 @@ O estado abaixo foi levantado do código em 19/09/2026. O branch
 | Item | Valor hoje |
 |---|---|
 | applicationId / Bundle ID | `com.pixstop.mobile` (ver decisão 1) |
-| Versão | `0.1.0` (versionCode 1) no `gradle.properties`; `1.0` (1) nos `xcconfig` |
+| Versão | `0.1.0` (versionCode 1), igual no `gradle.properties` e nos `xcconfig` (22/09) |
 | Nome no aparelho | "Pixelstop" nas duas plataformas |
 | API de produção | `https://pixelstop.com.br/api` (corrigida em 19/09, ver bloqueador 1) |
+| Ambientes | `local` e `production`; o `staging` saiu em 22/09 (host não resolve) |
 | Assinatura Android | `keystore.properties` não existe, a chave não foi criada |
-| Time Apple | `TEAM_ID` vazio nos três `xcconfig` |
+| Time Apple | `DV6WLH3JBP` (IMMO Tecnologia) nos `xcconfig` — build de aparelho assina (22/09) |
 
 ---
 
@@ -84,7 +85,8 @@ o `BuildKonfig` do `productionRelease` saem com a URL nova. Os leitores de link
 (`CompanyCodeParser`, `NotificationRouter`) não conferem o domínio, então QR
 Codes e avisos do servidor novo funcionam sem mudança.
 
-Continua em aberto: o staging (`staging.pixstop.com.br`) não responde.
+Continua em aberto: o staging (`staging.pixstop.com.br`) não responde — em
+22/09 o ambiente foi removido do app, que agora tem só `local` e `production`.
 
 ### 2. Keystore de release
 
@@ -238,16 +240,64 @@ Bluetooth; no 12+ o app usa `BLUETOOTH_SCAN` com `neverForLocation`.
 
 ### Pendências no projeto iOS
 
+> **O iOS compilou e rodou pela primeira vez em 22/09/2026.** Até então nada
+> tinha sido construído para a plataforma, e o que estava no `main` não
+> compilava. O que foi consertado está no bloco "Primeira compilação" abaixo.
+
 | # | O quê | Onde |
 |---|---|---|
 | 1 | ~~Nome: "Pixstop"/"PixStop" → Pixelstop~~ — resolvido em 19/09 | `Info.plist`, `PRODUCT_NAME` nos `xcconfig` |
-| 2 | `TEAM_ID` vazio | os três `xcconfig` (decisão 2) |
-| 3 | Só iPhone: `TARGETED_DEVICE_FAMILY = "1,2"` → `1` | `project.pbxproj`. A Apple não deixa tirar o iPad depois |
-| 4 | Ícone com canal alfa (`icon-1024.png` é RGBA) — a Apple recusa | `AppIcon.appiconset`, regravar em RGB |
-| 5 | `ITSAppUsesNonExemptEncryption = false` ausente | `Info.plist` — sem ela a App Store Connect pergunta a cada envio |
-| 6 | `PrivacyInfo.xcprivacy` não existe | o app usa `NSUserDefaults` (multiplatform-settings) — API de motivo obrigatório, `CA92.1` |
+| 2 | ~~`TEAM_ID` vazio~~ — resolvido em 22/09: `DV6WLH3JBP` (IMMO Tecnologia), o mesmo time dos apps Immo e VistoMais | `Config.xcconfig` e `Config-Production.xcconfig` |
+| 3 | ~~Só iPhone: `TARGETED_DEVICE_FAMILY = "1,2"` → `1`~~ — resolvido em 22/09 | `project.pbxproj` |
+| 4 | ~~Ícone com canal alfa~~ — resolvido em 22/09: o alfa era todo opaco, então nenhum pixel mudou; só o canal saiu | `AppIcon.appiconset/icon-1024.png`, agora RGB |
+| 5 | ~~`ITSAppUsesNonExemptEncryption = false` ausente~~ — resolvido em 22/09 | `Info.plist` |
+| 6 | ~~`PrivacyInfo.xcprivacy` não existe~~ — criado em 22/09 com `CA92.1` (NSUserDefaults) e os tipos de dado coletados | `iosApp/iosApp/PrivacyInfo.xcprivacy` |
 | 7 | ~~Texto da câmera~~ — resolvido em 19/09: convite da empresa e check-in na geladeira. Incluir a foto do avatar quando ela chegar ao iOS | `NSCameraUsageDescription` |
-| 8 | Versão `1.0 (1)` diferente do Android | igualar ao `gradle.properties` |
+| 8 | ~~Versão `1.0 (1)` diferente do Android~~ — alinhada em 22/09: os `xcconfig` passam a espelhar o `gradle.properties` (`0.1.0`/1). Subir para `1.0.0` é o commit de release | `Config.xcconfig`, `Config-Production.xcconfig` |
+
+### Primeira compilação do iOS — 22/09/2026
+
+O `main` não compilava para iOS. Como `SavedState` é um alias de `Bundle` no
+Android e uma classe própria no iOS, e como só o Android tinha sido construído,
+nada disso aparecia. Consertado:
+
+| O quê | Onde |
+|---|---|
+| `entry.arguments?.getString(...)` não existe fora do Android | `AppNavigation.kt` → `read { getStringOrNull(...) }` de `androidx.savedstate` |
+| `import` no meio do arquivo, depois de uma anotação | `PlatformModule.ios.kt` |
+| `PixColors` (getter `@Composable`) lido de dentro de `drawBehind` | `QrCodeScanner.ios.kt`, cor içada para fora |
+| 47 nomes de teste com vírgula — o Kotlin/Native recusa, o JVM aceita | 22 arquivos em `commonTest` |
+| `PRODUCT_BUNDLE_IDENTIFIER=com.pixstop.mobile$(TEAM_ID)`: preencher o time daria `com.pixstop.mobileDV6WLH3JBP`. O `$(TEAM_ID)` saiu do bundle ID e ficou só no `DEVELOPMENT_TEAM` | `Config.xcconfig` |
+| Faltava `NSLocalNetworkUsageDescription` — sem ela o iOS 14+ bloqueia o portal da geladeira em `http://10.42.0.1`, e a Fase 9.3 não funciona | `Info.plist` |
+| **O Koin nunca era iniciado no iOS**: o app abria e fechava em `KoinApplication has not been started` | `startApp()` em `MainViewController.kt`, chamado pelo `init()` do `iOSApp.swift` |
+| O Coil não tinha buscador HTTP no iOS — foto de perfil e de produto não apareceriam, sem erro na tela | mesmo `startApp()`, `SingletonImageLoader.setSafe` com `KtorNetworkFetcherFactory` |
+| O ambiente `local` mandava o iOS para `10.0.2.2`, endereço que só existe no emulador do Android | `composeApp/build.gradle.kts`, `targetConfigs` do BuildKonfig → `localhost:8010` no iOS |
+
+Conferido no simulador iPhone 17 Pro (Xcode 26.2): `** BUILD SUCCEEDED **`, app
+aberto na tela de login contra `https://pixelstop.com.br/api`, e os **278 testes
+do `commonTest` passando em `iosSimulatorArm64Test`**.
+
+Com o `TEAM_ID` preenchido, o build para **aparelho real** também passa, assinado
+com "Apple Development: Diego Tracz", perfil "iOS Team Provisioning Profile: *",
+`Identifier=com.pixstop.mobile`, `TeamIdentifier=DV6WLH3JBP`. Ou seja: dá para
+instalar num iPhone e arquivar.
+
+### O que o iOS ainda não faz
+
+| O quê | Situação |
+|---|---|
+| Abrir a geladeira por Bluetooth (B3 do [MQTT_BLE.md](../../pixstop/docs/plans/MQTT_BLE.md)) | **Não existe.** `UnavailableFridgeUnlockConnector`, `isSupported = false`. O Android (B2) está pronto e provado contra o Pi Zero 2 W. Falta portar para CoreBluetooth. Quando entrar, some `NSBluetoothAlwaysUsageDescription` — sem ela o app **fecha** ao tocar no rádio |
+| Entrar sozinho na rede da geladeira | `ManualFridgeNetworkConnector`: a tela diz "Já estou na rede da geladeira" e a pessoa entra pelas configurações. O automático exige `NEHotspotConfiguration`, que é um entitlement à parte |
+| Escolher foto da galeria para o avatar | `PhotoPicker.ios.kt` |
+
+O **resto da configuração da geladeira (Fase 9.3) funciona no iOS**: depois de
+entrar na rede à mão, `SetupPortalClient` fala com `http://10.42.0.1` como no
+Android — lista redes, envia WiFi e código, acompanha o status. É código de
+`commonMain`; só o passo de entrar na rede é manual.
+
+O ambiente **staging** foi removido (Android e iOS): `staging.pixstop.com.br`
+não resolve, e o multi-tenant responde em `pixelstop.com.br`. Restam `local` e
+`production`.
 
 Quando o Bluetooth chegar ao iOS (B3), entra `NSBluetoothAlwaysUsageDescription`
 — sem ela o app **fecha** ao tocar no rádio. Quando entrar a galeria, o

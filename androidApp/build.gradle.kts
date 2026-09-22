@@ -48,7 +48,7 @@ android {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // 🔧 Product Flavors - Ambientes Local, Staging e Production
+    // 🔧 Product Flavors - Ambientes Local e Production
     // ══════════════════════════════════════════════════════════════════════════
     flavorDimensions += "environment"
 
@@ -81,27 +81,6 @@ android {
             // A API local fala HTTP puro; o Android bloqueia isso desde a API 28.
             // A permissão fica restrita a este flavor e aos endereços do
             // arquivo network_security_config.
-            manifestPlaceholders["usesCleartextTraffic"] = "true"
-            manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security_config"
-        }
-
-        create("staging") {
-            dimension = "environment"
-            applicationIdSuffix = ".staging"
-            versionNameSuffix = "-staging"
-
-            // URL da API de Staging - Usa NGROK_URL do local.properties se disponível
-            val ngrokUrl = localProperties.getProperty("NGROK_URL", "")
-            val stagingApiUrl = if (ngrokUrl.isNotEmpty()) ngrokUrl else "https://staging.pixstop.com.br/api"
-            buildConfigField("String", "API_BASE_URL", "\"$stagingApiUrl\"")
-            buildConfigField("Boolean", "IS_PRODUCTION", "false")
-
-            // Nome do app diferente para staging
-            resValue("string", "app_name", "Pixelstop Staging")
-
-            manifestPlaceholders["deepLinkScheme"] = "pixstop-staging"
-
-            // Staging pode apontar para um túnel HTTP durante o desenvolvimento.
             manifestPlaceholders["usesCleartextTraffic"] = "true"
             manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security_config"
         }

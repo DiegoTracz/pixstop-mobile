@@ -27,7 +27,7 @@ class PixPaletteTest {
     private val paletas = listOf(PixDarkPalette, PixLightPalette)
 
     @Test
-    fun `o texto forte se le sobre o fundo, nos dois modos`() {
+    fun `o texto forte se le sobre o fundo nos dois modos`() {
         paletas.forEach { palette ->
             val razao = contrast(palette.Gray100, palette.Dark)
 
@@ -36,7 +36,7 @@ class PixPaletteTest {
     }
 
     @Test
-    fun `o texto secundario ainda se le, nos dois modos`() {
+    fun `o texto secundario ainda se le nos dois modos`() {
         paletas.forEach { palette ->
             val razao = contrast(palette.Gray300, palette.Dark)
 
@@ -83,7 +83,7 @@ class PixPaletteTest {
     }
 
     @Test
-    fun `o modo guardado volta como foi escolhido, e o desconhecido cai no sistema`() {
+    fun `o modo guardado volta como foi escolhido e o desconhecido cai no sistema`() {
         assertEquals(AppThemeMode.Light, AppThemeMode.fromStored("Light"))
         assertEquals(AppThemeMode.Dark, AppThemeMode.fromStored("Dark"))
         assertEquals(AppThemeMode.System, AppThemeMode.fromStored(null))

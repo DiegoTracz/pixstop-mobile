@@ -44,7 +44,7 @@ class LedSettingsTest {
     }
 
     @Test
-    fun `geladeira fora do ar nao acende nada, mesmo com controle escolhido`() {
+    fun `geladeira fora do ar nao acende nada mesmo com controle escolhido`() {
         assertFalse(settings(online = false).canPress)
     }
 
@@ -59,7 +59,7 @@ class LedSettingsTest {
     }
 
     @Test
-    fun `tecla de cor vira escolha, tecla de programa nao`() {
+    fun `tecla de cor vira escolha tecla de programa nao`() {
         val red = IrRemoteLayout.keys.first { it.slug == "red" }
         val flash = IrRemoteLayout.keys.first { it.slug == "flash" }
         val brightness = IrRemoteLayout.keys.first { it.slug == "brightness_up" }

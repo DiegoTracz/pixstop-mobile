@@ -28,7 +28,7 @@ class ProgressionTest {
     """.trimIndent()
 
     @Test
-    fun `progressao desligada vira nulo, e a tela nao desenha barra`() {
+    fun `progressao desligada vira nulo e a tela nao desenha barra`() {
         assertNull(apiJson.decodeFromString<ProgressionDto>("""{"enabled":false}""").toDomain())
     }
 
@@ -42,7 +42,7 @@ class ProgressionTest {
     }
 
     @Test
-    fun `a barra mede o trecho entre niveis, como o servidor mandou`() {
+    fun `a barra mede o trecho entre niveis como o servidor mandou`() {
         val progression = apiJson.decodeFromString<ProgressionDto>(ligada).toDomain()
 
         assertNotNull(progression)
@@ -84,7 +84,7 @@ class ProgressionTest {
     }
 
     @Test
-    fun `o pedido sabe o que rendeu, e pedidos antigos nao rendem nada`() {
+    fun `o pedido sabe o que rendeu e pedidos antigos nao rendem nada`() {
         val comXp = apiJson.decodeFromString<OrderDto>(
             """{"id":9,"status":"paid","xp":{"earned":10,"leveled_up_to":1}}""",
         ).toDomain()
@@ -97,7 +97,7 @@ class ProgressionTest {
     }
 
     @Test
-    fun `missoes, campanha e temporada passada chegam quando o servidor manda`() {
+    fun `missoes campanha e temporada passada chegam quando o servidor manda`() {
         val json = ligada.dropLast(1) + """,
             "missions":[{"code":"week_complete","label":"Semana completa","xp":30,"progress":2,"target":3,"done":false},
                         {"code":"new_category","label":"Nova categoria","xp":20,"progress":20,"target":20,"done":true}],

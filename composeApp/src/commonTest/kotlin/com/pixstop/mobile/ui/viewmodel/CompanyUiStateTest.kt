@@ -72,7 +72,7 @@ class CompanyUiStateTest {
     }
 
     @Test
-    fun `alocar exige quantidade, nao motivo`() {
+    fun `alocar exige quantidade nao motivo`() {
         val base = CompanyUiState(pending = CompanyAction.AllocatePixels(vendas), isLoading = false)
 
         assertFalse(base.needsReason)

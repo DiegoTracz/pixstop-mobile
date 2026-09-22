@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.savedstate.read
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -286,7 +287,7 @@ fun AppNavigation() {
 
         composable("${Routes.PRODUCT}/{id}") { entry ->
             ProductDetailScreen(
-                productId = entry.arguments?.getString("id")?.toLongOrNull() ?: 0L,
+                productId = entry.arguments?.read { getStringOrNull("id") }?.toLongOrNull() ?: 0L,
                 cartViewModel = cartViewModel,
                 onBack = { navController.popBackStack() },
                 onOpenCart = {
@@ -326,7 +327,7 @@ fun AppNavigation() {
 
         composable("${Routes.ORDER}/{id}") { entry ->
             OrderScreen(
-                orderId = entry.arguments?.getString("id")?.toLongOrNull() ?: 0L,
+                orderId = entry.arguments?.read { getStringOrNull("id") }?.toLongOrNull() ?: 0L,
                 onBack = { navController.popBackStack() },
             )
         }
@@ -367,7 +368,7 @@ fun AppNavigation() {
 
         composable(Routes.INVITE) { entry ->
             PixelInviteScreen(
-                code = entry.arguments?.getString("code").orEmpty(),
+                code = entry.arguments?.read { getStringOrNull("code") }.orEmpty(),
                 onAccepted = {
                     // A empresa nova já está ativa no servidor; o `/me` traz
                     // a carteira com o presente e a Home redesenha.

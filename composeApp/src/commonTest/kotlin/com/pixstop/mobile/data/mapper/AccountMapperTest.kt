@@ -83,7 +83,7 @@ class AccountMapperTest {
     }
 
     @Test
-    fun `sem empresa ativa, o app sabe que precisa de uma`() {
+    fun `sem empresa ativa o app sabe que precisa de uma`() {
         val json = """
         { "user": { "id": 1, "name": "X", "email": "x@x.com" },
           "tenants": [], "active_tenant": null, "has_pending_consent": true }
@@ -108,7 +108,7 @@ class AccountMapperTest {
     }
 
     @Test
-    fun `sem gateway conectado, a empresa nao recebe dinheiro`() {
+    fun `sem gateway conectado a empresa nao recebe dinheiro`() {
         val json = """
         { "user": { "id": 1, "name": "X", "email": "x@x.com" }, "tenants": [],
           "active_tenant": { "id": "a", "name": "A", "mercadopago_connected": false },

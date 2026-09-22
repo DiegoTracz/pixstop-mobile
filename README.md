@@ -10,7 +10,7 @@ Aplicativo mobile Pixstop para Android e iOS, construído com Kotlin Multiplatfo
 - ✅ Cache offline de dados do usuário
 - ✅ Navegação automática Login ↔ Home
 - ✅ Sidebar com Material Design
-- ✅ Ambientes Local, Staging e Produção com URLs separadas
+- ✅ Ambientes Local e Produção com URLs separadas
 - ✅ Suporte Android e iOS
 - ✅ Splash Screen com cores do tema
 - ✅ Tema claro/escuro personalizável
@@ -19,7 +19,7 @@ Aplicativo mobile Pixstop para Android e iOS, construído com Kotlin Multiplatfo
 
 ```
 ├── androidApp/                    # 📱 Módulo Android (aplicação)
-│   ├── build.gradle.kts           # Product Flavors (local/staging/production)
+│   ├── build.gradle.kts           # Product Flavors (local/production)
 │   └── src/main/
 │       ├── AndroidManifest.xml
 │       ├── kotlin/.../MainActivity.kt
@@ -43,7 +43,6 @@ Aplicativo mobile Pixstop para Android e iOS, construído com Kotlin Multiplatfo
 ├── iosApp/                        # 🍎 Módulo iOS (Xcode)
 │   └── Configuration/
 │       ├── Config.xcconfig
-│       ├── Config-Staging.xcconfig
 │       └── Config-Production.xcconfig
 │
 └── docs/                          # 📚 Documentação
@@ -67,9 +66,8 @@ No **Android Studio**, selecione o Build Variant no painel lateral:
 
 | Build Variant         | Ambiente   | URL                                    |
 |-----------------------|------------|----------------------------------------|
-| `localDebug`          | Local      | `NGROK_URL` do `local.properties`      |
-| `stagingDebug`        | Staging    | `https://staging.pixstop.com.br/api`   |
-| `productionDebug`     | Produção   | `https://pixelstop.com.br/api`           |
+| `localDebug`          | Local      | `NGROK_URL`, ou `10.0.2.2:8010` (Android) / `localhost:8010` (iOS) |
+| `productionDebug`     | Produção   | `https://pixelstop.com.br/api`         |
 
 > O ambiente é detectado **automaticamente** — não precisa passar flags.
 
@@ -101,9 +99,6 @@ Edite o bloco `baseUrl` em `composeApp/build.gradle.kts` (linhas ~155–160).
 # Local (ngrok)
 ./gradlew :androidApp:assembleLocalDebug
 
-# Staging
-./gradlew :androidApp:assembleStagingDebug
-
 # Produção
 ./gradlew :androidApp:assembleProductionRelease
 ```
@@ -112,8 +107,10 @@ Edite o bloco `baseUrl` em `composeApp/build.gradle.kts` (linhas ~155–160).
 
 ```shell
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 -Penvironment=local
-./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 -Penvironment=staging
 ./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64 -Penvironment=production
+
+# Ou abra iosApp/iosApp.xcodeproj e rode o scheme iosApp.
+# O ambiente vem de APP_ENVIRONMENT (Debug = local, Release = production).
 ```
 
 ---

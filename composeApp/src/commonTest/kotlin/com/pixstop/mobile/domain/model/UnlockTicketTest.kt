@@ -43,7 +43,7 @@ class UnlockTicketTest {
     }
 
     @Test
-    fun `le o aparelho, o pedido e a validade do bilhete`() {
+    fun `le o aparelho o pedido e a validade do bilhete`() {
         val ticket = UnlockTicket.parse(
             ticketOf(
                 """{"v":1,"kid":"k-teste","dev":"NHMBE0CXJ5","order":42,"cmd":7,"pulse_ms":400,
@@ -70,14 +70,14 @@ class UnlockTicketTest {
     }
 
     @Test
-    fun `o bilhete inteiro viaja como veio, sem o app tocar nele`() {
+    fun `o bilhete inteiro viaja como veio sem o app tocar nele`() {
         val raw = ticketOf("""{"kid":"k","dev":"ABCDEFGHIJ","exp":"2026-09-09T18:10:00+00:00"}""")
 
         assertEquals(raw, UnlockTicket.parse(raw)?.raw)
     }
 
     @Test
-    fun `lixo, vazio e bilhete sem aparelho viram nulo`() {
+    fun `lixo vazio e bilhete sem aparelho viram nulo`() {
         assertNull(UnlockTicket.parse(null))
         assertNull(UnlockTicket.parse(""))
         assertNull(UnlockTicket.parse("sem-ponto-nenhum"))

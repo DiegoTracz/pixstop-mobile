@@ -33,7 +33,7 @@ class ShopRepositoryTest {
     """.trimIndent()
 
     @Test
-    fun `usa o estoque disponivel, nao o cheio`() = runTest {
+    fun `usa o estoque disponivel nao o cheio`() = runTest {
         val result = ShopRepository(FakeApi().clientReturning(productsBody)).products()
 
         assertIs<Outcome.Success<Page<Product>>>(result)

@@ -43,7 +43,7 @@ class BuyAgainTest {
     )
 
     @Test
-    fun `mantem a ordem dos pedidos, do mais recente ao mais antigo`() {
+    fun `mantem a ordem dos pedidos do mais recente ao mais antigo`() {
         val ids = buyAgainIdsFrom(listOf(pedido(3), pedido(1), pedido(2)))
 
         assertEquals(listOf(3L, 1L, 2L), ids)
