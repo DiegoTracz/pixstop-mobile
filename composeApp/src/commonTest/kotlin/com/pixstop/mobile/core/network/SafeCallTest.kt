@@ -132,7 +132,7 @@ class SafeCallTest {
     }
 
     @Test
-    fun `queda de rede vira offline, e nao erro de servidor`() = runTest {
+    fun `queda de rede vira offline e nao erro de servidor`() = runTest {
         // A tela trata os dois de formas diferentes: um convida a tentar de
         // novo, o outro não.
         val client = HttpClient(MockEngine { throw kotlinx.io.IOException("Unable to resolve host") })

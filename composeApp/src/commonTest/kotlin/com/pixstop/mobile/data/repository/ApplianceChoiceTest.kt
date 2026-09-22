@@ -68,7 +68,7 @@ class ApplianceChoiceTest {
     }
 
     @Test
-    fun `a geladeira fora do ar continua na lista, dizendo que esta fora`() = runTest {
+    fun `a geladeira fora do ar continua na lista dizendo que esta fora`() = runTest {
         val result = ShopRepository(FakeApi().clientReturning(twoDoors)).appliances()
 
         assertIs<Outcome.Success<ApplianceChoice>>(result)
@@ -81,7 +81,7 @@ class ApplianceChoiceTest {
     }
 
     @Test
-    fun `o local aparece embaixo do nome, quando existe`() = runTest {
+    fun `o local aparece embaixo do nome quando existe`() = runTest {
         val result = ShopRepository(FakeApi().clientReturning(twoDoors)).appliances()
 
         assertIs<Outcome.Success<ApplianceChoice>>(result)

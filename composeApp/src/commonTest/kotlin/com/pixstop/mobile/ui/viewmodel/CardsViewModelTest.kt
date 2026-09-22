@@ -37,7 +37,7 @@ class CardsUiStateTest {
     }
 
     @Test
-    fun `escolher o que ja e padrao, ou um cartao que nao existe, nao mexe em nada`() {
+    fun `escolher o que ja e padrao ou um cartao que nao existe nao mexe em nada`() {
         assertSame(estado, estado.withDefault(1))
         assertSame(estado, estado.withDefault(99))
     }

@@ -32,7 +32,7 @@ class StaffCheckinUiStateTest {
     }
 
     @Test
-    fun `o QR do balcao vira o codigo, e o resto passa como esta`() {
+    fun `o QR do balcao vira o codigo e o resto passa como esta`() {
         assertEquals("ABC123XY", MemberCodeParser.parse("pixstop://u/abc123xy"))
         assertEquals("Ana", MemberCodeParser.parse("Ana"))
     }

@@ -46,7 +46,7 @@ class DigitMaskTest {
     }
 
     @Test
-    fun `a volta conta digitos, nao caracteres`() {
+    fun `a volta conta digitos nao caracteres`() {
         val map = mapping(cartao, "42356477")
 
         assertEquals(4, map.transformedToOriginal(5))

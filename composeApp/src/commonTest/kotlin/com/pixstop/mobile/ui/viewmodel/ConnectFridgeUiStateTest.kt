@@ -49,14 +49,14 @@ class ConnectFridgeUiStateTest {
     }
 
     @Test
-    fun `o codigo aparece como se dita, em dois blocos`() {
+    fun `o codigo aparece como se dita em dois blocos`() {
         assertEquals("483 921", geladeira().formattedCode)
         assertNull(geladeira(code = null).formattedCode)
         assertFalse(geladeira(code = null).hasCode)
     }
 
     @Test
-    fun `configurar exige rede e codigo, e nao pode estar ocupado`() {
+    fun `configurar exige rede e codigo e nao pode estar ocupado`() {
         val base = ConnectFridgeUiState(chosen = geladeira(), step = ConnectStep.Network, isLoading = false)
 
         assertFalse(base.canConfigure)
@@ -78,7 +78,7 @@ class ConnectFridgeUiStateTest {
     }
 
     @Test
-    fun `o portal dizendo erro volta para a rede com a mensagem, sem reiniciar nada`() {
+    fun `o portal dizendo erro volta para a rede com a mensagem sem reiniciar nada`() {
         val state = ConnectFridgeUiState(chosen = geladeira(), step = ConnectStep.Configuring, ssid = "Rede-da-Empresa", isWorking = true, isLoading = false)
 
         val depois = state.withPortalStatus(PortalStatus(PortalMode.Error, "Não consegui entrar na rede Rede-da-Empresa.", null))
@@ -122,7 +122,7 @@ class ConnectFridgeUiStateTest {
     }
 
     @Test
-    fun `online enquanto o codigo esta na tela tambem fecha, porque alguem configurou pelo navegador`() {
+    fun `online enquanto o codigo esta na tela tambem fecha porque alguem configurou pelo navegador`() {
         val state = ConnectFridgeUiState(chosen = geladeira(), step = ConnectStep.Code, isLoading = false)
 
         assertEquals(ConnectStep.Done, state.withPresence(geladeira(presence = FridgePresence.Online, code = null)).step)
@@ -140,7 +140,7 @@ class ConnectFridgeUiStateTest {
     }
 
     @Test
-    fun `offline nao fecha o fluxo, so atualiza a lista`() {
+    fun `offline nao fecha o fluxo so atualiza a lista`() {
         val state = ConnectFridgeUiState(devices = listOf(geladeira()), chosen = geladeira(), step = ConnectStep.WaitingOnline, isLoading = false)
 
         val depois = state.withPresence(geladeira(presence = FridgePresence.Offline, code = null))
@@ -150,7 +150,7 @@ class ConnectFridgeUiStateTest {
     }
 
     @Test
-    fun `criar aceita nome em branco, recusa nome curto e nao pode estar ocupado`() {
+    fun `criar aceita nome em branco recusa nome curto e nao pode estar ocupado`() {
         val state = ConnectFridgeUiState(isLoading = false)
 
         // Em branco o servidor batiza de "Pixelstop 01"; duas letras é engano.
@@ -161,7 +161,7 @@ class ConnectFridgeUiStateTest {
     }
 
     @Test
-    fun `depois de conectar, a tela diz o que ainda falta para a vitrine encher`() {
+    fun `depois de conectar a tela diz o que ainda falta para a vitrine encher`() {
         // Empresa sem produto nenhum: o estoque da geladeira nem é o assunto.
         assertEquals(
             "Falta cadastrar os produtos da empresa. Depois é só informar o estoque desta geladeira.",

@@ -58,7 +58,7 @@ class RoleHelperTest {
     )
 
     @Test
-    fun `nenhuma aba leva a lugar nenhum, em papel nenhum`() {
+    fun `nenhuma aba leva a lugar nenhum em papel nenhum`() {
         papeis.forEach { company ->
             RoleHelper.bottomBar(company).forEach { destination ->
                 assertTrue(
@@ -84,7 +84,7 @@ class RoleHelperTest {
     }
 
     @Test
-    fun `a area do gestor depende de gerir um time, nao do papel`() {
+    fun `a area do gestor depende de gerir um time nao do papel`() {
         // Quem é `user` na empresa pode gerir um departamento — é o caso do
         // seed —, e o administrador pode não gerir nenhum.
         assertTrue(RoleHelper.canOpen(Destination.Team, empresa(CompanyRole.Member, isManager = true)))
@@ -178,7 +178,7 @@ class RoleHelperTest {
     }
 
     @Test
-    fun `o segmento sem loja esconde loja, carrinho e pedidos, e sem departamentos esconde o time`() {
+    fun `o segmento sem loja esconde loja carrinho e pedidos e sem departamentos esconde o time`() {
         val barbearia = empresa(role = CompanyRole.Admin, isManager = true, modules = listOf("checkin", "vouchers"))
 
         assertFalse(RoleHelper.bottomBar(barbearia).contains(Destination.Shop))
@@ -198,7 +198,7 @@ class RoleHelperTest {
     }
 
     @Test
-    fun `o balcao aparece para o staff e para o administrador, onde ha visita registrada`() {
+    fun `o balcao aparece para o staff e para o administrador onde ha visita registrada`() {
         val barbearia = listOf("checkin", "vouchers")
 
         assertTrue(RoleHelper.drawer(empresa(isStaff = true, modules = barbearia)).contains(Destination.Staff))

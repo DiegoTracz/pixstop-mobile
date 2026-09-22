@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 class CheckoutTotalsTest {
 
     @Test
-    fun `sem pixels nem saldo, tudo vira dinheiro`() {
+    fun `sem pixels nem saldo tudo vira dinheiro`() {
         val total = CheckoutTotals.calculate(products = 6.0, method = PaymentMethod.Money)
 
         assertEquals(6.0, total.money)
@@ -121,7 +121,7 @@ class CheckoutTotalsTest {
     }
 
     @Test
-    fun `metodo desconhecido cai em dinheiro, nunca em cartao`() {
+    fun `metodo desconhecido cai em dinheiro nunca em cartao`() {
         assertEquals(PaymentMethod.Money, PaymentMethod.from("carteira-nova"))
         assertEquals(PaymentMethod.Card, PaymentMethod.from("card"))
     }

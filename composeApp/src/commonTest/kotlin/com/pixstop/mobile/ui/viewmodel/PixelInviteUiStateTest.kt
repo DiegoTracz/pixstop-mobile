@@ -28,7 +28,7 @@ class PixelInviteUiStateTest {
     )
 
     @Test
-    fun `por telefone, so aceita com o numero preenchido`() {
+    fun `por telefone so aceita com o numero preenchido`() {
         val semNumero = PixelInviteUiState(invite = convite(), isLoading = false)
 
         assertFalse(semNumero.canAccept)
@@ -37,7 +37,7 @@ class PixelInviteUiStateTest {
     }
 
     @Test
-    fun `por e-mail aceita sem telefone, e fechado nao aceita nunca`() {
+    fun `por e-mail aceita sem telefone e fechado nao aceita nunca`() {
         assertTrue(PixelInviteUiState(invite = convite(needsPhone = false), isLoading = false).canAccept)
         assertFalse(PixelInviteUiState(invite = convite(needsPhone = false, status = "accepted"), isLoading = false).canAccept)
         assertFalse(PixelInviteUiState(invite = convite(needsPhone = false), isAccepting = true).canAccept)

@@ -126,7 +126,7 @@ class CheckoutCardFlowTest {
         awaitState { !it.isPlacing && (it.placedOrder != null || it.error != null || it.cardErrors.isNotEmpty()) }
 
     @Test
-    fun `o pedido leva o token, o documento e o pedido de guardar`() = cardTest {
+    fun `o pedido leva o token o documento e o pedido de guardar`() = cardTest {
         val orderApi = FakeApi()
         val gateway = FakeApi()
         val model = viewModel(orderApi, gateway)

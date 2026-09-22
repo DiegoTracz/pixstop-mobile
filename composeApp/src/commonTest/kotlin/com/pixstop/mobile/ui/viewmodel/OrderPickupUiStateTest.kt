@@ -71,7 +71,7 @@ class OrderPickupUiStateTest {
     }
 
     @Test
-    fun `sem internet mas com bilhete, o texto muda para o Bluetooth`() {
+    fun `sem internet mas com bilhete o texto muda para o Bluetooth`() {
         val state = state(pickup(PickupStatus.Awaiting, reason = PickupReason.Offline, hasTicket = true))
 
         assertEquals("A geladeira está sem internet. Abra por Bluetooth, aqui do lado dela.", state.pickupMessage)
@@ -110,7 +110,7 @@ class OrderPickupUiStateTest {
     }
 
     @Test
-    fun `durante a janela o Bluetooth continua a mao, porque a rede pode ter caido no meio`() {
+    fun `durante a janela o Bluetooth continua a mao porque a rede pode ter caido no meio`() {
         val unlocking = pickup(PickupStatus.Unlocking, canUnlock = true, windowUntil = 40_000, hasTicket = true)
 
         assertTrue(state(unlocking, now = 10_000, ticket = ticket, bluetooth = true).canUnlockByBluetooth)

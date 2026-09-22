@@ -86,7 +86,7 @@ class CartUiStateTest {
     }
 
     @Test
-    fun `a contagem de itens vem do servidor, nao do tamanho da lista`() {
+    fun `a contagem de itens vem do servidor nao do tamanho da lista`() {
         val state = CartUiState(
             cart = Cart(items = listOf(linha(1, null)), totalItems = 3, total = 9.0, reservationMinutes = 5),
         )

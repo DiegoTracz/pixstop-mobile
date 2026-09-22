@@ -109,7 +109,7 @@ class NotificationRouterTest {
     }
 
     @Test
-    fun `subir de nivel e virar a temporada levam a barra de XP, mesmo com o link da carteira`() {
+    fun `subir de nivel e virar a temporada levam a barra de XP mesmo com o link da carteira`() {
         val levelUp = NotificationRouter.resolve(aviso(type = "level_up", actionUrl = "/my-pixels"))
         val season = NotificationRouter.resolve(aviso(type = "season_closed", actionUrl = "/my-pixels"))
 
@@ -120,7 +120,7 @@ class NotificationRouterTest {
     }
 
     @Test
-    fun `o link do convite com pixels leva ao convite, em maiusculas`() {
+    fun `o link do convite com pixels leva ao convite em maiusculas`() {
         assertEquals(NotificationTarget.Invite("ABC123XY"), NotificationRouter.fromLink("/c/abc123xy"))
         assertEquals(NotificationTarget.Invite("ABC123XY"), NotificationRouter.fromLink("pixstop://c/ABC123XY"))
         assertEquals(Destination.Home, NotificationRouter.fromLink("/c/ABC123XY")?.destination)
