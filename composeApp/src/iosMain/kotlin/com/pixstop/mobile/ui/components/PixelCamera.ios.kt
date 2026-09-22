@@ -19,8 +19,12 @@ import com.pixstop.mobile.ui.theme.PixTypography
  *
  * A captura de foto pede `AVCapturePhotoOutput` e um aparelho para provar que
  * a orientação, o espelhamento da câmera frontal e a permissão funcionam.
- * Escrever isso sem um Mac para rodar seria entregar código que só parece
- * pronto — a tela diz a verdade até lá.
+ * Escrever isso sem aparelho seria entregar código que só parece pronto — a
+ * tela diz a verdade até lá.
+ *
+ * O caminho que ela indica existe: desde 22/09 o `PhotoPicker.ios.kt` abre o
+ * `PHPickerViewController` de verdade, e o retrato 8-bit sai da foto da
+ * galeria igual ao do Android.
  */
 @Composable
 actual fun PixelCameraScreen(
