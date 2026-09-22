@@ -400,7 +400,7 @@ fun AppNavigation() {
         // diferenças, abastecer. Só se chega a ela a partir de uma geladeira.
         composable("${Routes.VISIT}/{applianceId}") { entry ->
             VisitScreen(
-                applianceId = entry.arguments?.getString("applianceId")?.toLongOrNull() ?: 0L,
+                applianceId = entry.arguments?.read { getStringOrNull("applianceId") }?.toLongOrNull() ?: 0L,
                 onBack = { navController.popBackStack() },
             )
         }

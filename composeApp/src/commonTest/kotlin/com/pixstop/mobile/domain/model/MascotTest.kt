@@ -55,7 +55,7 @@ class MascotTest {
     }
 
     @Test
-    fun `o aviso da interface e laranja, e o amarelo fica para a fita`() {
+    fun `o aviso da interface e laranja e o amarelo fica para a fita`() {
         assertEquals(MascotColors.Orange, MascotLook.of(MascotState.Warning).color)
         assertEquals(MascotColors.Yellow, MascotLook.of(FitaState.Demais).color)
         assertTrue(MascotState.entries.none { MascotLook.of(it).color == MascotColors.Yellow })

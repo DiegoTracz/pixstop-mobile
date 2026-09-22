@@ -15,7 +15,7 @@ import kotlin.test.assertNull
 class CountDraftStoreTest {
 
     @Test
-    fun `o rascunho volta como ficou, com o mesmo client id`() {
+    fun `o rascunho volta como ficou com o mesmo client id`() {
         val store = CountDraftStore(InMemorySettings())
 
         store.save(3, CountDraft(clientId = "01J", startedAt = "2026-09-20T11:00:00Z", counts = mapOf("1" to 6, "2" to 0)))
@@ -29,7 +29,7 @@ class CountDraftStoreTest {
     }
 
     @Test
-    fun `cada geladeira tem o seu, e apagar um nao mexe no outro`() {
+    fun `cada geladeira tem o seu e apagar um nao mexe no outro`() {
         val store = CountDraftStore(InMemorySettings())
 
         store.save(3, CountDraft("a", "2026-09-20T11:00:00Z", mapOf("1" to 6)))
