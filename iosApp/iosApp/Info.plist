@@ -11,6 +11,27 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 
+	<!-- O app só fala HTTPS e não traz criptografia própria: isenta pela
+	     categoria 5D992 do regulamento de exportação. Sem esta chave, a App
+	     Store Connect repete a pergunta a cada envio. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<!-- O ambiente `local` fala com o Sail da máquina em http://localhost:8010.
+	     Esta exceção do ATS libera só a rede local; a produção é HTTPS e não
+	     depende dela. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+
+	<!-- Desde o iOS 14, falar com um aparelho na rede local exige esta chave e
+	     a autorização da pessoa. É o que permite configurar a geladeira pelo
+	     portal em http://10.42.0.1 depois de entrar na rede dela. -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>O Pixelstop usa a rede local para configurar a geladeira: ele fala com ela enquanto seu celular está conectado à rede Pixelstop-Setup.</string>
+
 	<!-- Permissão de câmera para QR Code Scanner -->
 	<key>NSCameraUsageDescription</key>
 	<string>O Pixelstop usa a câmera para ler o QR Code de convite da sua empresa e o QR Code de check-in na geladeira.</string>
