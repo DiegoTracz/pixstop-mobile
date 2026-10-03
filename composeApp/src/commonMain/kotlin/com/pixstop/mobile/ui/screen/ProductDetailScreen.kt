@@ -33,6 +33,7 @@ import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelPrice
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
+import com.pixstop.mobile.ui.components.ProductImage
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.CartViewModel
@@ -143,19 +144,15 @@ fun ProductDetailScreen(
 @Composable
 private fun ProductHero(product: Product) {
     Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
-        Box(
+        ProductImage(
+            name = product.name,
+            imageUrl = product.imageUrl,
+            initialStyle = PixTypography.pageTitle,
             modifier = Modifier
                 .fillMaxSize()
-                .border(2.dp, PixColors.Gray700)
-                .background(PixColors.Gray800),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = product.name.take(1).uppercase(),
-                style = PixTypography.pageTitle,
-                color = PixColors.Gray500,
-            )
-        }
+                .border(2.dp, PixColors.Gray700),
+            imagePadding = 12.dp,
+        )
 
         if (product.hasDiscount) {
             DiscountTag(
