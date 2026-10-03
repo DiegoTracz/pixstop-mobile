@@ -9,9 +9,11 @@ import com.pixstop.mobile.domain.model.AppNotification
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.map
 import io.ktor.client.HttpClient
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 
 private const val TAG = "Notifications"
 
@@ -36,6 +38,24 @@ class NotificationRepository(private val client: HttpClient) {
 
     suspend fun markAllRead(): Outcome<Unit> =
         safeCallUnit(TAG) { client.post(ApiConfig.Endpoints.NOTIFICATIONS_READ_ALL) }
+
+    /** Liga o aparelho à conta para receber push. O servidor troca o dono se o token já for de outra. */
+    suspend fun registerDevice(token: String, platform: String, deviceName: String?, appVersion: String?): Outcome<Unit> =
+        safeCallUnit(TAG) {
+            client.post(ApiConfig.Endpoints.DEVICES) {
+                setBody(
+                    mapOf(
+                        "token" to token,
+                        "platform" to platform,
+                        "device_name" to deviceName,
+                        "app_version" to appVersion,
+                    ),
+                )
+            }
+        }
+
+    suspend fun unregisterDevice(token: String): Outcome<Unit> =
+        safeCallUnit(TAG) { client.delete(ApiConfig.Endpoints.device(token)) }
 }
 
 private fun NotificationDto.toDomain(): AppNotification {

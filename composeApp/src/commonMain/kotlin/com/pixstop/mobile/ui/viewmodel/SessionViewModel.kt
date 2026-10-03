@@ -3,6 +3,7 @@ package com.pixstop.mobile.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pixstop.mobile.core.logging.AppLogger
+import com.pixstop.mobile.core.notification.PushTokenRegistry
 import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.data.repository.AccountRepository
 import com.pixstop.mobile.data.repository.AuthRepository
@@ -38,6 +39,7 @@ class SessionViewModel(
     private val accounts: AccountRepository,
     private val session: SessionStore,
     private val auth: AuthRepository,
+    private val pushTokens: PushTokenRegistry,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SessionUiState())
@@ -69,7 +71,12 @@ class SessionViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
             when (val result = accounts.me()) {
-                is Outcome.Success -> _uiState.value = SessionUiState(account = result.value)
+                is Outcome.Success -> {
+                    _uiState.value = SessionUiState(account = result.value)
+                    // A conta carregou, então a sessão vale: é a hora de o
+                    // servidor saber para onde mandar o push.
+                    pushTokens.sync()
+                }
                 is Outcome.Failure -> handleFailure(result.error)
             }
         }
@@ -120,6 +127,7 @@ class SessionViewModel(
      */
     fun logout() {
         viewModelScope.launch {
+            pushTokens.unregister()
             auth.logout()
             _uiState.value = SessionUiState(loggedOut = true)
         }
