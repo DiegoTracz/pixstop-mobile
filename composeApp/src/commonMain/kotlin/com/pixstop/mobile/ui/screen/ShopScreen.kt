@@ -37,6 +37,7 @@ import com.pixstop.mobile.ui.components.PixelBalance
 import com.pixstop.mobile.ui.components.PixelInput
 import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelPrice
+import com.pixstop.mobile.ui.components.ProductImage
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.ShopViewModel
@@ -278,25 +279,20 @@ private fun AddButton(enabled: Boolean, onClick: () -> Unit) {
 /**
  * Miniatura do produto.
  *
- * Ainda é a inicial num quadrado: mostrar a foto pede uma biblioteca de
- * carregamento de imagem que o app não tem.
+ * A foto do produto; sem ela, a inicial num quadrado.
  */
 @Composable
 private fun ProductThumb(product: Product) {
     Box(modifier = Modifier.size(56.dp)) {
-        Box(
+        ProductImage(
+            name = product.name,
+            imageUrl = product.imageUrl,
+            initialStyle = PixTypography.sectionTitle,
             modifier = Modifier
                 .size(56.dp)
-                .border(2.dp, PixColors.Gray700)
-                .background(PixColors.Gray800),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = product.name.take(1).uppercase(),
-                style = PixTypography.sectionTitle,
-                color = PixColors.Gray500,
-            )
-        }
+                .border(2.dp, PixColors.Gray700),
+            imagePadding = 3.dp,
+        )
 
         if (product.hasDiscount) {
             DiscountTag(

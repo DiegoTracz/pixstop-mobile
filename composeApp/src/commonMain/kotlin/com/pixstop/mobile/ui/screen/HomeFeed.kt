@@ -39,6 +39,7 @@ import com.pixstop.mobile.ui.components.PixelCoin
 import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.XpBar
 import com.pixstop.mobile.ui.components.formatMoney
+import com.pixstop.mobile.ui.components.ProductImage
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.HomeFeedUiState
@@ -328,16 +329,12 @@ private fun ProductCard(product: Product, onClick: () -> Unit, onAdd: () -> Unit
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(modifier = Modifier.fillMaxWidth().height(64.dp)) {
-            Box(
-                modifier = Modifier.fillMaxSize().background(PixColors.Gray800),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = product.name.take(1).uppercase(),
-                    style = PixTypography.pageTitle,
-                    color = PixColors.Gray500,
-                )
-            }
+            ProductImage(
+                name = product.name,
+                imageUrl = product.imageUrl,
+                initialStyle = PixTypography.pageTitle,
+                modifier = Modifier.fillMaxSize(),
+            )
 
             if (product.hasDiscount) {
                 DiscountTag(
