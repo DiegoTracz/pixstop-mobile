@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
     kotlin("android")
+    // Lê o google-services.json (projeto pixelstop-fd153), que já traz os
+    // pacotes de produção e do local.
+    alias(libs.plugins.googleServices)
 }
 
 // Lê as propriedades do local.properties
@@ -158,4 +161,8 @@ dependencies {
     implementation(libs.coil.network.ktor)
     implementation(libs.compose.uiTooling)
     implementation(libs.androidx.activity.compose)
+
+    // Push: o serviço que recebe a mensagem vive aqui, ao lado da MainActivity.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 }

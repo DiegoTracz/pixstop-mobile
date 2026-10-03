@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "176457321664",
+    "project_id": "pixelstop-fd153",
+    "storage_bucket": "pixelstop-fd153.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176457321664:android:77dddfbd05d0d334b4f125",
+        "android_client_info": {
+          "package_name": "com.pixstop.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADvYadaY4CYNu6CWr9SwRo1g9p3SsmLTw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176457321664:android:d81fd46ca113c707b4f125",
+        "android_client_info": {
+          "package_name": "com.pixstop.mobile.local"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADvYadaY4CYNu6CWr9SwRo1g9p3SsmLTw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,7 +2,9 @@ package com.pixstop.mobile.core.di
 
 import com.pixstop.mobile.core.network.GatewayClientFactory
 import com.pixstop.mobile.core.network.HttpClientFactory
+import com.pixstop.mobile.BuildKonfig
 import com.pixstop.mobile.core.notification.NotificationEventBus
+import com.pixstop.mobile.core.notification.PushTokenRegistry
 import com.pixstop.mobile.core.storage.CountDraftStore
 import com.pixstop.mobile.core.storage.SessionStore
 import com.pixstop.mobile.core.storage.TokenManager
@@ -91,6 +93,7 @@ val dataModule: Module = module {
     single { LegalRepository(get()) }
     single { ProfileRepository(get()) }
     single { NotificationRepository(get()) }
+    single { PushTokenRegistry(get(), get(), BuildKonfig.APP_VERSION_NAME) }
     single { ShopRepository(get()) }
     single { CartRepository(get()) }
     single { OrderRepository(get()) }
@@ -121,7 +124,7 @@ val dataModule: Module = module {
 val viewModelModule: Module = module {
     viewModel { LoginViewModel(get()) }
     viewModel { RegisterViewModel(get()) }
-    viewModel { SessionViewModel(get(), get(), get()) }
+    viewModel { SessionViewModel(get(), get(), get(), get()) }
     viewModel { LegalConsentViewModel(get()) }
     viewModel { ProfileViewModel(get(), get()) }
     viewModel { NotificationsViewModel(get(), get()) }
