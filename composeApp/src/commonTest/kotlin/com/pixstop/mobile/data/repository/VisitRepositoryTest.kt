@@ -55,7 +55,7 @@ class VisitRepositoryTest {
     }
 
     @Test
-    fun `o envio leva o client id, o que foi contado e o que ficou sem contagem`() = runTest {
+    fun `o envio leva o client id o que foi contado e o que ficou sem contagem`() = runTest {
         val api = FakeApi()
         val resposta = """
             {"success": true, "data": {"id": 12, "at": "2026-09-20T12:00:00+00:00", "counted_items": 1, "skipped_items": 1,
@@ -89,7 +89,7 @@ class VisitRepositoryTest {
     }
 
     @Test
-    fun `sem rede o envio devolve falha, e nada se perde no aparelho`() = runTest {
+    fun `sem rede o envio devolve falha e nada se perde no aparelho`() = runTest {
         val api = FakeApi(status = HttpStatusCode.ServiceUnavailable)
 
         val outcome = VisitRepository(api.clientReturning("")).submit(

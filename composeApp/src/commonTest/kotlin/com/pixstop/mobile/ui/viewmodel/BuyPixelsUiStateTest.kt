@@ -26,7 +26,7 @@ class BuyPixelsUiStateTest {
     )
 
     @Test
-    fun `r$ 50 no pix compram 5000 pixels e custam 50`() {
+    fun `reais 50 no pix compram 5000 pixels e custam 50`() {
         val state = BuyPixelsUiState(offer = offer, preset = 50)
 
         assertTrue(state.isValid)
