@@ -30,6 +30,7 @@ import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.DiscountTag
 import com.pixstop.mobile.ui.components.PixelButton
+import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelPrice
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
@@ -50,7 +51,8 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ProductDetailScreen(
     productId: Long,
     onBack: () -> Unit,
-    onOpenCart: () -> Unit,
+    /** "Comprar agora": põe no carrinho e vai direto ao pagamento (CHECKOUT_RAPIDO.md). */
+    onBuyNow: () -> Unit,
     viewModel: ProductDetailViewModel = koinViewModel(),
     cartViewModel: CartViewModel = koinViewModel(),
 ) {
@@ -129,12 +131,23 @@ fun ProductDetailScreen(
                         )
                     }
 
+                    // Um item é o pedido de quase todo mundo: comprar agora
+                    // pula o carrinho. Adicionar continua para quem leva mais.
                     PixelButton(
-                        text = if (product.isSoldOut) "Esgotado" else "Adicionar ao carrinho",
-                        onClick = { cartViewModel.add(product.id, quantity, onAdded = onOpenCart) },
+                        text = if (product.isSoldOut) "Esgotado" else "Comprar agora",
+                        onClick = { cartViewModel.add(product.id, quantity, onAdded = onBuyNow) },
                         enabled = !product.isSoldOut,
                         modifier = Modifier.fillMaxWidth(),
                     )
+
+                    if (!product.isSoldOut) {
+                        PixelButton(
+                            text = "Adicionar ao carrinho",
+                            onClick = { cartViewModel.add(product.id, quantity, onAdded = onBack) },
+                            variant = PixelButtonVariant.Secondary,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
         }

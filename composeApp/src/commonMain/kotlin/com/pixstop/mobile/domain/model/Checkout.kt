@@ -24,7 +24,12 @@ data class Checkout(
     val itemCount: Int,
     /** A geladeira desta compra (Fase 9.7). */
     val appliance: ApplianceStatus = ApplianceStatus.Unknown,
+    /** Como a pessoa pagou da última vez (CHECKOUT_RAPIDO.md); nula para quem nunca pagou. */
+    val lastPayment: LastPayment? = null,
 )
+
+/** A forma e os pixels do último pedido pago: é de onde o checkout parte. */
+data class LastPayment(val method: com.pixstop.mobile.domain.checkout.PaymentMethod, val pixels: Int)
 
 data class SavedCard(
     val id: Long,

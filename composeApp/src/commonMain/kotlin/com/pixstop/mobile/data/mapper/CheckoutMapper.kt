@@ -8,7 +8,9 @@ import com.pixstop.mobile.data.remote.dto.ApplianceDto
 import com.pixstop.mobile.data.remote.dto.PickupDto
 import com.pixstop.mobile.data.remote.dto.PixDto
 import com.pixstop.mobile.data.remote.dto.SavedCardDto
+import com.pixstop.mobile.domain.checkout.PaymentMethod
 import com.pixstop.mobile.domain.model.Checkout
+import com.pixstop.mobile.domain.model.LastPayment
 import com.pixstop.mobile.domain.model.FridgeLight
 import com.pixstop.mobile.domain.model.Order
 import com.pixstop.mobile.domain.model.OrderXp
@@ -45,6 +47,7 @@ fun CheckoutDto.toDomain() = Checkout(
     savedCards = savedCards.map { it.toDomain() },
     itemCount = items.sumOf { it.quantity },
     appliance = appliance?.toDomain() ?: ApplianceStatus.Unknown,
+    lastPayment = checkout.lastPayment?.let { LastPayment(PaymentMethod.from(it.method), it.pixels) },
 )
 
 fun SavedCardDto.toDomain() = SavedCard(

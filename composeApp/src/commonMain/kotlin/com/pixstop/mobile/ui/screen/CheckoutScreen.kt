@@ -38,6 +38,8 @@ import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.domain.model.FridgeLight
 import com.pixstop.mobile.ui.components.FridgeLamp
 import com.pixstop.mobile.ui.components.PixelButton
+import com.pixstop.mobile.ui.components.PixelButtonVariant
+import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelCoin
 import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
@@ -112,12 +114,36 @@ fun CheckoutScreen(
                     }
 
                     Section(title = "Como pagar") {
-                        state.availableMethods.forEach { method ->
-                            MethodOption(
-                                method = method,
-                                selected = state.method == method,
-                                onClick = { viewModel.onMethodChange(method) },
-                            )
+                        if (!state.methodsExpanded) {
+                            // A forma lembrada, numa linha: a tela é uma
+                            // confirmação. "Trocar" abre o que ficou escondido.
+                            Row(
+                                modifier = Modifier.fillMaxWidth().border(2.dp, PixColors.Cyan).background(PixColors.CyanAlpha10).padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = state.method.label() + (state.savedCards.firstOrNull { it.id == state.savedCardId }
+                                        ?.takeIf { state.method == PaymentMethod.Card && state.cardMode == CardMode.Saved }
+                                        ?.let { " •••• ${it.lastFour}" } ?: ""),
+                                    style = PixTypography.bodySecondary,
+                                    color = PixColors.Gray100,
+                                )
+                                PixelButton(
+                                    text = "trocar",
+                                    onClick = viewModel::expandMethods,
+                                    variant = PixelButtonVariant.Secondary,
+                                    buttonSize = PixelButtonSize.Small,
+                                )
+                            }
+                        } else {
+                            state.availableMethods.forEach { method ->
+                                MethodOption(
+                                    method = method,
+                                    selected = state.method == method,
+                                    onClick = { viewModel.onMethodChange(method) },
+                                )
+                            }
                         }
 
                         if (!checkout.gatewayAvailable) {
@@ -296,7 +322,7 @@ fun CheckoutScreen(
                     }
 
                     PixelButton(
-                        text = if (totals.charged > 0) "Pagar ${formatMoney(totals.charged)}" else "Concluir pedido",
+                        text = state.payButtonLabel,
                         onClick = viewModel::place,
                         enabled = state.canPlace,
                         isLoading = state.isPlacing,
@@ -324,12 +350,7 @@ private fun MethodOption(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val label = when (method) {
-        PaymentMethod.Money -> "PIX"
-        PaymentMethod.Card -> "Cartão"
-        PaymentMethod.Pixels -> "Só pixels"
-        PaymentMethod.Mixed -> "Misto"
-    }
+    val label = method.label()
 
     Row(
         modifier = Modifier
@@ -490,4 +511,11 @@ private fun SummaryLine(
             color = color,
         )
     }
+}
+
+private fun PaymentMethod.label(): String = when (this) {
+    PaymentMethod.Money -> "PIX"
+    PaymentMethod.Card -> "Cartão"
+    PaymentMethod.Pixels -> "Só pixels"
+    PaymentMethod.Mixed -> "Misto"
 }

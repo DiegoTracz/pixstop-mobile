@@ -7,6 +7,7 @@ import com.pixstop.mobile.core.text.IsoInstant
 import com.pixstop.mobile.data.payment.CardTokenizer
 import com.pixstop.mobile.data.repository.AppConfigRepository
 import com.pixstop.mobile.data.repository.OrderRepository
+import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.domain.checkout.CheckoutBreakdown
 import com.pixstop.mobile.domain.checkout.CheckoutTotals
 import com.pixstop.mobile.domain.checkout.PaymentMethod
@@ -36,7 +37,54 @@ data class CheckoutUiState(
     val isPlacing: Boolean = false,
     val placedOrder: Order? = null,
     val error: String? = null,
+    /**
+     * As formas de pagamento abertas na tela. Com uma forma lembrada, a seção
+     * "Como pagar" vira uma linha com "trocar" (CHECKOUT_RAPIDO.md): a tela
+     * passa a ser uma confirmação, não um formulário.
+     */
+    val methodsExpanded: Boolean = true,
 ) {
+    /**
+     * Parte de como a pessoa pagou da última vez, se a forma ainda estiver
+     * disponível; senão, fica como a regra escolheu e as opções abrem. Os
+     * pixels lembrados respeitam o teto de hoje.
+     */
+    fun withRememberedPayment(): CheckoutUiState {
+        val last = checkout?.lastPayment ?: return copy(methodsExpanded = true)
+
+        // "Misto" no servidor é PIX com pixels; na tela é a forma PIX com o
+        // controle de pixels, não uma forma à parte.
+        val method = if (last.method == PaymentMethod.Mixed) PaymentMethod.Money else last.method
+
+        if (method !in availableMethods) {
+            return copy(methodsExpanded = true)
+        }
+
+        val remembered = copy(method = method, installments = 1, methodsExpanded = false)
+        val usesPixels = last.method == PaymentMethod.Pixels || last.method == PaymentMethod.Mixed
+
+        return remembered.copy(pixels = if (usesPixels) min(last.pixels, remembered.maxPixels).coerceAtLeast(0) else 0)
+    }
+
+    /** "Pagar R$ 12,00 com PIX": o botão diz como, para ninguém pagar com o cartão errado sem ver. */
+    val payButtonLabel: String
+        get() {
+            val charged = breakdown.charged
+            if (charged <= 0) return "Concluir pedido"
+
+            val how = when (method) {
+                PaymentMethod.Money, PaymentMethod.Mixed -> "com PIX"
+                PaymentMethod.Pixels -> "com pixels"
+                PaymentMethod.Card -> savedCards.firstOrNull { it.id == savedCardId }
+                    ?.takeIf { cardMode == CardMode.Saved }
+                    ?.let { "no cartão •••• ${it.lastFour}" }
+                    ?: "no cartão"
+            }
+            val andPixels = if (method != PaymentMethod.Pixels && breakdown.pixelsDiscount > 0) " e pixels" else ""
+
+            return "Pagar ${formatMoney(charged)} $how$andPixels"
+        }
+
     /**
      * Formas que a empresa aceita agora.
      *
@@ -204,7 +252,7 @@ class CheckoutViewModel(
                         // já cai no formulário, sem um passo a mais.
                         cardMode = if (checkout.savedCards.isEmpty()) CardMode.New else CardMode.Saved,
                         maxInstallments = config.config.value.maxInstallments,
-                    )
+                    ).withRememberedPayment()
                 }
 
                 is Outcome.Failure -> _uiState.value = _uiState.value.copy(
@@ -213,6 +261,11 @@ class CheckoutViewModel(
                 )
             }
         }
+    }
+
+    /** "Trocar": abre as formas que a lembrança tinha recolhido. */
+    fun expandMethods() {
+        _uiState.value = _uiState.value.copy(methodsExpanded = true)
     }
 
     fun onMethodChange(method: PaymentMethod) {

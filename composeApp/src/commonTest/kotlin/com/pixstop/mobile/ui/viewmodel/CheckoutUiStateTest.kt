@@ -2,6 +2,7 @@ package com.pixstop.mobile.ui.viewmodel
 
 import com.pixstop.mobile.domain.checkout.PaymentMethod
 import com.pixstop.mobile.domain.model.Checkout
+import com.pixstop.mobile.domain.model.LastPayment
 import com.pixstop.mobile.domain.model.SavedCard
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -20,6 +21,7 @@ class CheckoutUiStateTest {
         gateway: Boolean = true,
         cards: List<SavedCard> = emptyList(),
         publicKey: Boolean = true,
+        lastPayment: LastPayment? = null,
     ) = Checkout(
         productsTotal = 10.0,
         walletPixels = 0,
@@ -36,6 +38,7 @@ class CheckoutUiStateTest {
         cardTokenizationAvailable = gateway && publicKey,
         savedCards = cards,
         itemCount = 1,
+        lastPayment = lastPayment,
     )
 
     private val cartao = SavedCard(id = 4, lastFour = "1234", brand = "visa", isDefault = false, expires = "12/30")
@@ -138,5 +141,62 @@ class CheckoutUiStateTest {
 
         assertEquals(listOf(cartao, padrao), state.savedCards)
         assertEquals(emptyList(), CheckoutUiState().savedCards)
+    }
+
+    /* ── O pagamento lembra da última vez (CHECKOUT_RAPIDO.md) ───────────── */
+
+    @Test
+    fun `parte da forma da ultima vez, com as opcoes recolhidas`() {
+        val state = CheckoutUiState(
+            checkout = checkout(cards = listOf(padrao), lastPayment = LastPayment(PaymentMethod.Card, 0)),
+            savedCardId = padrao.id,
+            cardMode = CardMode.Saved,
+        ).withRememberedPayment()
+
+        assertEquals(PaymentMethod.Card, state.method)
+        assertFalse(state.methodsExpanded)
+        // O botão diz com qual cartão: 10,00 + 4% + 0,50 = 10,90.
+        assertEquals("Pagar R$ 10,90 no cartão •••• 9999", state.payButtonLabel)
+    }
+
+    @Test
+    fun `forma lembrada que a empresa nao aceita mais nao e escolhida, e as opcoes abrem`() {
+        val state = CheckoutUiState(
+            checkout = checkout(cards = emptyList(), publicKey = false, lastPayment = LastPayment(PaymentMethod.Card, 0)),
+        ).withRememberedPayment()
+
+        assertEquals(PaymentMethod.Money, state.method)
+        assertTrue(state.methodsExpanded)
+    }
+
+    @Test
+    fun `sem lembranca as opcoes vem abertas e o botao diz com PIX`() {
+        val state = CheckoutUiState(checkout = checkout()).withRememberedPayment()
+
+        assertTrue(state.methodsExpanded)
+        assertEquals("Pagar R$ 10,00 com PIX", state.payButtonLabel)
+    }
+
+    @Test
+    fun `os pixels lembrados respeitam o teto de hoje`() {
+        // Carteira com 300 pixels, teto de 50% de R$ 10,00 = 500 pixels: o teto é a carteira.
+        val base = checkout(lastPayment = LastPayment(PaymentMethod.Mixed, 999)).copy(walletPixels = 300, maxPixels = 300)
+        val state = CheckoutUiState(checkout = base).withRememberedPayment()
+
+        // "Misto" do servidor vira PIX com o controle de pixels preenchido.
+        assertEquals(PaymentMethod.Money, state.method)
+        assertEquals(state.maxPixels, state.pixels)
+        assertTrue(state.pixels <= 300)
+        assertEquals("Pagar R$ 7,00 com PIX e pixels", state.payButtonLabel)
+    }
+
+    @Test
+    fun `nada a cobrar vira concluir pedido`() {
+        // Sem teto de desconto e com pixels para a compra inteira, não sobra nada a cobrar.
+        val base = checkout(lastPayment = LastPayment(PaymentMethod.Pixels, 1000))
+            .copy(walletPixels = 1000, walletPixelsAsMoney = 1000, maxPixels = 1000, maxDiscountPercentage = 100.0)
+        val state = CheckoutUiState(checkout = base).withRememberedPayment()
+
+        assertEquals("Concluir pedido", state.payButtonLabel)
     }
 }

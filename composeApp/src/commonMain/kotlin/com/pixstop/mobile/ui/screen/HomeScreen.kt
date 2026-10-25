@@ -116,6 +116,8 @@ fun HomeScreen(
     onJoinCompany: () -> Unit = {},
     onOpenNotifications: () -> Unit = {},
     onOpenCart: () -> Unit = {},
+    /** A gaveta do carrinho leva direto ao pagamento (CHECKOUT_RAPIDO.md). */
+    onCheckout: () -> Unit = {},
     onOpenProduct: (Long) -> Unit = {},
     onDestination: (Destination) -> Unit = {},
     onOpenCards: () -> Unit = {},
@@ -228,7 +230,7 @@ fun HomeScreen(
                         onKeepShopping = { scope.launch { cartDrawerState.close() } },
                         onCheckout = {
                             scope.launch { cartDrawerState.close() }
-                            onOpenCart()
+                            onCheckout()
                         },
                     )
                 }

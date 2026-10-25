@@ -59,7 +59,12 @@ data class CheckoutRulesDto(
     @SerialName("gateway_available") val gatewayAvailable: Boolean = false,
     @SerialName("mp_public_key") val mpPublicKey: String? = null,
     @SerialName("is_sandbox") val isSandbox: Boolean = false,
+    /** Como a pessoa pagou da última vez (CHECKOUT_RAPIDO.md); nulo para quem nunca pagou. */
+    @SerialName("last_payment") val lastPayment: LastPaymentDto? = null,
 )
+
+@Serializable
+data class LastPaymentDto(val method: String, val pixels: Int = 0)
 
 @Serializable
 data class CheckoutFeesDto(

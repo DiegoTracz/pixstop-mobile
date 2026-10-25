@@ -265,6 +265,7 @@ fun AppNavigation() {
                 onJoinCompany = { navController.navigate(Routes.JOIN_COMPANY) },
                 onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 onOpenCart = { navController.navigate(Routes.CART) },
+                onCheckout = { navController.navigate(Routes.CHECKOUT) },
                 onOpenCards = { navController.navigate(Routes.CARDS) },
                 // A tela não conhece rotas: ela diz para onde a pessoa quer
                 // ir, e a navegação sabe onde isso fica.
@@ -295,9 +296,9 @@ fun AppNavigation() {
                 productId = entry.arguments?.read { getStringOrNull("id") }?.toLongOrNull() ?: 0L,
                 cartViewModel = cartViewModel,
                 onBack = { navController.popBackStack() },
-                onOpenCart = {
-                    navController.navigate(Routes.CART) {
-                        // Sair do produto para o carrinho: voltar dali leva de
+                onBuyNow = {
+                    navController.navigate(Routes.CHECKOUT) {
+                        // Sair do produto para o pagamento: voltar dali leva de
                         // volta à vitrine, não ao produto que já foi resolvido.
                         popUpTo("${Routes.PRODUCT}/{id}") { inclusive = true }
                     }
