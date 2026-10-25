@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.pixstop.mobile.data.repository.OperatorRepository
 import com.pixstop.mobile.domain.model.OperatorCompanies
 import com.pixstop.mobile.domain.model.OperatorRound
+import com.pixstop.mobile.domain.model.OperatorShopping
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +19,8 @@ data class OperatorUiState(
     val tab: OperatorTab = OperatorTab.Round,
     val round: OperatorRound? = null,
     val companies: OperatorCompanies? = null,
+    /** O que comprar para todas as empresas, numa ida só ao atacado (COMPRAS_MOBILE.md, A3). */
+    val shopping: OperatorShopping? = null,
     val onlyLow: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -45,15 +48,17 @@ class OperatorViewModel(private val operators: OperatorRepository) : ViewModel()
         viewModelScope.launch {
             val round = operators.round(onlyLow = _uiState.value.onlyLow)
             val companies = operators.companies()
+            val shopping = operators.shoppingList()
 
             _uiState.update { state ->
                 state.copy(
                     isLoading = false,
                     round = round.successOrNull ?: state.round,
                     companies = companies.successOrNull ?: state.companies,
+                    shopping = shopping.successOrNull ?: state.shopping,
                     // A falha de uma das duas listas é a que a tela conta; a
                     // outra continua mostrando o que já tinha.
-                    error = (round.errorOrNull ?: companies.errorOrNull)?.message,
+                    error = (round.errorOrNull ?: companies.errorOrNull ?: shopping.errorOrNull)?.message,
                 )
             }
         }

@@ -58,6 +58,10 @@ import java.util.concurrent.Executors
 actual fun PixelCameraScreen(
     onPhoto: (ByteArray) -> Unit,
     onDismiss: () -> Unit,
+    title: String,
+    instruction: String,
+    startWithFront: Boolean,
+    squareFrame: Boolean,
 ) {
     val context = LocalContext.current
     var hasPermission by remember {
@@ -74,7 +78,7 @@ actual fun PixelCameraScreen(
         if (!hasPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    var useFront by remember { mutableStateOf(true) }
+    var useFront by remember { mutableStateOf(startWithFront) }
     var capturing by remember { mutableStateOf(false) }
     val imageCapture = remember { ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build() }
     val executor = remember { Executors.newSingleThreadExecutor() }
@@ -88,12 +92,14 @@ actual fun PixelCameraScreen(
             CameraPreview(useFront = useFront, imageCapture = imageCapture)
 
             // A moldura do recorte: quadrada, como o avatar vai ficar.
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(280.dp)
-                    .border(4.dp, PixColors.Cyan)
-            )
+            if (squareFrame) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(280.dp)
+                        .border(4.dp, PixColors.Cyan)
+                )
+            }
         } else {
             Column(
                 modifier = Modifier.fillMaxSize().padding(32.dp),
@@ -102,7 +108,7 @@ actual fun PixelCameraScreen(
             ) {
                 Text(text = "CÂMERA NECESSÁRIA", style = PixTypography.sectionTitle, color = PixColors.Cyan)
                 Spacer(Modifier.height(12.dp))
-                Text(text = "Permita o acesso à câmera para fotografar o seu avatar.", style = PixTypography.bodyMuted)
+                Text(text = "Permita o acesso à câmera para tirar a foto.", style = PixTypography.bodyMuted)
                 Spacer(Modifier.height(24.dp))
                 PixelButton(text = "Permitir", onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) })
             }
@@ -125,7 +131,7 @@ actual fun PixelCameraScreen(
 
             Spacer(Modifier.width(16.dp))
 
-            Text(text = "CÂMERA PIXEL ART", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+            Text(text = title, style = PixTypography.sectionTitle, color = PixColors.Cyan)
         }
 
         if (hasPermission) {
@@ -139,7 +145,7 @@ actual fun PixelCameraScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Rosto dentro do quadrado, luz de frente.",
+                    text = instruction,
                     style = PixTypography.bodyMuted,
                 )
 

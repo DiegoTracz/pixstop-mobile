@@ -51,6 +51,19 @@ sealed interface NotificationTarget {
         override val destination: Destination get() = Destination.Company
     }
 
+    /**
+     * A lista de compras da semana (docs/plans/COMPRAS_MOBILE.md): é o aviso
+     * de segunda-feira. De quem cuida da operação, como as geladeiras.
+     */
+    data object ShoppingList : NotificationTarget {
+        override val destination: Destination get() = Destination.Fridges
+    }
+
+    /** Uma compra específica: a nota que alguém subiu e espera conferência. */
+    data class Purchase(val id: Long) : NotificationTarget {
+        override val destination: Destination get() = Destination.Fridges
+    }
+
     /** A caixa de avisos. É onde um push genérico deixa a pessoa. */
     data object Notifications : NotificationTarget {
         override val destination: Destination get() = Destination.Notifications

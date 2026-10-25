@@ -30,13 +30,17 @@ import com.pixstop.mobile.ui.theme.PixTypography
 actual fun PixelCameraScreen(
     onPhoto: (ByteArray) -> Unit,
     onDismiss: () -> Unit,
+    title: String,
+    instruction: String,
+    startWithFront: Boolean,
+    squareFrame: Boolean,
 ) {
     Column(
         modifier = Modifier.fillMaxSize().background(PixColors.Dark).padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(text = "CÂMERA PIXEL ART", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+        Text(text = title, style = PixTypography.sectionTitle, color = PixColors.Cyan)
 
         androidx.compose.foundation.layout.Spacer(Modifier.height(12.dp))
 

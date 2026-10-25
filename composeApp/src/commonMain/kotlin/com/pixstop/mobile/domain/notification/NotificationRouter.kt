@@ -69,7 +69,15 @@ object NotificationRouter {
             // O painel da empresa no app reúne o que na web são páginas
             // separadas — pedidos, plano, add-ons. Assinatura e hardware não
             // têm tela aqui, então param na entrada do painel.
-            "company" -> NotificationTarget.Company
+            // As compras têm tela aqui (COMPRAS_MOBILE.md): a lista da
+            // semana e uma compra pelo id. O resto da empresa para no painel.
+            "company" -> when {
+                segments.getOrNull(1) == "products" && segments.getOrNull(2) == "shopping-list" -> NotificationTarget.ShoppingList
+                segments.getOrNull(1) == "purchases" -> segments.getOrNull(2)?.toLongOrNull()
+                    ?.let { NotificationTarget.Purchase(it) }
+                    ?: NotificationTarget.Company
+                else -> NotificationTarget.Company
+            }
 
             // Retaguarda da plataforma: existe só na web.
             else -> null
@@ -81,8 +89,14 @@ object NotificationRouter {
      * registro específico, o `id` dele.
      */
     fun fromPayload(type: String?, id: String?): NotificationTarget? {
-        val target = fromType(type) ?: return null
         val numericId = id?.toLongOrNull()
+
+        // A nota lida só faz sentido com o id da compra; sem ele, a lista.
+        if (type == "purchase_read") {
+            return numericId?.let { NotificationTarget.Purchase(it) } ?: NotificationTarget.ShoppingList
+        }
+
+        val target = fromType(type) ?: return null
 
         return if (target is NotificationTarget.Orders && numericId != null) {
             NotificationTarget.Order(numericId)
@@ -92,6 +106,7 @@ object NotificationRouter {
     }
 
     private fun fromType(type: String?): NotificationTarget? = when (type) {
+        "shopping_list" -> NotificationTarget.ShoppingList
         "order_paid", "order_canceled" -> NotificationTarget.Orders
         "pixels_received", "pixels_expiring" -> NotificationTarget.Pixels
         "level_up", "season_closed" -> NotificationTarget.Progress

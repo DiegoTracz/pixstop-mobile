@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.OperatorAlert
 import com.pixstop.mobile.domain.model.OperatorCompany
+import com.pixstop.mobile.domain.model.OperatorShopping
 import com.pixstop.mobile.domain.model.OperatorStockRow
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
@@ -32,6 +33,7 @@ import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.SensorCard
 import com.pixstop.mobile.ui.components.formatMoney
+import com.pixstop.mobile.ui.components.rememberShareText
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.OperatorTab
@@ -103,6 +105,7 @@ fun OperatorScreen(
             state.tab == OperatorTab.Round -> RoundList(
                 offline = state.round?.offline.orEmpty(),
                 stock = state.round?.stock.orEmpty(),
+                shopping = state.shopping,
                 onlyLow = state.onlyLow,
                 error = state.error,
                 onToggleOnlyLow = viewModel::toggleOnlyLow,
@@ -122,10 +125,13 @@ fun OperatorScreen(
 private fun RoundList(
     offline: List<OperatorAlert>,
     stock: List<OperatorStockRow>,
+    shopping: OperatorShopping?,
     onlyLow: Boolean,
     error: String?,
     onToggleOnlyLow: () -> Unit,
 ) {
+    val share = rememberShareText()
+
     LazyColumn(
         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
         contentPadding = PaddingValues(16.dp),
@@ -133,6 +139,44 @@ private fun RoundList(
     ) {
         if (error != null) {
             item { Text(text = error, style = PixTypography.errorText) }
+        }
+
+        // O que comprar para todas as empresas, numa ida só ao atacado
+        // (COMPRAS_MOBILE.md, A3). O custo só aparece para o dono.
+        if (shopping != null && shopping.lines.isNotEmpty()) {
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "PARA COMPRAR · todas as empresas",
+                        style = PixTypography.inputLabel,
+                        color = PixColors.Cyan,
+                        modifier = Modifier.weight(1f),
+                    )
+                    PixelButton(
+                        text = "Compartilhar",
+                        onClick = { share(shoppingMessage(shopping)) },
+                        buttonSize = PixelButtonSize.Small,
+                        variant = PixelButtonVariant.Secondary,
+                    )
+                }
+            }
+
+            items(shopping.lines, key = { it.key }) { line ->
+                SensorCard(
+                    icon = AppIconType.Cart,
+                    label = line.companies.joinToString(" · ") { "${it.name} ${it.suggested} (tem ${it.stock})" },
+                    value = "${line.name} · ${line.suggested} un",
+                    accent = if (line.zeroed > 0) PixColors.Pink else PixColors.Cyan,
+                    detail = listOfNotNull(
+                        line.zeroed.takeIf { it > 0 }?.let { "zerado em $it" },
+                        line.estimatedCost?.let { formatMoney(it) },
+                    ).joinToString(" · ").ifBlank { null },
+                )
+            }
+
+            shopping.totalCost?.let { total ->
+                item { Text(text = "Total estimado ${formatMoney(total)}", style = PixTypography.caption, color = PixColors.Gray400) }
+            }
         }
 
         // Primeiro o que impede a venda.
@@ -222,4 +266,24 @@ private fun detailFor(company: OperatorCompany): String = when {
     company.offline > 0 -> "${company.offline} fora do ar"
     company.lowStock > 0 -> "${company.lowStock} acabando"
     else -> "${company.appliances} geladeira(s) de pé"
+}
+
+/**
+ * A lista de uma ida só ao atacado: o total de cada item e, entre parênteses,
+ * onde descarregar cada parte.
+ */
+private fun shoppingMessage(shopping: OperatorShopping): String {
+    val lines = mutableListOf("🛒 *Compras da semana – todas as empresas*", "")
+
+    shopping.lines.forEach { line ->
+        val where = line.companies.joinToString(", ") { "${it.name} ${it.suggested}" }
+        lines += "• ${line.name} – ${line.suggested} un ($where)"
+    }
+
+    shopping.totalCost?.let {
+        lines += ""
+        lines += "💰 Total estimado: ~${formatMoney(it)} no custo"
+    }
+
+    return lines.joinToString("\n")
 }

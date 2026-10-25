@@ -21,6 +21,9 @@ import com.pixstop.mobile.ui.screen.BuyPixelsScreen
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
 import com.pixstop.mobile.ui.screen.VisitScreen
+import com.pixstop.mobile.ui.screen.PurchaseScreen
+import com.pixstop.mobile.ui.screen.PurchasesScreen
+import com.pixstop.mobile.ui.screen.ShoppingListScreen
 import com.pixstop.mobile.ui.screen.LegalConsentScreen
 import com.pixstop.mobile.ui.screen.LoginScreen
 import com.pixstop.mobile.ui.screen.CartScreen
@@ -88,6 +91,8 @@ fun AppNavigation() {
             NotificationTarget.Progress -> Routes.PROGRESS
             is NotificationTarget.Invite -> Routes.invite(target.code)
             NotificationTarget.Company -> Routes.COMPANY
+            NotificationTarget.ShoppingList -> Routes.SHOPPING_LIST
+            is NotificationTarget.Purchase -> Routes.purchase(target.id)
             NotificationTarget.Notifications -> Routes.NOTIFICATIONS
         }
 
@@ -393,6 +398,44 @@ fun AppNavigation() {
             ConnectFridgeScreen(
                 onBack = { navController.popBackStack() },
                 onVisit = { applianceId -> navController.navigate(Routes.visit(applianceId)) },
+                onShoppingList = { navController.navigate(Routes.SHOPPING_LIST) },
+                onPurchases = { navController.navigate(Routes.PURCHASES) },
+            )
+        }
+
+        // Compras (COMPRAS_MOBILE.md): a lista da semana, as compras e a
+        // nota. Chega-se pelo estoque das geladeiras ou pelo aviso da lista.
+        composable(Routes.SHOPPING_LIST) {
+            ShoppingListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenPurchase = { id -> navController.navigate(Routes.purchase(id)) },
+                // O ritmo é da empresa: o repositor compra com o que ela definiu.
+                canManage = session.company?.role?.isAdmin == true,
+            )
+        }
+
+        composable(Routes.PURCHASES) {
+            PurchasesScreen(
+                onBack = { navController.popBackStack() },
+                onOpen = { id -> navController.navigate(Routes.purchase(id)) },
+                onNewReceipt = { navController.navigate(Routes.PURCHASE_NEW) },
+                onOpenShoppingList = { navController.navigate(Routes.SHOPPING_LIST) },
+            )
+        }
+
+        composable(Routes.PURCHASE_NEW) {
+            PurchaseScreen(
+                purchaseId = null,
+                onBack = { navController.popBackStack() },
+                onOpenShoppingList = { navController.navigate(Routes.SHOPPING_LIST) { popUpTo(Routes.PURCHASES) } },
+            )
+        }
+
+        composable("${Routes.PURCHASES}/{purchaseId}") { entry ->
+            PurchaseScreen(
+                purchaseId = entry.arguments?.read { getStringOrNull("purchaseId") }?.toLongOrNull(),
+                onBack = { navController.popBackStack() },
+                onOpenShoppingList = { navController.navigate(Routes.SHOPPING_LIST) },
             )
         }
 

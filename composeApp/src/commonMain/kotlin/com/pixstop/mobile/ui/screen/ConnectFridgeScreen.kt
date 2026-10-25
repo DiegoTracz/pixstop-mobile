@@ -68,6 +68,9 @@ fun ConnectFridgeScreen(
     onBack: () -> Unit,
     /** A visita à prateleira daquela geladeira (CONCILIACAO_MOBILE.md). */
     onVisit: (Long) -> Unit = {},
+    /** A lista de compras e as compras da empresa (COMPRAS_MOBILE.md). */
+    onShoppingList: () -> Unit = {},
+    onPurchases: () -> Unit = {},
     viewModel: ConnectFridgeViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -103,7 +106,24 @@ fun ConnectFridgeScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     when (state.step) {
-                        ConnectStep.Devices -> DevicesStep(state, viewModel)
+                        ConnectStep.Devices -> {
+                            // O estoque começa aqui: o que comprar e o que já chegou.
+                            SensorCard(
+                                icon = AppIconType.Cart,
+                                label = "O que falta para a semana",
+                                value = "Lista de compras",
+                                detail = "Compartilhe com quem compra",
+                                onClick = onShoppingList,
+                            )
+                            SensorCard(
+                                icon = AppIconType.Camera,
+                                label = "Na volta do mercado",
+                                value = "Compras",
+                                detail = "Fotografe a nota: a IA lê e você confere",
+                                onClick = onPurchases,
+                            )
+                            DevicesStep(state, viewModel)
+                        }
                         ConnectStep.Code -> CodeStep(state, viewModel)
                         ConnectStep.Network -> NetworkStep(state, viewModel)
                         ConnectStep.Configuring -> WaitingStep(

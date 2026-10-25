@@ -4,10 +4,14 @@ import com.pixstop.mobile.core.config.ApiConfig
 import com.pixstop.mobile.core.network.safeCall
 import com.pixstop.mobile.data.remote.dto.OperatorCompaniesDto
 import com.pixstop.mobile.data.remote.dto.OperatorRoundDto
+import com.pixstop.mobile.data.remote.dto.OperatorShoppingDto
 import com.pixstop.mobile.domain.model.OperatorAlert
 import com.pixstop.mobile.domain.model.OperatorCompanies
 import com.pixstop.mobile.domain.model.OperatorCompany
 import com.pixstop.mobile.domain.model.OperatorRound
+import com.pixstop.mobile.domain.model.OperatorShopping
+import com.pixstop.mobile.domain.model.OperatorShoppingCompany
+import com.pixstop.mobile.domain.model.OperatorShoppingLine
 import com.pixstop.mobile.domain.model.OperatorStockRow
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.map
@@ -64,6 +68,29 @@ class OperatorRepository(private val client: HttpClient) {
                         profitMonth = it.profitMonth,
                     )
                 },
+            )
+        }
+
+    /**
+     * O que comprar para todas as empresas, numa ida só ao atacado
+     * (docs/plans/COMPRAS_MOBILE.md, A3). O custo só vem para o dono.
+     */
+    suspend fun shoppingList(): Outcome<OperatorShopping> =
+        safeCall<OperatorShoppingDto>(TAG) {
+            client.get(ApiConfig.Endpoints.OPERATOR_SHOPPING_LIST)
+        }.map { dto ->
+            OperatorShopping(
+                lines = dto.lines.map { line ->
+                    OperatorShoppingLine(
+                        key = line.key,
+                        name = line.name,
+                        suggested = line.suggested,
+                        zeroed = line.zeroed,
+                        estimatedCost = line.estimatedCost,
+                        companies = line.companies.map { OperatorShoppingCompany(it.tenant, it.suggested, it.stock) },
+                    )
+                },
+                totalCost = dto.totalCost,
             )
         }
 }

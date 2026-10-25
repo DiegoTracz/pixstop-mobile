@@ -77,7 +77,8 @@ fun DiscountTag(percentage: Int, modifier: Modifier = Modifier) {
  * Reais no formato brasileiro, sem depender de biblioteca de localização.
  */
 fun formatMoney(value: Double): String {
-    val cents = (value * 100).toLong()
+    // Arredonda, não trunca: 1,15 em ponto flutuante é 114,999… centavos.
+    val cents = kotlin.math.round(value * 100).toLong()
     val reais = cents / 100
     val rest = (cents % 100).toString().padStart(2, '0')
 

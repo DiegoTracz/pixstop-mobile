@@ -126,4 +126,27 @@ class NotificationRouterTest {
         assertEquals(Destination.Home, NotificationRouter.fromLink("/c/ABC123XY")?.destination)
         assertNull(NotificationRouter.fromLink("/c/"))
     }
+
+    @Test
+    fun `o aviso da lista de compras abre a lista, pelo link ou pelo tipo`() {
+        assertEquals(NotificationTarget.ShoppingList, NotificationRouter.fromLink("/company/products/shopping-list"))
+        assertEquals(NotificationTarget.ShoppingList, NotificationRouter.resolve(aviso(type = "shopping_list")))
+        assertEquals(NotificationTarget.ShoppingList, NotificationRouter.resolve(aviso(type = "shopping_list", actionUrl = "/company/products/shopping-list")))
+    }
+
+    @Test
+    fun `uma compra abre pelo id, e o resto da empresa continua no painel`() {
+        assertEquals(NotificationTarget.Purchase(3), NotificationRouter.fromLink("/company/purchases/3"))
+        assertEquals(NotificationTarget.Company, NotificationRouter.fromLink("/company/purchases"))
+        assertEquals(NotificationTarget.Company, NotificationRouter.fromLink("/company/products/stock"))
+    }
+
+    @Test
+    fun `o aviso de nota lida abre a compra, pelo link ou pelo push`() {
+        assertEquals(
+            NotificationTarget.Purchase(6),
+            NotificationRouter.resolve(aviso(type = "purchase_read", actionUrl = "/company/purchases/6")),
+        )
+        assertEquals(NotificationTarget.Purchase(6), NotificationRouter.fromPayload("purchase_read", "6"))
+    }
 }

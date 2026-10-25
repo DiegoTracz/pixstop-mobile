@@ -131,6 +131,9 @@ object ApiConfig {
         /** As empresas dele, com o que está fora do ar e o que está acabando. */
         const val OPERATOR_COMPANIES = "operator/companies"
 
+        /** O que comprar para todas as empresas dele, numa ida só ao atacado. */
+        const val OPERATOR_SHOPPING_LIST = "operator/shopping-list"
+
         // ── Notificações e push ───────────────────────────────────────────
         const val NOTIFICATIONS = "notifications"
         const val NOTIFICATIONS_READ_ALL = "notifications/read-all"
@@ -234,6 +237,27 @@ object ApiConfig {
 
         /** A sugestão de motivo, ou o "contei errado" de uma linha. */
         fun companyStockCountItem(countId: Long, productId: Long) = "company/stock-counts/$countId/items/$productId"
+
+        // ── Compras (docs/plans/COMPRAS_MOBILE.md) ────────────────────────
+        /** A lista de compras da semana; `?appliance=` para uma geladeira. */
+        const val COMPANY_SHOPPING_LIST = "company/shopping-list"
+
+        /** O ritmo de compra da empresa: cobertura, folga e dia do aviso. */
+        const val COMPANY_SHOPPING_LIST_SETTINGS = "company/shopping-list/settings"
+
+        /** As compras da empresa, e abrir uma em branco ou a partir da lista. */
+        const val COMPANY_PURCHASES = "company/purchases"
+
+        /** A foto da nota: responde 202 com o id e a IA lê na fila. */
+        const val COMPANY_PURCHASE_RECEIPT_UPLOAD = "company/purchases/receipt"
+
+        fun companyPurchase(id: Long) = "company/purchases/$id"
+
+        fun companyPurchaseReceipt(id: Long) = "company/purchases/$id/receipt"
+
+        fun companyPurchaseConfirm(id: Long) = "company/purchases/$id/confirm"
+
+        fun companyPurchaseDiscard(id: Long) = "company/purchases/$id/discard"
 
         fun teamMembers(departmentId: Long) = "team/$departmentId/members"
 

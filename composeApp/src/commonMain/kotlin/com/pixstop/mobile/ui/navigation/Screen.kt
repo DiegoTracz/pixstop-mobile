@@ -70,6 +70,16 @@ object Routes {
     fun visit(applianceId: Long) = "visit/$applianceId"
 
     /** O painel de quem opera geladeiras em várias empresas (Fase 16). */
+    /** A lista de compras da semana (docs/plans/COMPRAS_MOBILE.md). */
+    const val SHOPPING_LIST = "shopping-list"
+
+    /** As compras da empresa; `purchase-new` abre a câmera da nota. */
+    const val PURCHASES = "purchases"
+
+    const val PURCHASE_NEW = "purchase-new"
+
+    fun purchase(id: Long) = "purchases/$id"
+
     const val OPERATOR = "operator"
 
     /** Caixa de avisos, alcançada pelo sino da barra superior. */

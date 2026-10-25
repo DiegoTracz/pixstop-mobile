@@ -521,6 +521,24 @@ Authorization: Bearer 1|abc123def456...
 | GET | `/api/me` | ✅ | Dados do usuário autenticado |
 | POST | `/api/auth/logout` | ✅ | Revogar token |
 
+### Compras (docs/plans/COMPRAS_MOBILE.md no backend)
+
+Grupo da empresa (`company.manager`); o do operador atravessa empresas. Envelope `{success, data}`; erro de regra em `400 {success: false, error: {message}}`.
+
+| Método | Endpoint | O que faz |
+|--------|----------|-----------|
+| GET | `/api/company/shopping-list?appliance=` | A lista da semana: `{appliances, appliance, company, weekday, list: {rows, covered, cover_days, safety_margin, selling_days_per_week, total_cost}}` |
+| PATCH | `/api/company/shopping-list/settings` | `{cover_days, safety_percent, weekday}`; `weekday` ausente não mexe, `null` desliga o aviso. **Mande o `null` explícito** (o JSON do app omite nulos) |
+| GET | `/api/company/purchases` | `{purchases: {data[], current_page, last_page}, canReadReceipts}` |
+| POST | `/api/company/purchases` | `{source: "manual"\|"list", items[]}` → `201 {id, status}`. **`source` sempre explícito** (o JSON do app omite valores padrão) |
+| POST | `/api/company/purchases/receipt` | Multipart `receipt` (JPEG/PNG/WEBP/PDF, ≤ 12 MB, com `filename`) → `202 {id, status: "reading"}` |
+| GET | `/api/company/purchases/{id}` | A folha: `{purchase: {…, items[]}, destination, duplicate, products[], appliances[], reading, receipt: {url, kind}, ai: {error, warnings[], model}}`. Enquanto `reading` for `true`, perguntar de novo a cada 3 s |
+| GET | `/api/company/purchases/{id}/receipt` | O arquivo da nota (bytes, sem envelope) |
+| PATCH | `/api/company/purchases/{id}` | A folha inteira, com os campos `raw_*` de volta intactos |
+| POST | `/api/company/purchases/{id}/confirm` | `{allow_duplicate}` → `data: null`, `message` |
+| POST | `/api/company/purchases/{id}/discard` | Rascunho fora |
+| GET | `/api/operator/shopping-list` | `{lines: [{key, name, suggested, zeroed, estimated_cost?, companies[]}], total_cost}`; custo só para o dono |
+
 ## Formato Padrão de Resposta
 
 ### Sucesso
