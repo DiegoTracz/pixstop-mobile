@@ -267,6 +267,8 @@ fun AppNavigation() {
                 onOpenCart = { navController.navigate(Routes.CART) },
                 onCheckout = { navController.navigate(Routes.CHECKOUT) },
                 onOpenCards = { navController.navigate(Routes.CARDS) },
+                onOpenProduct = { navController.navigate(Routes.product(it)) },
+                onOpenOrder = { navController.navigate(Routes.order(it)) },
                 // A tela não conhece rotas: ela diz para onde a pessoa quer
                 // ir, e a navegação sabe onde isso fica.
                 onDestination = { destination ->

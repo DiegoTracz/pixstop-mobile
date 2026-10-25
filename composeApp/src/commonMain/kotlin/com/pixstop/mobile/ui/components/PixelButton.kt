@@ -119,14 +119,19 @@ fun PixelButton(
         animationSpec = tween(50)
     )
 
+    // Rótulo longo quebra em duas linhas; sem altura de linha a fonte pixel
+    // as desenha uma por cima da outra.
     val textStyle = when (buttonSize) {
         PixelButtonSize.Small -> PixTypography.buttonTextSm
         else -> PixTypography.buttonText
-    }
+    }.let { it.copy(lineHeight = it.fontSize * 1.8f) }
 
+    // propagateMinConstraints: um fillMaxWidth de quem chama tem de chegar ao
+    // botão desenhado, não só à caixa de fora — senão ele fica do tamanho do texto.
     Box(
         modifier = modifier
-            .alpha(if (enabled && !isLoading) 1f else 0.5f)
+            .alpha(if (enabled && !isLoading) 1f else 0.5f),
+        propagateMinConstraints = true,
     ) {
         Box(
             modifier = Modifier
