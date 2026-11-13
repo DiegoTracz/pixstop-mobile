@@ -9,21 +9,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
-import com.pixstop.mobile.domain.model.MascotState
-import com.pixstop.mobile.ui.components.PixelMascot
+import com.pixstop.mobile.ui.components.PixelFlagSprite
+import com.pixstop.mobile.ui.components.PixelWordmark
 import com.pixstop.mobile.ui.components.gridPattern
 import com.pixstop.mobile.ui.components.scanlines
 import com.pixstop.mobile.ui.theme.PixColors
 
 /**
- * Tela de Splash: o mascote, o LED da fita, acendendo em ciclo RGB.
+ * Tela de Splash: a bandeira da marca tremulando, com o nome embaixo.
  *
- * É a primeira espera do app, e a espera é o único lugar onde o mascote cicla
- * as cores (docs/plans/MASCOTE_LED.md). O ciclo já diz "carregando", então a
- * tela não tem mais a palavra com cursor nem a barra de três blocos: dois
- * indicadores de espera juntos diriam a mesma coisa duas vezes. O splash
- * nativo do Android (`splash_logo.png`) é o mesmo mascote parado, para a troca
- * de um para o outro não piscar.
+ * A bandeira em movimento já diz "carregando", então a tela não tem palavra
+ * com cursor nem barra de progresso: dois indicadores de espera juntos diriam
+ * a mesma coisa duas vezes. O splash nativo do Android (`splash_logo.png`) é
+ * a mesma bandeira parada, no mesmo tamanho e no mesmo fundo, para a troca de
+ * um para o outro não piscar.
  */
 @Composable
 fun SplashScreen(
@@ -50,10 +49,13 @@ fun SplashScreen(
             .scanlines(),
         contentAlignment = Alignment.Center
     ) {
-        PixelMascot(
+        Column(
             modifier = Modifier.alpha(alphaAnim),
-            state = MascotState.Loading,
-            size = 160.dp,
-        )
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            PixelFlagSprite(height = 136.dp)
+            PixelWordmark(height = 28.dp)
+        }
     }
 }

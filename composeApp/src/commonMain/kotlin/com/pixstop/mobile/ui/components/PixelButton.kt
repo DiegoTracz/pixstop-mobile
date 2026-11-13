@@ -61,10 +61,10 @@ fun PixelButton(
 
     val btnColors = when (variant) {
         PixelButtonVariant.Primary -> ButtonColors(
-            bg = PixColors.Cyan,
-            text = PixColors.Dark,
-            border = PixColors.Cyan,
-            shadow = PixColors.Cyan
+            bg = PixColors.Blue,
+            text = PixColors.White,
+            border = PixColors.Blue,
+            shadow = PixColors.Purple
         )
         PixelButtonVariant.Secondary -> ButtonColors(
             bg = Color.Transparent,

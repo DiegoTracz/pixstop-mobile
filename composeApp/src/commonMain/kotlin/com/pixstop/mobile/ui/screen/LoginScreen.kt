@@ -45,11 +45,7 @@ fun LoginScreen(
     PixelAuthCard(centerContent = true) {
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Branding
-        Text(
-            text = AppBranding.APP_NAME,
-            style = PixTypography.pageTitle
-        )
+        PixelstopLogo(height = 40.dp)
 
         Spacer(modifier = Modifier.height(32.dp))
 

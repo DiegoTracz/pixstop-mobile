@@ -17,6 +17,11 @@ import androidx.compose.ui.graphics.Color
  * A escala de cinza inverte de um modo para o outro. Os acentos não: neon em
  * cima de branco não se lê, então cada cor tem uma versão fechada para o modo
  * claro, escolhida para passar em contraste sobre o fundo dele.
+ *
+ * **A marca é o azul da logo, #015DFA**, a mesma escala do site. `Blue` é
+ * esse azul exato; `Cyan`, a cor de destaque que mais aparece, é um tom
+ * acima no escuro (#4D8BFF), porque o azul da logo como texto sobre o fundo
+ * escuro dá só 3,5:1. `Purple` é o magenta, o destaque secundário.
  */
 data class PixPalette(
     // Chão e superfícies
@@ -67,13 +72,13 @@ val PixDarkPalette = PixPalette(
     Dark = Color(0xFF0B1020),
     Darker = Color(0xFF060A14),
 
-    Cyan = Color(0xFF5B8CFF),
+    Cyan = Color(0xFF4D8BFF),
     Green = Color(0xFF3DDC97),
     Yellow = Color(0xFFFFC93C),
     Orange = Color(0xFFFF8A3D),
-    Purple = Color(0xFF5B8CFF),
+    Purple = Color(0xFFFA00FB),
     Pink = Color(0xFFFF5C5C),
-    Blue = Color(0xFF5B8CFF),
+    Blue = Color(0xFF015DFA),
 
     Gray100 = Color(0xFFEEF2F7),
     Gray200 = Color(0xFFD3DBE6),
@@ -85,11 +90,11 @@ val PixDarkPalette = PixPalette(
     Gray800 = Color(0xFF131B2E),
     Gray900 = Color(0xFF0F1626),
 
-    CyanShadow = Color(0xFF2B55D6),
+    CyanShadow = Color(0xFF015DFA),
     YellowDim = Color(0x80FFC93C),
-    CyanAlpha10 = Color(0x1A5B8CFF),
-    CyanAlpha20 = Color(0x335B8CFF),
-    CyanAlpha40 = Color(0x665B8CFF),
+    CyanAlpha10 = Color(0x1A4D8BFF),
+    CyanAlpha20 = Color(0x334D8BFF),
+    CyanAlpha40 = Color(0x664D8BFF),
     GreenAlpha20 = Color(0x333DDC97),
     PinkAlpha20 = Color(0x33FF5C5C),
     PinkAlpha40 = Color(0x66FF5C5C),
@@ -100,21 +105,21 @@ val PixDarkPalette = PixPalette(
 /**
  * O claro.
  *
- * A escala inverte e os acentos fecham: o ciano neon vira o teal do símbolo
- * da marca, que é o mesmo tom da sombra do logotipo — a identidade continua
+ * A escala inverte e os acentos fecham: o azul vira o 600 da escala da marca
+ * (#0149C8), o mesmo que o site usa no tema claro — a identidade continua
  * reconhecível, e o texto se lê.
  */
 val PixLightPalette = PixPalette(
     Dark = Color(0xFFF4F6FA),
     Darker = Color(0xFFFFFFFF),
 
-    Cyan = Color(0xFF2B55D6),
+    Cyan = Color(0xFF0149C8),
     Green = Color(0xFF0E7C53),
     Yellow = Color(0xFF7A5200),
     Orange = Color(0xFFB4530A),
-    Purple = Color(0xFF2B55D6),
+    Purple = Color(0xFFC400C5),
     Pink = Color(0xFFC62828),
-    Blue = Color(0xFF2B55D6),
+    Blue = Color(0xFF0149C8),
 
     Gray100 = Color(0xFF0F172A),
     Gray200 = Color(0xFF1E293B),
@@ -126,11 +131,11 @@ val PixLightPalette = PixPalette(
     Gray800 = Color(0xFFFFFFFF),
     Gray900 = Color(0xFFF4F6FA),
 
-    CyanShadow = Color(0xFFA9C0F5),
+    CyanShadow = Color(0xFFADC8FF),
     YellowDim = Color(0x807A5200),
-    CyanAlpha10 = Color(0x1A2B55D6),
-    CyanAlpha20 = Color(0x332B55D6),
-    CyanAlpha40 = Color(0x662B55D6),
+    CyanAlpha10 = Color(0x1A0149C8),
+    CyanAlpha20 = Color(0x330149C8),
+    CyanAlpha40 = Color(0x660149C8),
     GreenAlpha20 = Color(0x330E7C53),
     PinkAlpha20 = Color(0x33C62828),
     PinkAlpha40 = Color(0x66C62828),
