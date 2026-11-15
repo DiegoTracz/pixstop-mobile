@@ -138,7 +138,7 @@ fun ChallengeParticipants(
 
         if (challenge.hasJoined) {
             Text(
-                text = "Você ajudou com ${challenge.myUnits} ${challenge.unitLabel}. Só você vê esse número.",
+                text = "Você ajudou com ${challenge.myUnits} ${challenge.unitsFor(challenge.myUnits)}. Só você vê esse número.",
                 style = PixTypography.caption,
                 color = PixColors.Gray400,
             )

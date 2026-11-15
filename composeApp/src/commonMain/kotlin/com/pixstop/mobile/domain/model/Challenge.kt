@@ -32,11 +32,18 @@ data class Challenge(
 
     val allQuotasReached: Boolean get() = quotas.isNotEmpty() && quotas.all { it.reached }
 
+    /**
+     * O rótulo concordando com a quantidade: "1 lata", "2 latas". O rótulo é
+     * texto livre da empresa, quase sempre um plural com "s" no fim.
+     */
+    fun unitsFor(count: Int): String =
+        if (count == 1 && unitLabel.endsWith("s")) unitLabel.dropLast(1) else unitLabel
+
     /** A frase de baixo da barra: o que falta, ou como terminou. */
     val headline: String
         get() = when {
             hasEnded -> "Encerrado com $unitsTotal $unitLabel."
-            nextQuota != null -> "Faltam ${nextQuota.remaining} $unitLabel para a cota de ${nextQuota.unitsRequired}, " +
+            nextQuota != null -> "${if (nextQuota.remaining == 1) "Falta" else "Faltam"} ${nextQuota.remaining} ${unitsFor(nextQuota.remaining)} para a cota de ${nextQuota.unitsRequired}, " +
                 "que rende ${nextQuota.rewardXp} XP para quem ajudar."
             allQuotasReached -> "Todas as cotas batidas!"
             else -> "$unitsTotal de $goal $unitLabel."

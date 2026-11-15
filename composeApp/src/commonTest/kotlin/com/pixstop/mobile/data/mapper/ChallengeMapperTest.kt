@@ -48,6 +48,18 @@ class ChallengeMapperTest {
     }
 
     @Test
+    fun `uma lata so concorda no singular`() {
+        val challenge = apiJson.decodeFromString<ChallengePageDto>(
+            """{"challenge":{"id":1,"name":"X","unit_label":"latas","units_total":5,"goal":15,
+               "next_quota":{"units_required":6,"remaining":1,"reward_xp":50},"me":{"units":1}}}""",
+        ).toDomain().challenge!!
+
+        assertEquals("Falta 1 lata para a cota de 6, que rende 50 XP para quem ajudar.", challenge.headline)
+        assertEquals("lata", challenge.unitsFor(1))
+        assertEquals("latas", challenge.unitsFor(2))
+    }
+
+    @Test
     fun `sem desafio as medalhas continuam`() {
         val result = apiJson.decodeFromString<ChallengePageDto>(
             """{"challenge":null,"achievements":[{"code":"challenge_closer","title":"Fechou a cota","xp":20}]}""",
