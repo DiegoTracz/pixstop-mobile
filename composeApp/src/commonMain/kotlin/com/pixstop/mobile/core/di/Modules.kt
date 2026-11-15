@@ -31,6 +31,7 @@ import com.pixstop.mobile.data.repository.CardRepository
 import com.pixstop.mobile.data.repository.PixelInviteRepository
 import com.pixstop.mobile.data.repository.RewardRepository
 import com.pixstop.mobile.data.repository.StaffRepository
+import com.pixstop.mobile.data.repository.ChallengeRepository
 import com.pixstop.mobile.data.repository.ProgressRepository
 import com.pixstop.mobile.data.repository.TeamRepository
 import com.pixstop.mobile.ui.viewmodel.BuyPixelsViewModel
@@ -104,6 +105,7 @@ val dataModule: Module = module {
     single { OrderRepository(get()) }
     single { TeamRepository(get()) }
     single { ProgressRepository(get()) }
+    single { ChallengeRepository(get()) }
     single { CardRepository(get()) }
     single { PixelInviteRepository(get()) }
     single { StaffRepository(get()) }
@@ -136,7 +138,7 @@ val viewModelModule: Module = module {
     viewModel { ProfileViewModel(get(), get()) }
     viewModel { NotificationsViewModel(get(), get()) }
     viewModel { ShopViewModel(get()) }
-    viewModel { HomeFeedViewModel(get(), get(), get()) }
+    viewModel { HomeFeedViewModel(get(), get(), get(), get()) }
     viewModel { ProductDetailViewModel(get()) }
     viewModel { CartViewModel(get(), get()) }
     viewModel { CheckoutViewModel(get(), get(), get()) }
@@ -144,7 +146,7 @@ val viewModelModule: Module = module {
     viewModel { OrdersViewModel(get()) }
     viewModel { PixelHistoryViewModel(get(), get(), get()) }
     viewModel { BuyPixelsViewModel(get(), get()) }
-    viewModel { ProgressViewModel(get()) }
+    viewModel { ProgressViewModel(get(), get()) }
     viewModel { CardsViewModel(get()) }
     viewModel { (code: String) -> PixelInviteViewModel(code, get()) }
     viewModel { StaffCheckinViewModel(get()) }

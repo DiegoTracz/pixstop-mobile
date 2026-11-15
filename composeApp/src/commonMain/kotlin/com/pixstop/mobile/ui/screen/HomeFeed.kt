@@ -37,6 +37,7 @@ import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelCoin
 import com.pixstop.mobile.ui.components.PixelLoader
+import com.pixstop.mobile.ui.components.ChallengeBoard
 import com.pixstop.mobile.ui.components.XpBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.components.ProductImage
@@ -96,6 +97,18 @@ fun HomeFeed(
             item {
                 XpBar(
                     progression = progression,
+                    onClick = onOpenProgress,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
+            }
+        }
+
+        // O desafio coletivo: o placar que a empresa empurra junto. Abre
+        // "Meu progresso", onde moram as cotas, a roda e as medalhas.
+        state.challenge?.let { challenge ->
+            item {
+                ChallengeBoard(
+                    challenge = challenge,
                     onClick = onOpenProgress,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )

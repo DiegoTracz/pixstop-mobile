@@ -117,6 +117,8 @@ class NotificationRouterTest {
         assertEquals(Destination.Progress, season?.destination)
         // O mesmo link, num aviso de pixels, continua na carteira.
         assertEquals(NotificationTarget.Pixels, NotificationRouter.resolve(aviso(type = "pixels_received", actionUrl = "/my-pixels")))
+        // A cota batida do desafio coletivo também: o placar mora em "Meu progresso".
+        assertEquals(NotificationTarget.Progress, NotificationRouter.resolve(aviso(type = "challenge_quota", actionUrl = "/my-pixels")))
     }
 
     @Test

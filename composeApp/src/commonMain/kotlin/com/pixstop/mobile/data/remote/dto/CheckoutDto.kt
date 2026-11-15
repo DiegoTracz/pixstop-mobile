@@ -121,6 +121,8 @@ data class OrderDto(
     @SerialName("paid_at") val paidAt: String? = null,
     /** O que o pedido rendeu de XP; só vem no pedido criado e no aberto. */
     val xp: OrderXpDto? = null,
+    /** O que o pedido somou no desafio coletivo; nulo quando não contou. */
+    val challenge: OrderChallengeDto? = null,
     /** A retirada (Fase 9.8): em que pé está e se dá para abrir agora. */
     val pickup: PickupDto? = null,
     /** O bilhete de abertura por Bluetooth (Fase 9.7), quando há. */

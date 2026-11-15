@@ -59,6 +59,8 @@ data class Order(
     val isCancelable: Boolean,
     val createdAt: String?,
     val xp: OrderXp = OrderXp.None,
+    /** O que o pedido somou no desafio coletivo (docs/plans/CONQUISTAS.md no servidor). */
+    val challenge: OrderChallenge? = null,
     /** A retirada (Fase 9.8): em que pé está e se dá para abrir agora. */
     val pickup: Pickup = Pickup.None,
     /** O bilhete de abertura por Bluetooth (Fase 9.7), já lido. */

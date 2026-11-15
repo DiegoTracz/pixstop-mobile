@@ -129,6 +129,22 @@ fun OrderScreen(
                         XpEarned(xp = order.xp)
                     }
 
+                    // O placar do desafio coletivo: quanto esta compra somou.
+                    order.challenge?.takeIf { order.isPaid }?.let { challenge ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(2.dp, PixColors.Yellow)
+                                .background(PixColors.Darker)
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(text = challenge.challenge, style = PixTypography.caption, color = PixColors.Gray300, modifier = Modifier.weight(1f))
+                            Text(text = challenge.label, style = PixTypography.caption, color = PixColors.Yellow)
+                        }
+                    }
+
                     // Só enquanto o pagamento é esperado: um pedido já pago
                     // não pode ficar dizendo que aguarda.
                     if (order.isPending) {

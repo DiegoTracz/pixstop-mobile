@@ -196,6 +196,10 @@ object ApiConfig {
         const val PIXELS_PROGRESS = "pixels/progress"
         const val PIXELS_XP_HISTORY = "pixels/xp-history"
 
+        /** O desafio coletivo e as medalhas (docs/plans/CONQUISTAS.md no servidor). */
+        const val CHALLENGE_CURRENT = "challenges/current"
+        fun challengeVisibility(id: Long) = "challenges/$id/visibility"
+
         // ── Gestor ────────────────────────────────────────────────────────
         const val TEAM = "team"
 

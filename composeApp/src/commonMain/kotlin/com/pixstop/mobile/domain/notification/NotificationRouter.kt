@@ -109,7 +109,7 @@ object NotificationRouter {
         "shopping_list" -> NotificationTarget.ShoppingList
         "order_paid", "order_canceled" -> NotificationTarget.Orders
         "pixels_received", "pixels_expiring" -> NotificationTarget.Pixels
-        "level_up", "season_closed" -> NotificationTarget.Progress
+        "level_up", "season_closed", "challenge_quota" -> NotificationTarget.Progress
         "new_order_received", "plan_changed", "subscription_activated",
         "subscription_canceled", "subscription_payment_failed",
         "trial_ending", "trial_expired",

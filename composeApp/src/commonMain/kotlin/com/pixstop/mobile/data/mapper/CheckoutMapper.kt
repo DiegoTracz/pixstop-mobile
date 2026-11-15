@@ -87,6 +87,7 @@ fun OrderDto.toDomain() = Order(
     isCancelable = isCancelable,
     createdAt = createdAt,
     xp = xp?.toDomain() ?: OrderXp.None,
+    challenge = challenge?.toDomain(),
     pickup = pickup?.toDomain() ?: Pickup.None,
     ticket = UnlockTicket.parse(unlockTicket),
 )

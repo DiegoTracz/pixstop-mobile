@@ -31,6 +31,10 @@ import com.pixstop.mobile.domain.model.ProgressionLevel
 import com.pixstop.mobile.domain.model.ProgressionMission
 import com.pixstop.mobile.domain.model.Ranking
 import com.pixstop.mobile.domain.model.XpEntry
+import com.pixstop.mobile.ui.components.AchievementRow
+import com.pixstop.mobile.ui.components.ChallengeBoard
+import com.pixstop.mobile.ui.components.ChallengeParticipants
+import com.pixstop.mobile.ui.components.ChallengeQuotas
 import com.pixstop.mobile.ui.components.LevelBadge
 import com.pixstop.mobile.ui.components.PixelCoin
 import com.pixstop.mobile.ui.components.PixelEmptyState
@@ -94,6 +98,38 @@ fun ProgressScreen(
                 val progression = state.progression!!
 
                 item { Summary(progression) }
+
+                // O desafio coletivo vem logo depois da barra: é o placar que
+                // a empresa inteira está empurrando junto.
+                state.challenges.challenge?.let { challenge ->
+                    item { ChallengeBoard(challenge = challenge) }
+
+                    item {
+                        Text(text = "Cotas", style = PixTypography.sectionTitle, color = PixColors.Yellow)
+                    }
+
+                    item { ChallengeQuotas(challenge = challenge) }
+
+                    item {
+                        Text(
+                            text = "Na roda · ${challenge.participantsCount}",
+                            style = PixTypography.sectionTitle,
+                            color = PixColors.Yellow,
+                        )
+                    }
+
+                    item { ChallengeParticipants(challenge = challenge, onToggleVisibility = viewModel::toggleChallengeVisibility) }
+                }
+
+                if (state.challenges.achievements.isNotEmpty()) {
+                    item {
+                        Text(text = "Medalhas", style = PixTypography.sectionTitle, color = PixColors.Yellow)
+                    }
+
+                    items(state.challenges.achievements, key = { "medal-${it.code}-${it.challenge}" }) { medal ->
+                        AchievementRow(medal)
+                    }
+                }
 
                 if (progression.missions.isNotEmpty()) {
                     item {

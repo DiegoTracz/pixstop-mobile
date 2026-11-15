@@ -3,9 +3,11 @@ package com.pixstop.mobile.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pixstop.mobile.core.storage.SessionStore
+import com.pixstop.mobile.data.repository.ChallengeRepository
 import com.pixstop.mobile.data.repository.OrderRepository
 import com.pixstop.mobile.data.repository.ShopRepository
 import com.pixstop.mobile.domain.model.Category
+import com.pixstop.mobile.domain.model.Challenge
 import com.pixstop.mobile.domain.model.Order
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.PixelWallet
@@ -25,6 +27,8 @@ data class HomeFeedUiState(
     val buyAgain: List<Product> = emptyList(),
     val promotions: List<Product> = emptyList(),
     val categories: List<Category> = emptyList(),
+    /** O desafio coletivo da empresa, quando há um (docs/plans/CONQUISTAS.md no servidor). */
+    val challenge: Challenge? = null,
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val error: String? = null,
@@ -44,6 +48,7 @@ class HomeFeedViewModel(
     private val shop: ShopRepository,
     private val orders: OrderRepository,
     private val session: SessionStore,
+    private val challenges: ChallengeRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeFeedUiState())
@@ -71,18 +76,20 @@ class HomeFeedViewModel(
                 error = null,
             )
 
-            // As quatro chamadas não dependem umas das outras; em série a tela
+            // As chamadas não dependem umas das outras; em série a tela
             // levaria quatro idas e voltas para aparecer.
             coroutineScope {
                 val wallet = async { shop.pixelWallet() }
                 val recentOrders = async { orders.orders() }
                 val promotions = async { shop.products(perPage = PROMO_LIMIT, onlyDiscounted = true) }
                 val categories = async { shop.categories() }
+                val challenge = async { challenges.current() }
 
                 val walletResult = wallet.await()
                 val ordersResult = recentOrders.await()
                 val promotionsResult = promotions.await()
                 val categoriesResult = categories.await()
+                val challengeResult = challenge.await()
 
                 val openOrder = (ordersResult as? Outcome.Success)?.value?.items?.firstOrNull { it.isPending }
 
@@ -95,6 +102,7 @@ class HomeFeedViewModel(
                     categories = (categoriesResult as? Outcome.Success)?.value
                         ?.filter { it.productsCount > 0 }
                         .orEmpty(),
+                    challenge = (challengeResult as? Outcome.Success)?.value?.challenge,
                     // Só é erro quando nada carregou: uma seção vazia é um
                     // detalhe, a tela inteira em branco é um problema.
                     error = (walletResult as? Outcome.Failure)?.error?.message
