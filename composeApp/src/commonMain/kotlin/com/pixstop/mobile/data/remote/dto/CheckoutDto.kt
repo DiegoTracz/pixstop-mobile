@@ -123,6 +123,8 @@ data class OrderDto(
     val xp: OrderXpDto? = null,
     /** O que o pedido somou no desafio coletivo; nulo quando não contou. */
     val challenge: OrderChallengeDto? = null,
+    /** O que a compra rendeu, para o app comemorar. */
+    val rewards: OrderRewardsDto? = null,
     /** A retirada (Fase 9.8): em que pé está e se dá para abrir agora. */
     val pickup: PickupDto? = null,
     /** O bilhete de abertura por Bluetooth (Fase 9.7), quando há. */

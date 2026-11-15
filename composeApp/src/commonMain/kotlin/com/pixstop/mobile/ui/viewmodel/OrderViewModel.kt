@@ -2,7 +2,9 @@ package com.pixstop.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pixstop.mobile.core.storage.CelebratedOrders
 import com.pixstop.mobile.core.storage.currentTimeMillis
+import com.pixstop.mobile.core.text.IsoInstant
 import com.pixstop.mobile.data.repository.AppConfigRepository
 import com.pixstop.mobile.data.repository.OrderRepository
 import com.pixstop.mobile.domain.access.FridgeUnlockConnector
@@ -13,6 +15,7 @@ import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.Pickup
 import com.pixstop.mobile.domain.model.PickupReason
 import com.pixstop.mobile.domain.model.PickupStatus
+import com.pixstop.mobile.domain.model.RewardScene
 import com.pixstop.mobile.domain.model.UnlockTicket
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -39,6 +42,8 @@ data class OrderUiState(
     val bluetoothSupported: Boolean = false,
     /** O que dizer depois de uma tentativa: some no próximo toque. */
     val feedback: String? = null,
+    /** As cenas de recompensa a tocar agora; vazio é nada a comemorar. */
+    val celebration: List<RewardScene> = emptyList(),
 ) {
     /**
      * Segundos que faltam para o PIX vencer.
@@ -128,6 +133,7 @@ class OrderViewModel(
     private val orders: OrderRepository,
     private val config: AppConfigRepository,
     private val fridge: FridgeUnlockConnector,
+    private val celebrated: CelebratedOrders,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OrderUiState())
@@ -151,6 +157,7 @@ class OrderViewModel(
                         pickup = result.value.pickup,
                         ticket = result.value.ticket,
                         bluetoothSupported = fridge.isSupported,
+                        celebration = celebrationFor(result.value),
                     )
                     startPollingIfWaiting(result.value)
                     startFollowingPickup(result.value)
@@ -159,6 +166,33 @@ class OrderViewModel(
                 is Outcome.Failure -> _uiState.value = OrderUiState(isLoading = false, error = result.error.message)
             }
         }
+    }
+
+    /**
+     * O que comemorar neste pedido: só quando ele acabou de ser pago, e só
+     * uma vez neste aparelho. Reabrir pelo histórico não repete a festa.
+     */
+    private fun celebrationFor(order: Order): List<RewardScene> {
+        val playing = _uiState.value.celebration
+
+        if (playing.isNotEmpty() && _uiState.value.order?.id == order.id) {
+            return playing
+        }
+
+        if (!order.isPaid || order.rewards.isEmpty) {
+            return emptyList()
+        }
+
+        if (!CelebratedOrders.isFresh(IsoInstant.toEpochMillis(order.paidAt), currentTimeMillis())) {
+            return emptyList()
+        }
+
+        return if (celebrated.claim(order.id)) order.rewards.scenes() else emptyList()
+    }
+
+    /** A pessoa viu a última cena. */
+    fun dismissCelebration() {
+        _uiState.value = _uiState.value.copy(celebration = emptyList())
     }
 
     /**

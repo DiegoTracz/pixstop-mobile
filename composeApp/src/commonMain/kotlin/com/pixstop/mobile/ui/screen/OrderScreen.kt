@@ -32,6 +32,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.pixstop.mobile.domain.model.FitaState
 import com.pixstop.mobile.domain.model.MascotFace
 import com.pixstop.mobile.domain.model.MascotState
@@ -60,6 +62,7 @@ import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.domain.model.FridgeLight
 import com.pixstop.mobile.ui.components.FridgeLamp
 import com.pixstop.mobile.ui.components.rememberBluetoothPermissionRequest
+import com.pixstop.mobile.ui.components.reward.RewardCelebration
 import com.pixstop.mobile.ui.viewmodel.OrderUiState
 import com.pixstop.mobile.ui.viewmodel.OrderViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -87,6 +90,17 @@ fun OrderScreen(
 
     LaunchedEffect(orderId) {
         viewModel.load(orderId)
+    }
+
+    // O que a compra rendeu, em tela cheia e uma vez só: o cashback, a cota
+    // do desafio, as medalhas e o nível, nessa ordem.
+    if (state.celebration.isNotEmpty()) {
+        Dialog(
+            onDismissRequest = viewModel::dismissCelebration,
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            RewardCelebration(scenes = state.celebration, onFinished = viewModel::dismissCelebration)
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize().background(PixColors.Dark)) {

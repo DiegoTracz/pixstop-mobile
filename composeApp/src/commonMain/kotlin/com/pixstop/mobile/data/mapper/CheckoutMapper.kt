@@ -13,6 +13,7 @@ import com.pixstop.mobile.domain.model.Checkout
 import com.pixstop.mobile.domain.model.LastPayment
 import com.pixstop.mobile.domain.model.FridgeLight
 import com.pixstop.mobile.domain.model.Order
+import com.pixstop.mobile.domain.model.OrderRewards
 import com.pixstop.mobile.domain.model.OrderXp
 import com.pixstop.mobile.domain.model.OrderLine
 import com.pixstop.mobile.domain.model.OrderStatus
@@ -88,6 +89,8 @@ fun OrderDto.toDomain() = Order(
     createdAt = createdAt,
     xp = xp?.toDomain() ?: OrderXp.None,
     challenge = challenge?.toDomain(),
+    rewards = rewards?.toDomain() ?: OrderRewards.None,
+    paidAt = paidAt,
     pickup = pickup?.toDomain() ?: Pickup.None,
     ticket = UnlockTicket.parse(unlockTicket),
 )

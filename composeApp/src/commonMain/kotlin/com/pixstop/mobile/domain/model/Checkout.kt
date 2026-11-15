@@ -61,6 +61,9 @@ data class Order(
     val xp: OrderXp = OrderXp.None,
     /** O que o pedido somou no desafio coletivo (docs/plans/CONQUISTAS.md no servidor). */
     val challenge: OrderChallenge? = null,
+    /** O que a compra rendeu: é daqui que saem as animações de recompensa. */
+    val rewards: OrderRewards = OrderRewards.None,
+    val paidAt: String? = null,
     /** A retirada (Fase 9.8): em que pé está e se dá para abrir agora. */
     val pickup: Pickup = Pickup.None,
     /** O bilhete de abertura por Bluetooth (Fase 9.7), já lido. */
