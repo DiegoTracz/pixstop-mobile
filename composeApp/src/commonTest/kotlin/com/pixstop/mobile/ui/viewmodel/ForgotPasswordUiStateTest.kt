@@ -28,12 +28,12 @@ class ForgotPasswordUiStateTest {
     }
 
     @Test
-    fun emailSemContaMostraOQueOServidorDisse() {
+    fun falhaDoServidorMantemOFormularioComOAviso() {
         val state = ForgotPasswordUiState(email = "x@y.com", isSending = true)
-            .withResult(Outcome.Failure(DomainError.Rule("client_error", "Não encontramos um usuário com esse endereço de e-mail.")))
+            .withResult(Outcome.Failure(DomainError.Server(500, "O servidor não respondeu como esperado.")))
 
         assertNull(state.sentTo)
-        assertEquals("Não encontramos um usuário com esse endereço de e-mail.", state.error)
+        assertEquals("O servidor não respondeu como esperado.", state.error)
     }
 
     @Test

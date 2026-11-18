@@ -88,7 +88,7 @@ fun ForgotPasswordSheet(
                     modifier = Modifier.fillMaxWidth(),
                 )
             } else {
-                Text("Link enviado para $sentTo.", color = PixColors.Green)
+                Text("Se $sentTo estiver cadastrado, o link já está a caminho.", color = PixColors.Green)
                 Text(
                     "Abra o e-mail, toque em \"Redefinir senha\" e crie a senha nova no site. " +
                         "Depois volte aqui e entre com ela. Não chegou? Olhe a caixa de spam.",
