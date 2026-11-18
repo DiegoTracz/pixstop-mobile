@@ -35,6 +35,7 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
+    var forgotOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
@@ -103,7 +104,14 @@ fun LoginScreen(
             )
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        // ── Esqueci a senha ──
+        Box(Modifier.fillMaxWidth().padding(top = 10.dp), contentAlignment = Alignment.CenterEnd) {
+            Text(
+                text = "Esqueci a senha",
+                style = PixTypography.link.copy(textDecoration = TextDecoration.Underline, color = PixColors.Cyan),
+                modifier = Modifier.clickable(enabled = !uiState.isLoading) { forgotOpen = true },
+            )
+        }
 
         // ── Erro ──
         if (uiState.error != null) {
@@ -178,6 +186,17 @@ fun LoginScreen(
         Text(
             text = "© 2026 ${AppBranding.APP_NAME}",
             style = PixTypography.footerText
+        )
+    }
+
+    if (forgotOpen) {
+        ForgotPasswordSheet(
+            initialEmail = uiState.email,
+            onDismiss = { sentTo ->
+                forgotOpen = false
+                // Quem pediu o link volta com o e-mail já no campo.
+                sentTo?.let(viewModel::onEmailChange)
+            },
         )
     }
 }

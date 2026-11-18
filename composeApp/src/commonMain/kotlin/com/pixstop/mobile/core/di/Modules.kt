@@ -63,6 +63,7 @@ import com.pixstop.mobile.ui.viewmodel.TeamViewModel
 import com.pixstop.mobile.ui.viewmodel.ProductDetailViewModel
 import com.pixstop.mobile.ui.viewmodel.ProfileViewModel
 import com.pixstop.mobile.ui.viewmodel.ShopViewModel
+import com.pixstop.mobile.ui.viewmodel.ForgotPasswordViewModel
 import com.pixstop.mobile.ui.viewmodel.LoginViewModel
 import com.pixstop.mobile.ui.viewmodel.RegisterViewModel
 import com.pixstop.mobile.ui.viewmodel.SessionViewModel
@@ -137,6 +138,7 @@ val dataModule: Module = module {
 /** ViewModels, criados a cada tela. */
 val viewModelModule: Module = module {
     viewModel { LoginViewModel(get()) }
+    viewModel { ForgotPasswordViewModel(get<AuthRepository>()::forgotPassword) }
     viewModel { RegisterViewModel(get()) }
     viewModel { SessionViewModel(get(), get(), get(), get()) }
     viewModel { LegalConsentViewModel(get()) }
