@@ -33,6 +33,11 @@ enum class Destination(
      */
     Fridges,
     /**
+     * O assistente de IA (ASSISTENTE_IA.md, A8): o chat do painel no celular.
+     * De quem cuida da empresa, com o assistente no plano.
+     */
+    Assistant(requiredFeature = "assistant"),
+    /**
      * O painel de quem opera geladeiras em várias empresas (Fase 16): a ronda
      * e a lista de empresas. Não depende de empresa ativa nenhuma.
      */

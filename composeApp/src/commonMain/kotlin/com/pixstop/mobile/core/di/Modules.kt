@@ -21,6 +21,7 @@ import com.pixstop.mobile.data.repository.AvatarRepository
 import com.pixstop.mobile.data.repository.FridgeRepository
 import com.pixstop.mobile.data.repository.OperatorRepository
 import com.pixstop.mobile.data.repository.VisitRepository
+import com.pixstop.mobile.data.repository.AssistantRepository
 import com.pixstop.mobile.data.repository.PurchaseRepository
 import com.pixstop.mobile.data.repository.ShoppingListRepository
 import com.pixstop.mobile.data.repository.NotificationRepository
@@ -44,6 +45,7 @@ import com.pixstop.mobile.ui.viewmodel.CompanyViewModel
 import com.pixstop.mobile.ui.viewmodel.ConnectFridgeViewModel
 import com.pixstop.mobile.ui.viewmodel.OperatorViewModel
 import com.pixstop.mobile.ui.viewmodel.VisitViewModel
+import com.pixstop.mobile.ui.viewmodel.AssistantViewModel
 import com.pixstop.mobile.ui.viewmodel.PurchaseViewModel
 import com.pixstop.mobile.ui.viewmodel.PurchasesViewModel
 import com.pixstop.mobile.ui.viewmodel.ShoppingListViewModel
@@ -118,6 +120,7 @@ val dataModule: Module = module {
     single { VisitRepository(get()) }
     single { ShoppingListRepository(get()) }
     single { PurchaseRepository(get()) }
+    single { AssistantRepository(get()) }
     // O rascunho da contagem vive no armazenamento comum: é conveniência, não
     // credencial, e perdê-lo custa trinta linhas digitadas, não segurança.
     single { CountDraftStore(Settings()) }
@@ -161,6 +164,7 @@ val viewModelModule: Module = module {
     viewModel { ShoppingListViewModel(get()) }
     viewModel { PurchasesViewModel(get()) }
     viewModel { PurchaseViewModel(get()) }
+    viewModel { AssistantViewModel(get()) }
     viewModel { PixelAvatarViewModel(get()) }
 }
 

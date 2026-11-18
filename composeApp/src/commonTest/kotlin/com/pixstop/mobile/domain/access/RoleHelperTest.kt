@@ -117,7 +117,7 @@ class RoleHelperTest {
         val company = empresa(CompanyRole.Admin, isManager = true, features = emptyMap())
 
         assertEquals(
-            listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Team, Destination.Company, Destination.Fridges),
+            listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Team, Destination.Company, Destination.Fridges, Destination.Assistant),
             RoleHelper.drawer(company),
         )
     }
@@ -133,6 +133,18 @@ class RoleHelperTest {
 
         // E quem só participa continua de fora.
         assertFalse(RoleHelper.canOpen(Destination.Fridges, empresa(CompanyRole.Member)))
+    }
+
+    @Test
+    fun `o assistente e de quem cuida da operacao e tem o assistente no plano`() {
+        // O mesmo corte do servidor (ASSISTENTE_IA.md, A8): admin ou operador.
+        assertTrue(RoleHelper.canOpen(Destination.Assistant, empresa(CompanyRole.Operator, operates = true)))
+        assertTrue(RoleHelper.canOpen(Destination.Assistant, empresa(CompanyRole.Admin)))
+        assertFalse(RoleHelper.canOpen(Destination.Assistant, empresa(CompanyRole.Member)))
+
+        // Plano que desliga o assistente esconde a entrada.
+        val semAssistente = empresa(CompanyRole.Admin, features = mapOf("assistant" to false))
+        assertFalse(RoleHelper.drawer(semAssistente).contains(Destination.Assistant))
     }
 
     @Test

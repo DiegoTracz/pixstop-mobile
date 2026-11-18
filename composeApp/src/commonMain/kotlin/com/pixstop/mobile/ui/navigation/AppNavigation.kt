@@ -21,6 +21,7 @@ import com.pixstop.mobile.ui.screen.BuyPixelsScreen
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
 import com.pixstop.mobile.ui.screen.VisitScreen
+import com.pixstop.mobile.ui.screen.AssistantScreen
 import com.pixstop.mobile.ui.screen.PurchaseScreen
 import com.pixstop.mobile.ui.screen.PurchasesScreen
 import com.pixstop.mobile.ui.screen.ShoppingListScreen
@@ -281,6 +282,7 @@ fun AppNavigation() {
                         Destination.Rewards -> navController.navigate(Routes.REWARDS)
                         Destination.Company -> navController.navigate(Routes.COMPANY)
                         Destination.Fridges -> navController.navigate(Routes.FRIDGES)
+                        Destination.Assistant -> navController.navigate(Routes.ASSISTANT)
                         Destination.Operator -> navController.navigate(Routes.OPERATOR)
                         else -> Unit
                     }
@@ -424,6 +426,10 @@ fun AppNavigation() {
                 onNewReceipt = { navController.navigate(Routes.PURCHASE_NEW) },
                 onOpenShoppingList = { navController.navigate(Routes.SHOPPING_LIST) },
             )
+        }
+
+        composable(Routes.ASSISTANT) {
+            AssistantScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.PURCHASE_NEW) {

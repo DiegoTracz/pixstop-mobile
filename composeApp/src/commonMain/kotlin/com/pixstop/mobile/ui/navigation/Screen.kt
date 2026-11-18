@@ -60,6 +60,9 @@ object Routes {
     /** Conectar e acompanhar as geladeiras (Fase 9.3). */
     const val FRIDGES = "fridges"
 
+    /** O chat do assistente de IA (ASSISTENTE_IA.md, A8). */
+    const val ASSISTANT = "assistant"
+
     /**
      * A visita do repositor a uma geladeira: contar, ver as diferenças e
      * abastecer (docs/plans/CONCILIACAO_MOBILE.md). Alcançada a partir de uma

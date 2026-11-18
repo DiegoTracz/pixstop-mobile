@@ -33,7 +33,7 @@ object RoleHelper {
     fun drawer(company: ActiveCompany?, isOperator: Boolean = false): List<Destination> =
         listOf(
             Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Rewards,
-            Destination.Team, Destination.Staff, Destination.Company, Destination.Fridges,
+            Destination.Team, Destination.Staff, Destination.Company, Destination.Fridges, Destination.Assistant,
             // O painel do operador não é da empresa ativa: é de quem faz parte
             // de um operador, e atravessa todas elas (Fase 16, O8).
             Destination.Operator,
@@ -74,6 +74,9 @@ object RoleHelper {
             // Geladeira é operação, e quem opera cuida dela sem administrar a
             // empresa (Fase 16, O8) — o mesmo corte que o servidor faz.
             Destination.Fridges -> company.canManageOperation
+            // O assistente é do mesmo time da geladeira: o servidor recusa
+            // quem só compra, e o menu nem oferece.
+            Destination.Assistant -> company.canManageOperation
             else -> true
         }
     }

@@ -261,6 +261,18 @@ object ApiConfig {
 
         fun companyPurchaseConfirm(id: Long) = "company/purchases/$id/confirm"
 
+        /** O chat do assistente de IA (ASSISTENTE_IA.md, A8): o mesmo do painel. */
+        const val COMPANY_ASSISTANT_CONVERSATIONS = "company/assistant/conversations"
+
+        const val COMPANY_ASSISTANT_MESSAGES = "company/assistant/messages"
+
+        /** A foto do produto sobe antes da mensagem; a mensagem leva só o id. */
+        const val COMPANY_ASSISTANT_ATTACHMENTS = "company/assistant/attachments"
+
+        fun companyAssistantConversation(id: Long) = "company/assistant/conversations/$id"
+
+        fun companyAssistantDecide(id: Long) = "company/assistant/conversations/$id/decide"
+
         fun companyPurchaseDiscard(id: Long) = "company/purchases/$id/discard"
 
         fun teamMembers(departmentId: Long) = "team/$departmentId/members"
