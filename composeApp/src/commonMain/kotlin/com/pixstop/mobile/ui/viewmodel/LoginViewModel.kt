@@ -111,7 +111,7 @@ class LoginViewModel(
                 is Outcome.Failure -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = result.error.message,
+                        error = loginErrorMessage(result.error),
                         isOfflineMode = (result.error is DomainError.Offline)
                     )
                 }
@@ -137,4 +137,10 @@ class LoginViewModel(
             )
         }
     }
+}
+
+/** No login, um 401 é e-mail ou senha errados, não sessão expirada. */
+internal fun loginErrorMessage(error: DomainError): String = when (error) {
+    is DomainError.Unauthorized -> "E-mail ou senha incorretos."
+    else -> error.message
 }
