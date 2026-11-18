@@ -33,7 +33,7 @@ object RoleHelper {
     fun drawer(company: ActiveCompany?, isOperator: Boolean = false): List<Destination> =
         listOf(
             Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Rewards,
-            Destination.Team, Destination.Staff, Destination.Company, Destination.Fridges, Destination.Assistant,
+            Destination.Team, Destination.Staff, Destination.Company, Destination.Fridges,
             // O painel do operador não é da empresa ativa: é de quem faz parte
             // de um operador, e atravessa todas elas (Fase 16, O8).
             Destination.Operator,

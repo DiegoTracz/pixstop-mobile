@@ -117,7 +117,7 @@ class RoleHelperTest {
         val company = empresa(CompanyRole.Admin, isManager = true, features = emptyMap())
 
         assertEquals(
-            listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Team, Destination.Company, Destination.Fridges, Destination.Assistant),
+            listOf(Destination.Orders, Destination.Pixels, Destination.Progress, Destination.Team, Destination.Company, Destination.Fridges),
             RoleHelper.drawer(company),
         )
     }
@@ -142,9 +142,12 @@ class RoleHelperTest {
         assertTrue(RoleHelper.canOpen(Destination.Assistant, empresa(CompanyRole.Admin)))
         assertFalse(RoleHelper.canOpen(Destination.Assistant, empresa(CompanyRole.Member)))
 
-        // Plano que desliga o assistente esconde a entrada.
+        // Plano que desliga o assistente esconde o mascote flutuante.
         val semAssistente = empresa(CompanyRole.Admin, features = mapOf("assistant" to false))
-        assertFalse(RoleHelper.drawer(semAssistente).contains(Destination.Assistant))
+        assertFalse(RoleHelper.canOpen(Destination.Assistant, semAssistente))
+
+        // A entrada é o mascote flutuante da Home, não um item do menu.
+        assertFalse(RoleHelper.drawer(empresa(CompanyRole.Admin)).contains(Destination.Assistant))
     }
 
     @Test

@@ -1,6 +1,22 @@
 package com.pixstop.mobile.ui.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.sp
+import com.pixstop.mobile.ui.theme.PixTypography
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,24 +61,41 @@ import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelCameraScreen
-import com.pixstop.mobile.ui.components.PixelInput
 import com.pixstop.mobile.ui.components.PixelMascot
-import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.rememberPhotoPicker
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.viewmodel.AssistantUiState
 import com.pixstop.mobile.ui.viewmodel.AssistantViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
+/** As perguntas prontas da conversa vazia, cada uma com o ícone do assunto. */
+private val SUGGESTION_ICONS = listOf(AppIconType.Person, AppIconType.Store, AppIconType.Box, AppIconType.Bulb)
+
 /**
- * O assistente de IA no celular (ASSISTENTE_IA.md, A8): pergunta, foto do
- * produto pela câmera e os mesmos cards com Confirmar e Cancelar do painel.
+ * O assistente de IA no celular (ASSISTENTE_IA.md, A8), aberto pelo mascote
+ * flutuante da Home numa folha de baixo para cima: pergunta, foto do produto
+ * e os mesmos cards com Confirmar e Cancelar do painel.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AssistantScreen(
-    onBack: () -> Unit,
+fun AssistantSheet(
+    onDismiss: () -> Unit,
     viewModel: AssistantViewModel = koinViewModel(),
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = PixColors.Dark,
+        contentWindowInsets = { WindowInsets(0) },
+    ) {
+        AssistantChat(onClose = onDismiss, viewModel = viewModel, modifier = Modifier.fillMaxHeight(0.94f))
+    }
+}
+
+@Composable
+private fun AssistantChat(onClose: () -> Unit, viewModel: AssistantViewModel, modifier: Modifier = Modifier) {
     val state by viewModel.uiState.collectAsState()
     var cameraOpen by remember { mutableStateOf(false) }
     val pickFromGallery = rememberPhotoPicker { photo -> viewModel.onPhoto(photo) }
@@ -88,41 +121,30 @@ fun AssistantScreen(
         return
     }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(PixColors.Dark)
-            .navigationBarsPadding()
-            .imePadding(),
-    ) {
-        PixelScreenTopBar(
-            title = "Assistente",
-            onBack = onBack,
-            action = {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Conversas",
-                        color = PixColors.Cyan,
-                        modifier = Modifier.clickable(onClick = viewModel::toggleHistory),
-                    )
-                    Box(Modifier.clickable(onClick = viewModel::newConversation)) {
-                        AppIcon(icon = AppIconType.Add, contentDescription = "Nova conversa", tint = PixColors.Cyan, modifier = Modifier.size(22.dp))
-                    }
-                }
-            },
+    Column(modifier.fillMaxWidth().navigationBarsPadding().imePadding()) {
+        Header(
+            showingHistory = state.showHistory,
+            thinking = state.isSending || state.isUploading,
+            onBack = { if (state.showHistory) viewModel.toggleHistory() else onClose() },
+            onHistory = viewModel::toggleHistory,
         )
 
         if (state.showHistory) {
-            ConversationList(state, onOpen = viewModel::open, modifier = Modifier.weight(1f))
+            ConversationList(
+                state,
+                onOpen = viewModel::open,
+                onNew = viewModel::newConversation,
+                modifier = Modifier.weight(1f),
+            )
         } else {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.Bottom),
             ) {
                 if (state.isEmpty) {
-                    item { Welcome(onSuggestion = viewModel::send) }
+                    item { Suggestions(onSuggestion = viewModel::send) }
                 }
 
                 items(state.messages, key = { it.id }) { message ->
@@ -151,36 +173,93 @@ fun AssistantScreen(
     }
 }
 
+/** Voltar à esquerda, o mascote no meio e as conversas à direita, como no Mercado Pago. */
 @Composable
-private fun Welcome(onSuggestion: (String) -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().padding(vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+private fun Header(showingHistory: Boolean, thinking: Boolean, onBack: () -> Unit, onHistory: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        PixelMascot(state = MascotState.Idle, size = 72.dp, decorative = true)
-        Text(
-            "Pergunte sobre vendas, estoque, clientes e gravações, ou fotografe um produto para cadastrar.",
-            color = PixColors.Gray300,
-            textAlign = TextAlign.Center,
-        )
-        AssistantUiState.SUGGESTIONS.forEach { suggestion ->
-            Text(
-                text = suggestion,
-                color = PixColors.Cyan,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(1.dp, PixColors.Gray700, RoundedCornerShape(16.dp))
-                    .clickable { onSuggestion(suggestion) }
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-            )
+        SquareIconButton(AppIconType.ArrowBack, if (showingHistory) "Voltar à conversa" else "Fechar o assistente", onBack)
+        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            if (showingHistory) {
+                Text("Conversas", style = PixTypography.sectionTitle, color = PixColors.Gray100)
+            } else {
+                PixelMascot(state = if (thinking) MascotState.Loading else MascotState.Idle, size = 36.dp, decorative = true)
+            }
+        }
+        if (showingHistory) {
+            Spacer(Modifier.size(48.dp))
+        } else {
+            SquareIconButton(AppIconType.Menu, "Conversas anteriores", onHistory)
         }
     }
 }
 
 @Composable
-private fun ConversationList(state: AssistantUiState, onOpen: (Long) -> Unit, modifier: Modifier = Modifier) {
-    LazyColumn(modifier.fillMaxWidth(), contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+private fun SquareIconButton(icon: AppIconType, description: String, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(48.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(PixColors.CyanAlpha10)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        AppIcon(icon = icon, contentDescription = description, tint = PixColors.Cyan, modifier = Modifier.size(22.dp))
+    }
+}
+
+/** A conversa vazia: as perguntas prontas em lista, logo acima do campo. */
+@Composable
+private fun Suggestions(onSuggestion: (String) -> Unit) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            "Pergunte sobre vendas, estoque, clientes e gravações, ou fotografe um produto para cadastrar.",
+            color = PixColors.Gray400,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        AssistantUiState.SUGGESTIONS.forEachIndexed { index, suggestion ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onSuggestion(suggestion) }
+                    .padding(vertical = 12.dp, horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Box(
+                    Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(PixColors.CyanAlpha10),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AppIcon(icon = SUGGESTION_ICONS[index % SUGGESTION_ICONS.size], contentDescription = null, tint = PixColors.Cyan, modifier = Modifier.size(22.dp))
+                }
+                Text(suggestion, color = PixColors.Gray100, fontSize = 17.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConversationList(state: AssistantUiState, onOpen: (Long) -> Unit, onNew: () -> Unit, modifier: Modifier = Modifier) {
+    LazyColumn(modifier.fillMaxWidth(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        item {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(PixColors.CyanAlpha10)
+                    .clickable(onClick = onNew)
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                AppIcon(icon = AppIconType.Add, contentDescription = null, tint = PixColors.Cyan, modifier = Modifier.size(20.dp))
+                Text("Nova conversa", color = PixColors.Cyan)
+            }
+        }
+
         if (state.conversations.isEmpty()) {
             item { Text("Nenhuma conversa ainda.", color = PixColors.Gray400) }
         }
@@ -195,7 +274,7 @@ private fun ConversationList(state: AssistantUiState, onOpen: (Long) -> Unit, mo
                     .clip(RoundedCornerShape(8.dp))
                     .background(PixColors.Gray900)
                     .clickable { onOpen(conversation.id) }
-                    .padding(12.dp),
+                    .padding(14.dp),
             )
         }
     }
@@ -307,6 +386,10 @@ private fun ToolCardView(card: ToolCard, busy: Boolean, onDecide: (String, Strin
     }
 }
 
+/**
+ * O campo, como o do Mercado Pago: uma pílula com o "+" da galeria, o texto,
+ * a câmera e o botão redondo de enviar.
+ */
 @Composable
 private fun Composer(
     state: AssistantUiState,
@@ -317,45 +400,88 @@ private fun Composer(
     onRemovePhoto: (Long) -> Unit,
 ) {
     Column(
-        Modifier.fillMaxWidth().background(PixColors.Gray900).padding(10.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(top = 4.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        state.error?.let { Text(it, color = PixColors.Pink) }
+        state.error?.let { Text(it, color = PixColors.Pink, modifier = Modifier.padding(horizontal = 8.dp)) }
 
         if (state.photos.isNotEmpty()) {
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(horizontal = 8.dp)) {
                 state.photos.forEach { photo ->
                     val bitmap = remember(photo.id) { runCatching { photo.preview.decodeToImageBitmap() }.getOrNull() }
-                    Box(Modifier.size(56.dp).clip(RoundedCornerShape(8.dp)).clickable { onRemovePhoto(photo.id) }) {
+                    Box(Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)).clickable { onRemovePhoto(photo.id) }) {
                         bitmap?.let { Image(it, contentDescription = "Foto anexada (toque para tirar)", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
+                        AppIcon(
+                            icon = AppIconType.Close,
+                            contentDescription = null,
+                            tint = PixColors.White,
+                            modifier = Modifier.align(Alignment.TopEnd).padding(3.dp).size(16.dp).clip(CircleShape).background(PixColors.Gray800.copy(alpha = 0.8f)),
+                        )
                     }
                 }
             }
         }
 
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.clickable(enabled = state.canAddPhoto, onClick = onCamera)) {
-                AppIcon(icon = AppIconType.Camera, contentDescription = "Fotografar produto", tint = if (state.canAddPhoto) PixColors.Cyan else PixColors.Gray700, modifier = Modifier.size(26.dp))
+        val pill = RoundedCornerShape(32.dp)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, pill)
+                .clip(pill)
+                .background(PixColors.Darker)
+                .border(1.dp, PixColors.Gray800, pill)
+                .padding(start = 6.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier.size(44.dp).clip(CircleShape).clickable(enabled = state.canAddPhoto, onClick = onGallery),
+                contentAlignment = Alignment.Center,
+            ) {
+                AppIcon(icon = AppIconType.Add, contentDescription = "Foto da galeria", tint = if (state.canAddPhoto) PixColors.Gray200 else PixColors.Gray700, modifier = Modifier.size(24.dp))
             }
-            Text(
-                text = "Galeria",
-                color = if (state.canAddPhoto) PixColors.Cyan else PixColors.Gray700,
-                modifier = Modifier.clickable(enabled = state.canAddPhoto, onClick = onGallery),
-            )
-            PixelInput(
-                value = state.draft,
-                onValueChange = onDraft,
-                label = "",
-                placeholder = if (state.isUploading) "Enviando a foto…" else "Pergunte ou peça algo…",
-                singleLine = false,
-                modifier = Modifier.weight(1f),
-            )
-            PixelButton(
-                text = "Enviar",
-                onClick = onSend,
-                buttonSize = PixelButtonSize.Small,
-                enabled = state.canSend,
-            )
+
+            Box(Modifier.weight(1f).padding(horizontal = 4.dp, vertical = 8.dp), contentAlignment = Alignment.CenterStart) {
+                if (state.draft.isEmpty()) {
+                    Text(
+                        if (state.isUploading) "Enviando a foto…" else "O que faço por você?",
+                        color = PixColors.Gray500,
+                        fontSize = 17.sp,
+                    )
+                }
+                BasicTextField(
+                    value = state.draft,
+                    onValueChange = onDraft,
+                    textStyle = TextStyle(color = PixColors.Gray100, fontSize = 17.sp),
+                    cursorBrush = SolidColor(PixColors.Cyan),
+                    maxLines = 5,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            Box(
+                Modifier.size(44.dp).clip(CircleShape).clickable(enabled = state.canAddPhoto, onClick = onCamera),
+                contentAlignment = Alignment.Center,
+            ) {
+                AppIcon(icon = AppIconType.Camera, contentDescription = "Fotografar produto", tint = if (state.canAddPhoto) PixColors.Gray200 else PixColors.Gray700, modifier = Modifier.size(24.dp))
+            }
+
+            Box(
+                Modifier
+                    .padding(start = 4.dp)
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(if (state.canSend) PixColors.Blue else PixColors.Gray800)
+                    .clickable(enabled = state.canSend, onClick = onSend),
+                contentAlignment = Alignment.Center,
+            ) {
+                AppIcon(
+                    icon = AppIconType.ArrowBack,
+                    contentDescription = "Enviar",
+                    tint = if (state.canSend) PixColors.White else PixColors.Gray500,
+                    modifier = Modifier.size(24.dp).rotate(90f),
+                )
+            }
         }
     }
 }

@@ -61,7 +61,6 @@ object Routes {
     const val FRIDGES = "fridges"
 
     /** O chat do assistente de IA (ASSISTENTE_IA.md, A8). */
-    const val ASSISTANT = "assistant"
 
     /**
      * A visita do repositor a uma geladeira: contar, ver as diferenças e

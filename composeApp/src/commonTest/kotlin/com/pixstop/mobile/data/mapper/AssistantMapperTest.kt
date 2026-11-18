@@ -68,4 +68,11 @@ class AssistantMapperTest {
         assertEquals("Refeitório", overview.rows.single().title)
         assertEquals("Fábrica Norte · 1 pedidos · 3 un. · R$ 25,00", overview.rows.single().detail)
     }
+
+    @Test
+    fun datasDoServidorAparecemNoJeitoBrasileiro() {
+        assertEquals("16/11/2026", AssistantMapper.brazilianDate("2026-11-16"))
+        assertEquals("16/11/2026 14:05", AssistantMapper.brazilianDate("2026-11-16T14:05:00-03:00"))
+        assertEquals("ontem", AssistantMapper.brazilianDate("ontem"))
+    }
 }

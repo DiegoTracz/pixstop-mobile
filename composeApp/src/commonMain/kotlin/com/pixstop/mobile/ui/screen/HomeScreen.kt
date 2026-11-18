@@ -48,6 +48,7 @@ import com.pixstop.mobile.domain.access.Destination
 import com.pixstop.mobile.domain.access.RoleHelper
 import com.pixstop.mobile.domain.model.ActiveCompany
 import com.pixstop.mobile.domain.model.MascotState
+import com.pixstop.mobile.ui.components.AssistantBubble
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.BottomNavItem
@@ -145,6 +146,8 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val openCartDrawer: () -> Unit = { scope.launch { cartDrawerState.open() } }
     var switcherOpen by remember { mutableStateOf(false) }
+    var assistantOpen by remember { mutableStateOf(false) }
+    val canUseAssistant = RoleHelper.canOpen(Destination.Assistant, session.company)
     val destinations = RoleHelper.bottomBar(session.company)
     var selectedTab by remember { mutableStateOf(Destination.Home.name) }
 
@@ -268,6 +271,7 @@ fun HomeScreen(
                 }
             },
         ) { paddingValues ->
+            Box(Modifier.fillMaxSize()) {
             when (selectedTab) {
                 Destination.Shop.name -> ShopScreen(
                     viewModel = shopViewModel,
@@ -311,8 +315,19 @@ fun HomeScreen(
                     modifier = Modifier.padding(paddingValues),
                 )
             }
+
+            // O assistente flutua sobre a Home para quem cuida da operação;
+            // a pessoa o arrasta para onde ele não atrapalha (A8).
+            if (canUseAssistant) {
+                AssistantBubble(onClick = { assistantOpen = true }, modifier = Modifier.padding(paddingValues))
+            }
+            }
         }
         }
+    }
+
+    if (assistantOpen) {
+        AssistantSheet(onDismiss = { assistantOpen = false })
     }
 }
 

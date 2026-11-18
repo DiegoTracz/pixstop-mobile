@@ -134,7 +134,8 @@ object AssistantMapper {
 
     private fun detail(row: JsonObject): String = buildList {
         row.text("company")?.let { add(it) }
-        row.text("last_purchase_at")?.let { add("última compra $it") }
+        row.text("last_purchase_at")?.let { add("última compra ${brazilianDate(it)}") }
+        row.text("opened_at")?.let { add(brazilianDate(it)) }
         row.number("orders")?.let { add("${it.toLong()} pedidos") }
         row.number("spent")?.let { add(formatMoney(it)) }
         row.number("quantity")?.let { add("${it.toLong()} un.") }
@@ -149,6 +150,7 @@ object AssistantMapper {
 
     private fun format(key: String, value: JsonPrimitive): String? {
         if (value.contentOrNull.isNullOrBlank()) return null
+        if (key.endsWith("_at")) return brazilianDate(value.content)
         if (key in moneyFields) return value.doubleOrNull?.let(::formatMoney) ?: value.content
         value.booleanOrNull?.let { return if (it) "Sim" else "Não" }
 
@@ -159,6 +161,17 @@ object AssistantMapper {
         val primitive = element as? JsonPrimitive ?: return "—"
 
         return format(field, primitive) ?: "—"
+    }
+
+    /**
+     * "2026-11-16" vira "16/11/2026", e "2026-11-16T14:05:00-03:00" vira
+     * "16/11/2026 14:05": o servidor manda ISO, a tela fala português.
+     */
+    fun brazilianDate(iso: String): String {
+        val match = Regex("""^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?""").find(iso) ?: return iso
+        val (year, month, day, hour, minute) = match.destructured
+
+        return "$day/$month/$year" + if (hour.isNotEmpty()) " $hour:$minute" else ""
     }
 
     private fun JsonObject?.text(key: String): String? = (this?.get(key) as? JsonPrimitive)?.contentOrNull
