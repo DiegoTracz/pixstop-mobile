@@ -36,6 +36,7 @@ import com.pixstop.mobile.domain.model.LossSuggestion
 import com.pixstop.mobile.domain.model.RestockSuggestion
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
+import com.pixstop.mobile.ui.components.HoldToConfirmButton
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelButtonVariant
@@ -113,7 +114,6 @@ fun VisitScreen(
 
 @Composable
 private fun CountingStep(state: com.pixstop.mobile.ui.viewmodel.VisitUiState, viewModel: VisitViewModel) {
-    var confirmingSkipped by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Text(
@@ -131,10 +131,22 @@ private fun CountingStep(state: com.pixstop.mobile.ui.viewmodel.VisitUiState, vi
         state.message?.let { Notice(it, PixColors.Green, viewModel::dismissMessage) }
 
         if (state.expiredCount > 0) {
-            Notice(
-                "${state.expiredCount} produto(s) com validade vencida nesta geladeira. Eles estão no topo: tire o vencido da prateleira antes de contar.",
-                PixColors.Pink,
-            ) {}
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).border(1.dp, PixColors.Pink).padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = "${state.expiredCount} produto(s) com validade vencida. Eles estão no topo: tire o vencido da prateleira, segure o botão e depois conte.",
+                    style = PixTypography.caption,
+                    color = PixColors.Pink,
+                )
+                HoldToConfirmButton(
+                    text = if (state.isWorking) "Registrando…" else "Segure: tirei os vencidos",
+                    enabled = !state.isWorking,
+                    onConfirm = viewModel::removeExpired,
+                    color = PixColors.Pink,
+                )
+            }
         }
 
         if (state.draftFound) {
@@ -187,27 +199,44 @@ private fun CountingStep(state: com.pixstop.mobile.ui.viewmodel.VisitUiState, vi
             }
         }
 
-        if (confirmingSkipped) {
-            Notice(
-                "${state.skipped.size} produto(s) ficaram sem contagem. Eles não serão acertados, e ficam registrados como não contados. Toque de novo para enviar assim.",
-                PixColors.Yellow,
-            ) { confirmingSkipped = false }
-        }
-
-        PixelButton(
-            text = "Conferir diferenças (${state.countedCount})",
-            onClick = {
-                if (state.hasSkipped && !confirmingSkipped) {
-                    confirmingSkipped = true
-                } else {
-                    viewModel.review()
+        if (state.confirmingSkipped) {
+            // Uma pergunta de verdade, com as duas saídas, em vez de "toque
+            // de novo": o aviso colado no botão fazia tocar no lugar errado.
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp).border(1.dp, PixColors.Yellow).padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = "Enviar sem contar ${state.skipped.size} produto(s)? Eles não serão acertados e ficam registrados como não contados.",
+                    style = PixTypography.caption,
+                    color = PixColors.Yellow,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PixelButton(
+                        text = "Voltar a contar",
+                        onClick = viewModel::cancelSkipped,
+                        variant = PixelButtonVariant.Secondary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    PixelButton(
+                        text = "Enviar assim",
+                        onClick = viewModel::review,
+                        isLoading = state.isWorking,
+                        loadingText = "Enviando...",
+                        modifier = Modifier.weight(1f),
+                    )
                 }
-            },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-            enabled = state.canReview,
-            isLoading = state.isWorking,
-            loadingText = "Enviando...",
-        )
+            }
+        } else {
+            PixelButton(
+                text = "Conferir diferenças (${state.countedCount})",
+                onClick = viewModel::askReview,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                enabled = state.canReview,
+                isLoading = state.isWorking,
+                loadingText = "Enviando...",
+            )
+        }
     }
 }
 
@@ -346,6 +375,14 @@ private fun DifferencesStep(state: com.pixstop.mobile.ui.viewmodel.VisitUiState,
             }
         }
 
+        if (state.restockItems.isEmpty()) {
+            Text(
+                text = "Nada para levar do depósito. Se você trouxe a mercadoria do mercado, lance a nota em Compras e escolha \"Encher a geladeira\".",
+                style = PixTypography.caption,
+                color = PixColors.Cyan,
+            )
+        }
+
         Text(
             text = "Quem decide o que vira perda é o dono do estoque, no fechamento do mês.",
             style = PixTypography.caption,
@@ -472,6 +509,7 @@ private fun RestockRow(item: RestockSuggestion, quantity: Int, onChange: (Int) -
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Column(modifier = Modifier.weight(1f)) {
+                item.place?.let { Text(text = it.uppercase(), style = PixTypography.inputLabel, color = PixColors.Cyan) }
                 Text(text = item.product, style = PixTypography.bodySecondary, color = PixColors.Gray100)
                 Text(
                     text = "depósito ${item.warehouse} · sugerido ${item.suggested}",

@@ -2,6 +2,7 @@ package com.pixstop.mobile.data.repository
 
 import com.pixstop.mobile.core.config.ApiConfig
 import com.pixstop.mobile.core.network.safeCall
+import com.pixstop.mobile.core.network.safeCallUnit
 import com.pixstop.mobile.data.remote.dto.CountEntryDto
 import com.pixstop.mobile.data.remote.dto.CountItemUpdateDto
 import com.pixstop.mobile.data.remote.dto.CountResultDto
@@ -100,9 +101,21 @@ class VisitRepository(private val client: HttpClient) {
                         suggestedReason = LossSuggestion.fromApi(it.suggestedReason),
                     )
                 },
-                restock = dto.restock.map { RestockSuggestion(it.productId, it.product, it.warehouse, it.suggested) },
+                restock = dto.restock.map { RestockSuggestion(it.productId, it.product, it.warehouse, it.suggested, it.place) },
                 restockClientId = dto.restockClientId,
             )
+        }
+
+    /**
+     * "Tirei os vencidos": o servidor dá baixa, com motivo "vencido", só das
+     * unidades de lote vencido desta geladeira. Não devolve quantas: a
+     * contagem continua às cegas.
+     */
+    suspend fun removeExpired(applianceId: Long): Outcome<Unit> =
+        safeCallUnit(TAG) {
+            client.post(ApiConfig.Endpoints.COMPANY_EXPIRY_REMOVE) {
+                setBody(mapOf("appliance_id" to applianceId))
+            }
         }
 
     /**

@@ -88,6 +88,7 @@ data class RestockSuggestionDto(
     val product: String = "",
     val warehouse: Int = 0,
     val suggested: Int = 0,
+    val place: String? = null,
 )
 
 /** O abastecimento (COMPRAS_CORREDOR.md, P1): tudo ou nada, idempotente pelo `client_id`. */

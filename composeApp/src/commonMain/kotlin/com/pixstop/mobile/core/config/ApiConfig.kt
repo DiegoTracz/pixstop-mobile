@@ -239,6 +239,9 @@ object ApiConfig {
         /** O envio da contagem. Idempotente pelo `client_id`. */
         fun companyStockCounts(applianceId: Long) = "company/appliances/$applianceId/stock-counts"
 
+        /** "Tirei os vencidos": baixa só do que venceu, naquele lugar. */
+        const val COMPANY_EXPIRY_REMOVE = "company/expiry/remove"
+
         /** Abastecer na visita: depósito → geladeira. Idempotente pelo `client_id`. */
         fun companyRestocks(applianceId: Long) = "company/appliances/$applianceId/restocks"
 

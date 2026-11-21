@@ -49,6 +49,10 @@ data class VisitUiState(
     /** Produto → quanto levar do depósito. Zero tira o item do abastecimento. */
     val restockQuantities: Map<Long, Int> = emptyMap(),
     val restocked: RestockResult? = null,
+    /** "Tirei os vencidos" já foi registrado nesta visita. */
+    val expiredRemoved: Boolean = false,
+    /** Faltou contar alguém e a pessoa tocou em enviar: pede a confirmação. */
+    val confirmingSkipped: Boolean = false,
 ) {
     val visibleProducts: List<CountProduct>
         get() = if (query.isBlank()) {
@@ -185,6 +189,49 @@ class VisitViewModel(
 
     fun dismissMessage() = _uiState.update { it.copy(message = null, error = null) }
 
+    /**
+     * "Tirei os vencidos": a pessoa tirou da prateleira, e o sistema dá a
+     * baixa. Depois disso a marca some da lista.
+     */
+    fun removeExpired() {
+        val current = _uiState.value
+        if (current.expiredCount == 0 || current.isWorking) return
+
+        _uiState.update { it.copy(isWorking = true, error = null) }
+
+        viewModelScope.launch {
+            when (val outcome = repository.removeExpired(current.applianceId)) {
+                is Outcome.Success -> _uiState.update {
+                    it.copy(
+                        isWorking = false,
+                        expiredRemoved = true,
+                        products = it.products.map { product -> product.copy(hasExpired = false) },
+                        message = "Vencidos retirados do estoque. Agora é só contar.",
+                    )
+                }
+
+                is Outcome.Failure -> _uiState.update { it.copy(isWorking = false, error = outcome.error.message) }
+            }
+        }
+    }
+
+    /**
+     * Tocou em "conferir diferenças". Faltando alguém, pergunta antes: quem
+     * não foi contado fica registrado como não contado.
+     */
+    fun askReview() {
+        val current = _uiState.value
+        if (!current.canReview) return
+
+        if (current.hasSkipped) {
+            _uiState.update { it.copy(confirmingSkipped = true) }
+        } else {
+            review()
+        }
+    }
+
+    fun cancelSkipped() = _uiState.update { it.copy(confirmingSkipped = false) }
+
     /** Envia a contagem e passa para as diferenças, que é onde o esperado aparece. */
     fun review() {
         val current = _uiState.value
@@ -193,7 +240,7 @@ class VisitViewModel(
 
         if (!current.canReview) return
 
-        _uiState.update { it.copy(isWorking = true, error = null) }
+        _uiState.update { it.copy(isWorking = true, error = null, confirmingSkipped = false) }
 
         viewModelScope.launch {
             val outcome = repository.submit(

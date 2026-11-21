@@ -1,9 +1,6 @@
 package com.pixstop.mobile.ui.screen
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,10 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -36,13 +31,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.decodeToImageBitmap
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -51,6 +44,7 @@ import com.pixstop.mobile.domain.model.MascotFace
 import com.pixstop.mobile.domain.model.PurchaseLine
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
+import com.pixstop.mobile.ui.components.HoldToConfirmButton
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelButtonVariant
@@ -73,7 +67,6 @@ import com.pixstop.mobile.ui.viewmodel.PurchaseViewModel
 import com.pixstop.mobile.ui.viewmodel.averageAfter
 import com.pixstop.mobile.ui.viewmodel.formatMoneyInput
 import com.pixstop.mobile.ui.viewmodel.lineTotal
-import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -818,51 +811,6 @@ private fun DestinationCard(title: String, detail: String, selected: Boolean, on
             Text(text = (if (selected) "● " else "○ ") + title, style = PixTypography.bodySecondary, color = PixColors.Gray100)
             Text(text = detail, style = PixTypography.caption, color = PixColors.Gray400)
         }
-    }
-}
-
-/**
- * Segurar para confirmar: a barra enche enquanto o dedo está em cima, e
- * soltar antes cancela. Meio segundo basta para não ser sem querer.
- */
-@Composable
-private fun HoldToConfirmButton(text: String, enabled: Boolean, onConfirm: () -> Unit) {
-    val progress = remember { Animatable(0f) }
-    val scope = rememberCoroutineScope()
-    val accent = if (enabled) PixColors.Green else PixColors.Gray600
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .background(PixColors.Darker)
-            .border(2.dp, accent)
-            .pointerInput(enabled) {
-                if (!enabled) return@pointerInput
-                detectTapGestures(
-                    onPress = {
-                        val fillUp = scope.launch {
-                            progress.animateTo(1f, tween(durationMillis = 600))
-                            onConfirm()
-                        }
-                        tryAwaitRelease()
-                        if (progress.value < 1f) {
-                            fillUp.cancel()
-                            scope.launch { progress.animateTo(0f, tween(durationMillis = 150)) }
-                        }
-                    },
-                )
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .fillMaxHeight()
-                .fillMaxWidth(progress.value)
-                .background(accent.copy(alpha = 0.35f)),
-        )
-        Text(text = text, style = PixTypography.bodySecondary, color = if (enabled) PixColors.Gray100 else PixColors.Gray500)
     }
 }
 

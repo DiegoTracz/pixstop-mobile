@@ -108,7 +108,7 @@ class VisitRepositoryTest {
     fun `a resposta da contagem traz o abastecimento e o envio leva so o que tem quantidade`() = runTest {
         val resposta = """
             {"success": true, "data": {"id": 12, "at": "2026-11-21T12:00:00+00:00", "items": [],
-             "restock": [{"product_id": 1, "product": "Monster", "warehouse": 18, "suggested": 8}],
+             "restock": [{"product_id": 1, "product": "Monster", "warehouse": 18, "suggested": 8, "place": "P1 · fileiras 1 e 2"}],
              "restock_client_id": "count-12"}}
         """.trimIndent()
 
@@ -118,6 +118,7 @@ class VisitRepositoryTest {
             ).value
 
         assertEquals(8, result.restock.single().suggested)
+        assertEquals("P1 · fileiras 1 e 2", result.restock.single().place)
         assertEquals("count-12", result.restockClientId)
 
         val api = FakeApi()
@@ -131,5 +132,15 @@ class VisitRepositoryTest {
         assertTrue(enviado.contains("\"client_id\":\"count-12\""), "o client_id da contagem vai no corpo: $enviado")
         assertTrue(enviado.contains("{\"product_id\":1,\"quantity\":8}"), "o item com quantidade vai: $enviado")
         assertFalse(enviado.contains("\"product_id\":2"), "zero não vai para o servidor: $enviado")
+    }
+
+    @Test
+    fun `tirei os vencidos manda so a geladeira e nao recebe quantidade`() = runTest {
+        val api = FakeApi()
+        val outcome = VisitRepository(api.clientReturning("""{"success": true, "data": null, "message": "2 unidades vencidas retiradas (Copa)."}"""))
+            .removeExpired(3)
+
+        assertTrue(outcome is Outcome.Success)
+        assertEquals("{\"appliance_id\":3}", api.lastBody.replace(" ", ""))
     }
 }

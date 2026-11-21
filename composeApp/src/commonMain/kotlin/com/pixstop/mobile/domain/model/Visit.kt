@@ -82,6 +82,8 @@ data class RestockSuggestion(
     val product: String,
     val warehouse: Int,
     val suggested: Int,
+    /** Onde vai na geladeira, pelo planograma: "P1 · fileira 2". */
+    val place: String? = null,
 )
 
 /** O que o abastecimento gravou. */
