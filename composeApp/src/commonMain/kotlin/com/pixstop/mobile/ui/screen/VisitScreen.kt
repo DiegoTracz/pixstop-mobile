@@ -242,19 +242,25 @@ private fun CountRow(
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = product.name, style = PixTypography.bodySecondary, color = PixColors.Gray100)
-                    Text(
-                        text = product.category ?: if (counted == null) "não contado" else "contado",
-                        style = PixTypography.caption,
-                        color = PixColors.Gray400,
-                    )
-                    if (product.hasExpired) {
-                        Text(text = "TEM VENCIDO · RETIRE", style = PixTypography.caption, color = PixColors.Pink)
-                    }
+            // O nome em cima, com a largura toda: na tela estreita ele não
+            // pode disputar espaço com os botões e quebrar letra por letra.
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = product.name, style = PixTypography.bodySecondary, color = PixColors.Gray100)
+                Text(
+                    text = product.category ?: if (counted == null) "não contado" else "contado",
+                    style = PixTypography.caption,
+                    color = PixColors.Gray400,
+                )
+                if (product.hasExpired) {
+                    Text(text = "TEM VENCIDO · RETIRE", style = PixTypography.caption, color = PixColors.Pink)
                 }
+            }
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 if (counted == null) {
                     PixelButton(
                         text = "não tem",
@@ -263,6 +269,8 @@ private fun CountRow(
                         buttonSize = PixelButtonSize.Small,
                     )
                 }
+
+                Box(modifier = Modifier.weight(1f))
 
                 QuantityStepper(
                     value = counted,

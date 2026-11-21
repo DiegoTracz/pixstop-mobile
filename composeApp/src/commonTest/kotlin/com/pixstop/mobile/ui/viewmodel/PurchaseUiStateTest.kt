@@ -158,6 +158,10 @@ class PurchaseUiStateTest {
             destinationOptions = opcoes.copy(default = Destination.Warehouse, applianceId = null))
         assertEquals(Destination.Warehouse to 1L, semGeladeiraNaCompra.startingDestination())
 
+        // E quando o servidor manda "encher" para a compra sem geladeira, a folha abre nele.
+        val encherSemGeladeira = semGeladeiraNaCompra.copy(destinationOptions = semGeladeiraNaCompra.destinationOptions!!.copy(default = Destination.Fill))
+        assertEquals(Destination.Fill to 1L, encherSemGeladeira.startingDestination())
+
         val semGeladeira = sheet().copy(destinationOptions = opcoes.copy(default = Destination.Warehouse, fill = emptyList()))
         assertEquals(Destination.Warehouse to null, semGeladeira.startingDestination())
     }
