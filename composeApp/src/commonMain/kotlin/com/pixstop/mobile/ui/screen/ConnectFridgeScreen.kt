@@ -71,6 +71,7 @@ fun ConnectFridgeScreen(
     /** A lista de compras e as compras da empresa (COMPRAS_MOBILE.md). */
     onShoppingList: () -> Unit = {},
     onPurchases: () -> Unit = {},
+    onExpiry: () -> Unit = {},
     viewModel: ConnectFridgeViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -121,6 +122,13 @@ fun ConnectFridgeScreen(
                                 value = "Compras",
                                 detail = "Fotografe a nota: a IA lê e você confere",
                                 onClick = onPurchases,
+                            )
+                            SensorCard(
+                                icon = AppIconType.Warning,
+                                label = "O que vence",
+                                value = "Validade",
+                                detail = "Vencidos para retirar e o que vence logo",
+                                onClick = onExpiry,
                             )
                             DevicesStep(state, viewModel)
                         }

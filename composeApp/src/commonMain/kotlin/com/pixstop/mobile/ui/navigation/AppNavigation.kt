@@ -29,6 +29,8 @@ import com.pixstop.mobile.ui.screen.LoginScreen
 import com.pixstop.mobile.ui.screen.CartScreen
 import com.pixstop.mobile.ui.screen.CompanyScreen
 import com.pixstop.mobile.ui.screen.ConnectFridgeScreen
+import com.pixstop.mobile.ui.screen.ExpiryScreen
+import com.pixstop.mobile.ui.screen.ExpirySettingsScreen
 import com.pixstop.mobile.ui.screen.OperatorScreen
 import com.pixstop.mobile.ui.screen.CheckoutScreen
 import com.pixstop.mobile.ui.screen.OrderScreen
@@ -92,6 +94,7 @@ fun AppNavigation() {
             is NotificationTarget.Invite -> Routes.invite(target.code)
             NotificationTarget.Company -> Routes.COMPANY
             NotificationTarget.ShoppingList -> Routes.SHOPPING_LIST
+            NotificationTarget.Expiry -> Routes.EXPIRY
             is NotificationTarget.Purchase -> Routes.purchase(target.id)
             NotificationTarget.Notifications -> Routes.NOTIFICATIONS
         }
@@ -403,7 +406,19 @@ fun AppNavigation() {
                 onVisit = { applianceId -> navController.navigate(Routes.visit(applianceId)) },
                 onShoppingList = { navController.navigate(Routes.SHOPPING_LIST) },
                 onPurchases = { navController.navigate(Routes.PURCHASES) },
+                onExpiry = { navController.navigate(Routes.EXPIRY) },
             )
+        }
+
+        composable(Routes.EXPIRY) {
+            ExpiryScreen(
+                onBack = { navController.popBackStack() },
+                onSettings = { navController.navigate(Routes.EXPIRY_SETTINGS) },
+            )
+        }
+
+        composable(Routes.EXPIRY_SETTINGS) {
+            ExpirySettingsScreen(onBack = { navController.popBackStack() })
         }
 
         // Compras (COMPRAS_MOBILE.md): a lista da semana, as compras e a

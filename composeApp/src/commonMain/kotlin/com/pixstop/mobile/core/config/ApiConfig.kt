@@ -239,6 +239,13 @@ object ApiConfig {
         /** O envio da contagem. Idempotente pelo `client_id`. */
         fun companyStockCounts(applianceId: Long) = "company/appliances/$applianceId/stock-counts"
 
+        /** A validade de cada produto (V5 d): ler a lista e gravar um. */
+        const val COMPANY_PRODUCTS_EXPIRY = "company/products/expiry"
+        fun companyProductExpiry(productId: Long) = "company/products/$productId/expiry"
+
+        /** A validade por lugar (VALIDADE.md, V5 c). */
+        const val COMPANY_EXPIRY = "company/expiry"
+
         /** "Tirei os vencidos": baixa só do que venceu, naquele lugar. */
         const val COMPANY_EXPIRY_REMOVE = "company/expiry/remove"
 

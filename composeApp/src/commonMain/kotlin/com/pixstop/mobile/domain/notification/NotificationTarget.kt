@@ -59,6 +59,11 @@ sealed interface NotificationTarget {
         override val destination: Destination get() = Destination.Fridges
     }
 
+    /** A validade: o aviso diário do vencido e do que vence logo (VALIDADE.md, V5). */
+    data object Expiry : NotificationTarget {
+        override val destination: Destination get() = Destination.Fridges
+    }
+
     /** Uma compra específica: a nota que alguém subiu e espera conferência. */
     data class Purchase(val id: Long) : NotificationTarget {
         override val destination: Destination get() = Destination.Fridges

@@ -73,6 +73,7 @@ object NotificationRouter {
             // semana e uma compra pelo id. O resto da empresa para no painel.
             "company" -> when {
                 segments.getOrNull(1) == "products" && segments.getOrNull(2) == "shopping-list" -> NotificationTarget.ShoppingList
+                segments.getOrNull(1) == "products" && segments.getOrNull(2) == "expiry" -> NotificationTarget.Expiry
                 segments.getOrNull(1) == "purchases" -> segments.getOrNull(2)?.toLongOrNull()
                     ?.let { NotificationTarget.Purchase(it) }
                     ?: NotificationTarget.Company
@@ -107,6 +108,7 @@ object NotificationRouter {
 
     private fun fromType(type: String?): NotificationTarget? = when (type) {
         "shopping_list" -> NotificationTarget.ShoppingList
+        "expiry" -> NotificationTarget.Expiry
         "order_paid", "order_canceled" -> NotificationTarget.Orders
         "pixels_received", "pixels_expiring" -> NotificationTarget.Pixels
         "level_up", "season_closed", "challenge_quota" -> NotificationTarget.Progress

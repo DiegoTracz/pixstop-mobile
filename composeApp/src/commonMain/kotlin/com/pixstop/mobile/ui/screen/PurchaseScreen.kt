@@ -751,7 +751,11 @@ private fun DestinationStep(state: PurchaseUiState, viewModel: PurchaseViewModel
         if (fill != null) {
             DestinationCard(
                 title = "Encher a geladeira, o resto no depósito",
-                detail = "${fill.toAppliance} vão para $applianceName, até o que cabe no planograma; ${fill.toWarehouse} ficam no depósito.",
+                detail = if (fill.toAppliance == 0) {
+                    "$applianceName já está cheia pelo planograma: tudo fica no depósito."
+                } else {
+                    "${fill.toAppliance} vão para $applianceName, até o que cabe no planograma; ${fill.toWarehouse} ficam no depósito."
+                },
                 selected = state.destination == Destination.Fill,
                 onClick = { viewModel.chooseDestination(Destination.Fill) },
             )

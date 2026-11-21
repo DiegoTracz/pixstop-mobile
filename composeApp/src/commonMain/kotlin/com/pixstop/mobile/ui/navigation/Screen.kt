@@ -75,6 +75,12 @@ object Routes {
     /** A lista de compras da semana (docs/plans/COMPRAS_MOBILE.md). */
     const val SHOPPING_LIST = "shopping-list"
 
+    /** A validade por lugar (VALIDADE.md, V5 c). */
+    const val EXPIRY = "expiry"
+
+    /** A validade de cada produto (V5 d). */
+    const val EXPIRY_SETTINGS = "expiry/products"
+
     /** As compras da empresa; `purchase-new` abre a câmera da nota. */
     const val PURCHASES = "purchases"
 

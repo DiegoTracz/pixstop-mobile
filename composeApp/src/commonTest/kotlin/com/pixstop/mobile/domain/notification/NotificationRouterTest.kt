@@ -151,4 +151,10 @@ class NotificationRouterTest {
         )
         assertEquals(NotificationTarget.Purchase(6), NotificationRouter.fromPayload("purchase_read", "6"))
     }
+
+    @Test
+    fun `o aviso de validade abre a tela de validade pelo tipo e pelo link`() {
+        assertEquals(NotificationTarget.Expiry, NotificationRouter.fromPayload("expiry", null))
+        assertEquals(NotificationTarget.Expiry, NotificationRouter.fromLink("/company/products/expiry"))
+    }
 }
