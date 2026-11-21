@@ -806,7 +806,10 @@ private fun DestinationCard(title: String, detail: String, selected: Boolean, on
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(if (selected) PixColors.Cyan.copy(alpha = 0.1f) else PixColors.Darker)
+                // Fundo sólido primeiro: a sombra de pixel fica atrás e
+                // apareceria através de um fundo translúcido.
+                .background(PixColors.Darker)
+                .background(if (selected) PixColors.Cyan.copy(alpha = 0.12f) else PixColors.Darker)
                 .border(2.dp, accent)
                 .clickable(onClick = onClick)
                 .padding(14.dp),

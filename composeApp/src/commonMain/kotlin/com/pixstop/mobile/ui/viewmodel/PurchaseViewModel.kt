@@ -117,7 +117,9 @@ data class PurchaseUiState(
  */
 fun PurchaseSheet.startingDestination(): Pair<Destination, Long?> {
     val options = destinationOptions ?: return Destination.Warehouse to null
-    val applianceId = applianceId ?: options.applianceId ?: appliances.firstOrNull()?.id
+    // Sem geladeira na compra, a que tem planograma vem marcada: é nela que
+    // o "encher" existe.
+    val applianceId = applianceId ?: options.applianceId ?: options.fill.firstOrNull()?.applianceId ?: appliances.firstOrNull()?.id
 
     return when {
         appliances.isEmpty() -> Destination.Warehouse to null

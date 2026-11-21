@@ -153,6 +153,11 @@ class PurchaseUiStateTest {
         val semPlanograma = comPlanograma.copy(destinationOptions = opcoes.copy(default = Destination.Appliance, fill = emptyList()))
         assertEquals(Destination.Appliance to 1L, semPlanograma.startingDestination())
 
+        // Compra sem geladeira: a marcada é a que tem planograma, não a primeira da lista.
+        val semGeladeiraNaCompra = comPlanograma.copy(applianceId = null, appliances = listOf(Named(2, "ESP32"), Named(1, "Copa")),
+            destinationOptions = opcoes.copy(default = Destination.Warehouse, applianceId = null))
+        assertEquals(Destination.Warehouse to 1L, semGeladeiraNaCompra.startingDestination())
+
         val semGeladeira = sheet().copy(destinationOptions = opcoes.copy(default = Destination.Warehouse, fill = emptyList()))
         assertEquals(Destination.Warehouse to null, semGeladeira.startingDestination())
     }
