@@ -22,7 +22,34 @@ data class PurchaseSheet(
     val receiptUrl: String?,
     val readingError: String?,
     val warnings: List<String>,
+    /** A pergunta do confirmar (COMPRAS_CORREDOR.md, P0). Nula fora do rascunho. */
+    val destinationOptions: DestinationOptions? = null,
 )
+
+/**
+ * Para onde vai a mercadoria. "Encher" põe na geladeira o que cabe no
+ * planograma e guarda o resto; só existe para geladeira com planograma.
+ */
+enum class Destination(val api: String) {
+    Fill("fill"),
+    Appliance("appliance"),
+    Warehouse("warehouse"),
+    ;
+
+    companion object {
+        fun fromApi(value: String?): Destination = entries.firstOrNull { it.api == value } ?: Warehouse
+    }
+}
+
+data class DestinationOptions(
+    val default: Destination,
+    val applianceId: Long?,
+    val warehouseInUse: Boolean,
+    val fill: List<FillPreview>,
+)
+
+/** A prévia do "encher a geladeira": quanto vai para a porta e quanto fica. */
+data class FillPreview(val applianceId: Long, val toAppliance: Int, val toWarehouse: Int)
 
 enum class PurchaseStatus {
     Draft, Reading, Confirmed, Discarded, Reversed;
@@ -61,6 +88,8 @@ data class PurchaseLine(
     val matchSource: String? = null,
     val confidence: Double? = null,
     val expectedQuantity: Int? = null,
+    /** Validade do lote, AAAA-MM-DD; só vale para produto que controla validade. */
+    val expiresOn: String? = null,
 )
 
 data class CatalogProduct(
@@ -69,6 +98,8 @@ data class CatalogProduct(
     val barcode: String?,
     val priceCost: Double,
     val stock: Int,
+    val tracksExpiry: Boolean = false,
+    val shelfLifeDays: Int? = null,
 )
 
 data class PurchaseSummary(

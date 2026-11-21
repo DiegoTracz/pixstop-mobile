@@ -1,5 +1,6 @@
 package com.pixstop.mobile.data.repository
 
+import com.pixstop.mobile.domain.model.Destination
 import com.pixstop.mobile.domain.model.DomainError
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.PurchaseStatus
@@ -136,5 +137,29 @@ class PurchaseRepositoryTest {
         assertEquals(54.0, index.purchases[1].total)
         assertEquals("2026-10-25", index.purchases[1].date)
         assertEquals(PurchaseStatus.Draft, index.purchases[1].status)
+    }
+
+    @Test
+    fun `confirmar leva o destino e devolve onde cada parte ficou`() = runTest {
+        val api = FakeApi()
+        val outcome = PurchaseRepository(
+            api.clientReturning("""{"success": true, "data": {"summary": "Entrada confirmada: 7 em Copa e 11 no depósito."}}"""),
+        ).confirm(3, destination = Destination.Fill, applianceId = 1)
+
+        assertEquals("Entrada confirmada: 7 em Copa e 11 no depósito.", (outcome as Outcome.Success).value)
+
+        val enviado = api.lastBody.replace(" ", "")
+        assertTrue(enviado.contains("\"destination\":\"fill\""), enviado)
+        assertTrue(enviado.contains("\"appliance_id\":1"), enviado)
+    }
+
+    @Test
+    fun `guardar no deposito nao manda geladeira, e servidor antigo sem dados ainda e sucesso`() = runTest {
+        val api = FakeApi()
+        val outcome = PurchaseRepository(api.clientReturning("""{"success": true, "data": null, "message": "ok"}"""))
+            .confirm(3, destination = Destination.Warehouse, applianceId = 1)
+
+        assertTrue(outcome is Outcome.Success)
+        assertFalse(api.lastBody.contains("appliance_id"), api.lastBody)
     }
 }

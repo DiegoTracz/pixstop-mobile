@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.pixstop.mobile.core.image.downscaleJpeg
 import com.pixstop.mobile.data.repository.PurchaseRepository
 import com.pixstop.mobile.domain.model.CatalogProduct
+import com.pixstop.mobile.domain.model.Destination
+import com.pixstop.mobile.domain.model.FillPreview
 import com.pixstop.mobile.domain.model.DomainError
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.PurchaseLine
@@ -57,6 +59,12 @@ data class PurchaseUiState(
     val message: String? = null,
     val confirmedUnits: Int = 0,
     val backOnShelf: List<String> = emptyList(),
+    /** A folha "Para onde vai a mercadoria?" aberta, antes de confirmar. */
+    val choosingDestination: Boolean = false,
+    val destination: Destination = Destination.Warehouse,
+    val destinationApplianceId: Long? = null,
+    /** O que o servidor disse que entrou e onde. */
+    val confirmSummary: String? = null,
 ) {
     val editable: Boolean get() = sheet?.editable == true
     val products: List<CatalogProduct> get() = sheet?.products.orEmpty()
@@ -86,6 +94,84 @@ data class PurchaseUiState(
         get() = if (pickerQuery.isBlank()) products else products.filter { it.name.contains(pickerQuery, ignoreCase = true) }
 
     fun productOf(line: PurchaseLine): CatalogProduct? = line.productId?.let { id -> products.firstOrNull { it.id == id } }
+
+    /** A linha pede validade só de produto que controla (VALIDADE.md, V5). */
+    fun tracksExpiry(line: PurchaseLine): Boolean = !line.ignored && productOf(line)?.tracksExpiry == true
+
+    /** A prévia do "encher" da geladeira escolhida, se ela tiver planograma. */
+    val fillPreview: FillPreview?
+        get() = sheet?.destinationOptions?.fill?.firstOrNull { it.applianceId == destinationApplianceId }
+
+    /** "Pôr na geladeira" ou "encher" pedem geladeira; sem nenhuma, só o depósito. */
+    val canChooseDestination: Boolean
+        get() = when (destination) {
+            Destination.Warehouse -> true
+            Destination.Appliance -> destinationApplianceId != null
+            Destination.Fill -> fillPreview != null
+        }
+}
+
+/**
+ * A opção que a folha abre marcada: encher, se a geladeira para onde a
+ * compra ia tem planograma; senão, o que o servidor sugeriu.
+ */
+fun PurchaseSheet.startingDestination(): Pair<Destination, Long?> {
+    val options = destinationOptions ?: return Destination.Warehouse to null
+    val applianceId = applianceId ?: options.applianceId ?: appliances.firstOrNull()?.id
+
+    return when {
+        appliances.isEmpty() -> Destination.Warehouse to null
+        options.default == Destination.Fill && options.fill.any { it.applianceId == applianceId } -> Destination.Fill to applianceId
+        options.default == Destination.Warehouse -> Destination.Warehouse to applianceId
+        else -> Destination.Appliance to applianceId
+    }
+}
+
+/**
+ * A validade sugerida: a data da nota mais o prazo do produto. Só preenche o
+ * que está vazio: a data digitada é a da embalagem e vale mais que o palpite.
+ */
+fun PurchaseLine.withSuggestedExpiry(product: CatalogProduct?, issuedAt: String): PurchaseLine {
+    if (!expiresOn.isNullOrBlank() || product?.tracksExpiry != true) return this
+    val days = product.shelfLifeDays ?: return this
+
+    return copy(expiresOn = addDays(issuedAt, days) ?: return this)
+}
+
+/** "2026-11-20" + 30 = "2026-12-20". Data inválida devolve nulo. */
+fun addDays(isoDate: String, days: Int): String? {
+    val parts = isoDate.trim().take(10).split("-").mapNotNull { it.toIntOrNull() }
+    if (parts.size != 3) return null
+    val (year, month, day) = parts
+    if (month !in 1..12 || day !in 1..31) return null
+
+    return civilFromDays(daysFromCivil(year, month, day) + days)
+}
+
+/** Dias desde 1970-01-01 (algoritmo de Howard Hinnant). */
+private fun daysFromCivil(year: Int, month: Int, day: Int): Long {
+    val y = (if (month <= 2) year - 1 else year).toLong()
+    val era = (if (y >= 0) y else y - 399) / 400
+    val yoe = y - era * 400
+    val mp = (month + 9) % 12
+    val doy = (153 * mp + 2) / 5 + day - 1
+    val doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
+
+    return era * 146097 + doe - 719468
+}
+
+private fun civilFromDays(days: Long): String {
+    val z = days + 719468
+    val era = (if (z >= 0) z else z - 146096) / 146097
+    val doe = z - era * 146097
+    val yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+    val doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+    val mp = (5 * doy + 2) / 153
+    val day = (doy - (153 * mp + 2) / 5 + 1).toInt()
+    val month = (if (mp < 10) mp + 3 else mp - 9).toInt()
+    val year = (yoe + era * 400 + if (month <= 2) 1 else 0).toInt()
+
+    return "$year-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}"
 }
 
 /** O que a linha custa na compra. "Não é estoque" não soma. */
@@ -192,7 +278,13 @@ class PurchaseViewModel(
             it.copy(
                 step = step,
                 sheet = sheet,
-                lines = sheet.lines,
+                lines = if (sheet.editable) {
+                    sheet.lines.map { line ->
+                        line.withSuggestedExpiry(sheet.products.firstOrNull { p -> p.id == line.productId }, sheet.issuedAt)
+                    }
+                } else {
+                    sheet.lines
+                },
                 supplierName = sheet.supplierName,
                 documentNumber = sheet.documentNumber,
                 issuedAt = sheet.issuedAt,
@@ -235,6 +327,7 @@ class PurchaseViewModel(
     fun setPack(index: Int, value: Int) = updateLine(index) { it.withPack(value) }
     fun setCost(index: Int, text: String) = updateLine(index) { it.copy(unitCost = parseMoney(text)) }
     fun setIgnored(index: Int, value: Boolean) = updateLine(index) { it.copy(ignored = value) }
+    fun setExpiry(index: Int, value: String) = updateLine(index) { it.copy(expiresOn = value.trim().ifBlank { null }) }
 
     fun addLine() = _uiState.update { it.copy(lines = it.lines + PurchaseLine(), pickingLine = it.lines.size) }
     fun removeLine(index: Int) = _uiState.update { state -> state.copy(lines = state.lines.filterIndexed { i, _ -> i != index }) }
@@ -245,7 +338,8 @@ class PurchaseViewModel(
 
     fun choose(product: CatalogProduct) {
         val index = _uiState.value.pickingLine ?: return
-        updateLine(index) { it.withProduct(product) }
+        val issuedAt = _uiState.value.issuedAt
+        updateLine(index) { it.withProduct(product).copy(expiresOn = null).withSuggestedExpiry(product, issuedAt) }
         closePicker()
     }
 
@@ -291,8 +385,11 @@ class PurchaseViewModel(
         }
     }
 
-    /** Salva a folha e faz a mercadoria entrar. O servidor diz o que impede, se algo impedir. */
-    fun confirm() {
+    /**
+     * "Confirmar entrada" salva a folha e abre a pergunta "para onde vai".
+     * Salvar antes é o que deixa a prévia do "encher a geladeira" certa.
+     */
+    fun askDestination() {
         val state = _uiState.value
         val sheet = currentSheet() ?: return
         if (!state.canConfirm) return
@@ -305,11 +402,45 @@ class PurchaseViewModel(
                 return@launch
             }
 
-            when (val outcome = repository.confirm(sheet.id, state.allowDuplicate)) {
+            when (val outcome = repository.show(sheet.id)) {
+                is Outcome.Success -> {
+                    val (destination, applianceId) = outcome.value.startingDestination()
+                    apply(outcome.value)
+                    _uiState.update {
+                        it.copy(choosingDestination = true, destination = destination, destinationApplianceId = applianceId)
+                    }
+                }
+
+                is Outcome.Failure -> _uiState.update { it.copy(isWorking = false, error = outcome.error.message) }
+            }
+        }
+    }
+
+    fun chooseDestination(destination: Destination) = _uiState.update { it.copy(destination = destination) }
+
+    fun chooseDestinationAppliance(id: Long) = _uiState.update {
+        // Trocou de geladeira e a nova não tem planograma: "encher" não existe lá.
+        val next = it.copy(destinationApplianceId = id)
+        if (next.destination == Destination.Fill && next.fillPreview == null) next.copy(destination = Destination.Appliance) else next
+    }
+
+    fun closeDestination() = _uiState.update { it.copy(choosingDestination = false) }
+
+    /** Segurou para confirmar: a mercadoria entra onde a pessoa escolheu. */
+    fun confirm() {
+        val state = _uiState.value
+        val id = state.sheet?.id ?: return
+        if (!state.canChooseDestination || state.isWorking) return
+
+        _uiState.update { it.copy(isWorking = true, error = null) }
+        viewModelScope.launch {
+            when (val outcome = repository.confirm(id, state.allowDuplicate, state.destination, state.destinationApplianceId)) {
                 is Outcome.Success -> _uiState.update {
                     it.copy(
                         isWorking = false,
+                        choosingDestination = false,
                         step = PurchaseStep.Done,
+                        confirmSummary = outcome.value,
                         confirmedUnits = it.lines.filter { line -> !line.ignored && line.productId != null }.sumOf { line -> line.quantityUnits },
                         backOnShelf = it.lines
                             .filter { line -> !line.ignored && line.quantityUnits > 0 }
@@ -319,8 +450,8 @@ class PurchaseViewModel(
                 }
 
                 is Outcome.Failure -> {
-                    _uiState.update { it.copy(isWorking = false, error = outcome.error.message) }
-                    reload(sheet.id)
+                    _uiState.update { it.copy(isWorking = false, choosingDestination = false, error = outcome.error.message) }
+                    reload(id)
                 }
             }
         }

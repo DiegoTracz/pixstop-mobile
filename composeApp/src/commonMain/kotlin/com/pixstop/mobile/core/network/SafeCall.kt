@@ -98,6 +98,26 @@ suspend inline fun <reified T> safeCallPaged(
 }
 
 /**
+ * Como [safeCall], mas sucesso não exige `data`: para rota que ganhou dados
+ * na resposta depois, e o app novo pode falar com um servidor antigo. Uma
+ * escrita que deu certo não pode virar erro na tela só porque veio sem dados.
+ */
+suspend inline fun <reified T> safeCallOptional(
+    tag: String = "API",
+    crossinline block: suspend () -> HttpResponse,
+): Outcome<T?> = runCatchingNetwork(tag) {
+    val response = block()
+
+    if (!response.status.isOk()) {
+        return@runCatchingNetwork Outcome.Failure(response.toDomainError(tag))
+    }
+
+    val envelope = apiJson.decodeFromString<ApiEnvelope<T>>(response.bodyAsText())
+
+    if (envelope.success) Outcome.Success(envelope.data) else Outcome.Failure(envelope.toDomainError())
+}
+
+/**
  * Para as poucas rotas que respondem sem corpo útil, como marcar tudo lido.
  */
 suspend inline fun safeCallUnit(

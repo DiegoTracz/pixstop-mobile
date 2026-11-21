@@ -1,6 +1,9 @@
 package com.pixstop.mobile.ui.viewmodel
 
 import com.pixstop.mobile.domain.model.CatalogProduct
+import com.pixstop.mobile.domain.model.Destination
+import com.pixstop.mobile.domain.model.DestinationOptions
+import com.pixstop.mobile.domain.model.FillPreview
 import com.pixstop.mobile.domain.model.Named
 import com.pixstop.mobile.domain.model.PurchaseLine
 import com.pixstop.mobile.domain.model.PurchaseSheet
@@ -116,5 +119,56 @@ class PurchaseUiStateTest {
         assertNull(parseMoney(""))
         assertEquals("566,12", formatMoneyInput(566.12))
         assertEquals("4,49", formatMoneyInput(4.49))
+    }
+
+    @Test
+    fun `somar dias atravessa mes, ano e fevereiro`() {
+        assertEquals("2026-12-20", addDays("2026-11-20", 30))
+        assertEquals("2027-01-19", addDays("2026-11-20", 60))
+        assertEquals("2028-02-29", addDays("2028-02-28", 1))
+        assertEquals("2027-03-01", addDays("2027-02-28", 1))
+        assertNull(addDays("", 30))
+        assertNull(addDays("20/11/2026", 30))
+    }
+
+    @Test
+    fun `a validade sugerida e a data da nota mais o prazo, so para quem controla`() {
+        val pudim = CatalogProduct(7, "Pudim", null, 4.0, 0, tracksExpiry = true, shelfLifeDays = 30)
+        val linha = PurchaseLine(productId = 7, quantityUnits = 6, unitCost = 4.0)
+
+        assertEquals("2026-12-20", linha.withSuggestedExpiry(pudim, "2026-11-20").expiresOn)
+        // A data digitada é a da embalagem: o palpite não passa por cima.
+        assertEquals("2026-12-01", linha.copy(expiresOn = "2026-12-01").withSuggestedExpiry(pudim, "2026-11-20").expiresOn)
+        assertNull(linha.withSuggestedExpiry(monster, "2026-11-20").expiresOn)
+        assertNull(linha.withSuggestedExpiry(pudim.copy(shelfLifeDays = null), "2026-11-20").expiresOn)
+    }
+
+    @Test
+    fun `a folha do destino abre em encher quando a geladeira tem planograma`() {
+        val opcoes = DestinationOptions(Destination.Fill, applianceId = 1, warehouseInUse = true, fill = listOf(FillPreview(1, 30, 18)))
+        val comPlanograma = sheet().copy(applianceId = 1, appliances = listOf(Named(1, "Copa"), Named(2, "Térreo")), destinationOptions = opcoes)
+
+        assertEquals(Destination.Fill to 1L, comPlanograma.startingDestination())
+
+        val semPlanograma = comPlanograma.copy(destinationOptions = opcoes.copy(default = Destination.Appliance, fill = emptyList()))
+        assertEquals(Destination.Appliance to 1L, semPlanograma.startingDestination())
+
+        val semGeladeira = sheet().copy(destinationOptions = opcoes.copy(default = Destination.Warehouse, fill = emptyList()))
+        assertEquals(Destination.Warehouse to null, semGeladeira.startingDestination())
+    }
+
+    @Test
+    fun `encher so vale para a geladeira que tem a previa`() {
+        val opcoes = DestinationOptions(Destination.Fill, 1, false, listOf(FillPreview(1, 30, 18)))
+        val estado = state(kitkatLine).copy(
+            sheet = sheet().copy(destinationOptions = opcoes),
+            destination = Destination.Fill,
+            destinationApplianceId = 1,
+        )
+
+        assertTrue(estado.canChooseDestination)
+        assertEquals(18, estado.fillPreview?.toWarehouse)
+        assertFalse(estado.copy(destinationApplianceId = 2).canChooseDestination)
+        assertTrue(estado.copy(destination = Destination.Warehouse, destinationApplianceId = null).canChooseDestination)
     }
 }

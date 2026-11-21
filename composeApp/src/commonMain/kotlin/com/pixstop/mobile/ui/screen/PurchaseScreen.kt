@@ -1,6 +1,10 @@
 package com.pixstop.mobile.ui.screen
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,8 +13,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -30,14 +36,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.decodeToImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.pixstop.mobile.domain.model.Destination
 import com.pixstop.mobile.domain.model.MascotFace
 import com.pixstop.mobile.domain.model.PurchaseLine
 import com.pixstop.mobile.ui.components.AppIcon
@@ -64,6 +73,7 @@ import com.pixstop.mobile.ui.viewmodel.PurchaseViewModel
 import com.pixstop.mobile.ui.viewmodel.averageAfter
 import com.pixstop.mobile.ui.viewmodel.formatMoneyInput
 import com.pixstop.mobile.ui.viewmodel.lineTotal
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -160,10 +170,13 @@ fun PurchaseScreen(
 
             PurchaseStep.Reading -> ReadingStep(onBack)
 
-            PurchaseStep.Review -> if (state.isWorking && state.sheet == null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { PixelLoader() }
-            } else {
-                ReviewStep(state, viewModel, onBack, sheetScroll)
+            PurchaseStep.Review -> when {
+                state.isWorking && state.sheet == null ->
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { PixelLoader() }
+
+                state.choosingDestination -> DestinationStep(state, viewModel)
+
+                else -> ReviewStep(state, viewModel, onBack, sheetScroll)
             }
 
             PurchaseStep.Done -> DoneStep(state, onBack, onOpenShoppingList)
@@ -315,6 +328,8 @@ private fun ReviewStep(state: PurchaseUiState, viewModel: PurchaseViewModel, onB
                 onCost = { viewModel.setCost(index, it) },
                 onIgnored = { viewModel.setIgnored(index, it) },
                 onRemove = { viewModel.removeLine(index) },
+                tracksExpiry = state.tracksExpiry(line),
+                onExpiry = { viewModel.setExpiry(index, it) },
             )
         }
 
@@ -353,7 +368,7 @@ private fun ReviewStep(state: PurchaseUiState, viewModel: PurchaseViewModel, onB
 
                 PixelButton(
                     text = "Confirmar entrada",
-                    onClick = viewModel::confirm,
+                    onClick = viewModel::askDestination,
                     enabled = state.canConfirm,
                     isLoading = state.isWorking,
                     loadingText = "Confirmando…",
@@ -420,30 +435,6 @@ private fun Header(state: PurchaseUiState, viewModel: PurchaseViewModel) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth(),
         )
-
-        val appliances = state.sheet?.appliances.orEmpty()
-
-        if (appliances.isNotEmpty()) {
-            Text(text = "ENTRA EM", style = PixTypography.inputLabel, color = PixColors.Gray400)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PixelButton(
-                    text = "Depósito",
-                    onClick = { viewModel.onApplianceChange(null) },
-                    enabled = state.editable,
-                    variant = if (state.applianceId == null) PixelButtonVariant.Primary else PixelButtonVariant.Secondary,
-                    buttonSize = PixelButtonSize.Small,
-                )
-                appliances.forEach { appliance ->
-                    PixelButton(
-                        text = appliance.name,
-                        onClick = { viewModel.onApplianceChange(appliance.id) },
-                        enabled = state.editable,
-                        variant = if (state.applianceId == appliance.id) PixelButtonVariant.Primary else PixelButtonVariant.Secondary,
-                        buttonSize = PixelButtonSize.Small,
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -462,6 +453,8 @@ private fun LineCard(
     onCost: (String) -> Unit,
     onIgnored: (Boolean) -> Unit,
     onRemove: () -> Unit,
+    tracksExpiry: Boolean = false,
+    onExpiry: (String) -> Unit = {},
 ) {
     val accent = when {
         line.ignored -> PixColors.Gray600
@@ -514,6 +507,22 @@ private fun LineCard(
                         onUnits(text.filter(Char::isDigit).take(5).toIntOrNull() ?: 0)
                     }
                     NumberField("Custo un.", line.unitCost?.let(::formatMoneyInput).orEmpty(), editable, Modifier.weight(1.2f), decimal = true, onChange = onCost)
+                }
+
+                if (tracksExpiry) {
+                    var expiry by remember(line.expiresOn) { mutableStateOf(line.expiresOn.orEmpty()) }
+
+                    PixelInput(
+                        value = expiry,
+                        onValueChange = {
+                            expiry = it.filter { char -> char.isDigit() || char == '-' }.take(10)
+                            onExpiry(expiry)
+                        },
+                        label = "Validade (opcional, AAAA-MM-DD)",
+                        enabled = editable,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -706,6 +715,154 @@ private fun ReceiptViewer(bytes: ByteArray?, onClose: () -> Unit) {
     }
 }
 
+/* ── Para onde vai ────────────────────────────────────────────────────── */
+
+/**
+ * A pergunta do confirmar (COMPRAS_CORREDOR.md, P0). Três cartões grandes e
+ * segurar para confirmar: um toque sem querer mexeria no estoque inteiro.
+ */
+@Composable
+private fun DestinationStep(state: PurchaseUiState, viewModel: PurchaseViewModel) {
+    val sheet = state.sheet ?: return
+    val appliances = sheet.appliances
+    val fill = state.fillPreview
+    val applianceName = appliances.firstOrNull { it.id == state.destinationApplianceId }?.name ?: "a geladeira"
+
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(text = "PARA ONDE VAI A MERCADORIA?", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+        Text(
+            text = "${state.units} unidades · ${state.lines.count { !it.ignored && it.productId != null }} produtos · ${formatMoney(state.itemsTotal)}",
+            style = PixTypography.caption,
+            color = PixColors.Gray400,
+        )
+
+        state.error?.let { PurchaseNotice(it, PixColors.Pink, viewModel::dismissMessage) }
+
+        if (appliances.size > 1) {
+            Text(text = "GELADEIRA", style = PixTypography.inputLabel, color = PixColors.Gray400)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                appliances.forEach { appliance ->
+                    PixelButton(
+                        text = appliance.name,
+                        onClick = { viewModel.chooseDestinationAppliance(appliance.id) },
+                        variant = if (state.destinationApplianceId == appliance.id) PixelButtonVariant.Primary else PixelButtonVariant.Secondary,
+                        buttonSize = PixelButtonSize.Small,
+                    )
+                }
+            }
+        }
+
+        if (fill != null) {
+            DestinationCard(
+                title = "Encher a geladeira, o resto no depósito",
+                detail = "${fill.toAppliance} vão para $applianceName, até o que cabe no planograma; ${fill.toWarehouse} ficam no depósito.",
+                selected = state.destination == Destination.Fill,
+                onClick = { viewModel.chooseDestination(Destination.Fill) },
+            )
+        }
+
+        if (appliances.isNotEmpty()) {
+            DestinationCard(
+                title = "Pôr na geladeira agora",
+                detail = "Tudo entra em $applianceName e aparece na loja na hora." +
+                    (fill?.takeIf { it.toWarehouse > 0 }?.let { " ${it.toWarehouse} passam do que cabe." } ?: ""),
+                selected = state.destination == Destination.Appliance,
+                onClick = { viewModel.chooseDestination(Destination.Appliance) },
+            )
+        }
+
+        DestinationCard(
+            title = "Guardar no depósito",
+            detail = "Vai para a geladeira no passo \"abastecer\" da visita." +
+                if (sheet.destinationOptions?.warehouseInUse == true) " Junta com o que já está lá." else "",
+            selected = state.destination == Destination.Warehouse,
+            onClick = { viewModel.chooseDestination(Destination.Warehouse) },
+        )
+
+        HoldToConfirmButton(
+            text = if (state.isWorking) "Confirmando…" else "Segure para confirmar a entrada",
+            enabled = state.canChooseDestination && !state.isWorking,
+            onConfirm = viewModel::confirm,
+        )
+
+        PixelButton(
+            text = "Voltar à conferência",
+            onClick = viewModel::closeDestination,
+            variant = PixelButtonVariant.Secondary,
+            enabled = !state.isWorking,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun DestinationCard(title: String, detail: String, selected: Boolean, onClick: () -> Unit) {
+    val accent = if (selected) PixColors.Cyan else PixColors.Gray600
+
+    Box(modifier = Modifier.fillMaxWidth().pixelShadow(color = accent, offsetX = 4.dp, offsetY = 4.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(if (selected) PixColors.Cyan.copy(alpha = 0.1f) else PixColors.Darker)
+                .border(2.dp, accent)
+                .clickable(onClick = onClick)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(text = (if (selected) "● " else "○ ") + title, style = PixTypography.bodySecondary, color = PixColors.Gray100)
+            Text(text = detail, style = PixTypography.caption, color = PixColors.Gray400)
+        }
+    }
+}
+
+/**
+ * Segurar para confirmar: a barra enche enquanto o dedo está em cima, e
+ * soltar antes cancela. Meio segundo basta para não ser sem querer.
+ */
+@Composable
+private fun HoldToConfirmButton(text: String, enabled: Boolean, onConfirm: () -> Unit) {
+    val progress = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    val accent = if (enabled) PixColors.Green else PixColors.Gray600
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .background(PixColors.Darker)
+            .border(2.dp, accent)
+            .pointerInput(enabled) {
+                if (!enabled) return@pointerInput
+                detectTapGestures(
+                    onPress = {
+                        val fillUp = scope.launch {
+                            progress.animateTo(1f, tween(durationMillis = 600))
+                            onConfirm()
+                        }
+                        tryAwaitRelease()
+                        if (progress.value < 1f) {
+                            fillUp.cancel()
+                            scope.launch { progress.animateTo(0f, tween(durationMillis = 150)) }
+                        }
+                    },
+                )
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .fillMaxHeight()
+                .fillMaxWidth(progress.value)
+                .background(accent.copy(alpha = 0.35f)),
+        )
+        Text(text = text, style = PixTypography.bodySecondary, color = if (enabled) PixColors.Gray100 else PixColors.Gray500)
+    }
+}
+
 /* ── Pronto ───────────────────────────────────────────────────────────── */
 
 @Composable
@@ -725,6 +882,10 @@ private fun DoneStep(state: PurchaseUiState, onBack: () -> Unit, onOpenShoppingL
         )
 
         SensorCard(icon = AppIconType.Box, label = "Custo da compra", value = formatMoney(state.itemsTotal))
+
+        state.confirmSummary?.let {
+            Text(text = it, style = PixTypography.caption, color = PixColors.Gray300)
+        }
 
         if (state.backOnShelf.isNotEmpty()) {
             Text(

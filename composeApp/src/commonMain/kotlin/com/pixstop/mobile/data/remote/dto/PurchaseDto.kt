@@ -49,6 +49,22 @@ data class PurchaseSheetDto(
     val reading: Boolean = false,
     val receipt: ReceiptDto? = null,
     val ai: ReadingDto? = null,
+    @SerialName("destination_options") val destinationOptions: DestinationOptionsDto? = null,
+)
+
+@Serializable
+data class DestinationOptionsDto(
+    val default: String = "warehouse",
+    @SerialName("appliance_id") val applianceId: Long? = null,
+    @SerialName("warehouse_in_use") val warehouseInUse: Boolean = false,
+    val fill: List<FillPreviewDto> = emptyList(),
+)
+
+@Serializable
+data class FillPreviewDto(
+    @SerialName("appliance_id") val applianceId: Long,
+    @SerialName("to_appliance") val toAppliance: Int = 0,
+    @SerialName("to_warehouse") val toWarehouse: Int = 0,
 )
 
 @Serializable
@@ -88,6 +104,7 @@ data class PurchaseItemDto(
     @SerialName("match_source") val matchSource: String? = null,
     val confidence: Double? = null,
     @SerialName("expected_quantity") val expectedQuantity: Int? = null,
+    @SerialName("expires_on") val expiresOn: String? = null,
 )
 
 @Serializable
@@ -100,6 +117,8 @@ data class CatalogProductDto(
     val barcode: String? = null,
     @SerialName("price_cost") val priceCost: Double = 0.0,
     val stock: Int = 0,
+    @SerialName("tracks_expiry") val tracksExpiry: Boolean = false,
+    @SerialName("shelf_life_days") val shelfLifeDays: Int? = null,
 )
 
 @Serializable
@@ -141,6 +160,7 @@ data class PurchaseLineSaveDto(
     @SerialName("match_source") val matchSource: String?,
     val confidence: Double?,
     @SerialName("expected_quantity") val expectedQuantity: Int?,
+    @SerialName("expires_on") val expiresOn: String? = null,
 )
 
 /**
@@ -163,5 +183,17 @@ data class PurchaseFromListItemDto(
     @SerialName("expected_quantity") val expectedQuantity: Int,
 )
 
+/**
+ * O confirmar com a resposta à pergunta "para onde vai". `destination` nulo é
+ * o app antigo: vale o que a compra já dizia.
+ */
 @Serializable
-data class PurchaseConfirmDto(@SerialName("allow_duplicate") val allowDuplicate: Boolean)
+data class PurchaseConfirmDto(
+    @SerialName("allow_duplicate") val allowDuplicate: Boolean,
+    val destination: String? = null,
+    @SerialName("appliance_id") val applianceId: Long? = null,
+)
+
+/** "Entrada confirmada: 7 em Geladeira da Copa e 11 no depósito." */
+@Serializable
+data class PurchaseConfirmedDto(val summary: String? = null)

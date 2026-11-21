@@ -3,14 +3,19 @@ package com.pixstop.mobile.data.repository
 import com.pixstop.mobile.core.config.ApiConfig
 import com.pixstop.mobile.core.network.safeBytes
 import com.pixstop.mobile.core.network.safeCall
+import com.pixstop.mobile.core.network.safeCallOptional
 import com.pixstop.mobile.core.network.safeCallUnit
 import com.pixstop.mobile.data.remote.dto.PurchaseConfirmDto
+import com.pixstop.mobile.data.remote.dto.PurchaseConfirmedDto
 import com.pixstop.mobile.data.remote.dto.PurchaseCreatedDto
 import com.pixstop.mobile.data.remote.dto.PurchaseIndexDto
 import com.pixstop.mobile.data.remote.dto.PurchaseLineSaveDto
 import com.pixstop.mobile.data.remote.dto.PurchaseSaveDto
 import com.pixstop.mobile.data.remote.dto.PurchaseSheetDto
 import com.pixstop.mobile.domain.model.CatalogProduct
+import com.pixstop.mobile.domain.model.Destination
+import com.pixstop.mobile.domain.model.DestinationOptions
+import com.pixstop.mobile.domain.model.FillPreview
 import com.pixstop.mobile.domain.model.Named
 import com.pixstop.mobile.domain.model.Outcome
 import com.pixstop.mobile.domain.model.PurchaseIndex
@@ -118,14 +123,25 @@ class PurchaseRepository(private val client: HttpClient) {
                         matchSource = it.matchSource,
                         confidence = it.confidence,
                         expectedQuantity = it.expectedQuantity,
+                        expiresOn = it.expiresOn,
                     )
                 },
-                products = dto.products.map { CatalogProduct(it.id, it.name, it.barcode, it.priceCost, it.stock) },
+                products = dto.products.map {
+                    CatalogProduct(it.id, it.name, it.barcode, it.priceCost, it.stock, it.tracksExpiry, it.shelfLifeDays)
+                },
                 appliances = dto.appliances.map { Named(it.id, it.name) },
                 duplicate = dto.duplicate?.let { Named(it.id, it.label) },
                 receiptUrl = dto.receipt?.url,
                 readingError = dto.ai?.error,
                 warnings = dto.ai?.warnings.orEmpty(),
+                destinationOptions = dto.destinationOptions?.let { options ->
+                    DestinationOptions(
+                        default = Destination.fromApi(options.default),
+                        applianceId = options.applianceId,
+                        warehouseInUse = options.warehouseInUse,
+                        fill = options.fill.map { FillPreview(it.applianceId, it.toAppliance, it.toWarehouse) },
+                    )
+                },
             )
         }
 
@@ -157,6 +173,7 @@ class PurchaseRepository(private val client: HttpClient) {
                                 matchSource = it.matchSource,
                                 confidence = it.confidence,
                                 expectedQuantity = it.expectedQuantity,
+                                expiresOn = it.expiresOn?.ifBlank { null },
                             )
                         },
                     ),
@@ -164,12 +181,27 @@ class PurchaseRepository(private val client: HttpClient) {
             }
         }
 
-    suspend fun confirm(id: Long, allowDuplicate: Boolean = false): Outcome<Unit> =
-        safeCallUnit(TAG) {
+    /**
+     * Faz a mercadoria entrar, com a resposta à pergunta "para onde vai".
+     * Devolve o resumo do servidor: onde cada parte ficou.
+     */
+    suspend fun confirm(
+        id: Long,
+        allowDuplicate: Boolean = false,
+        destination: Destination? = null,
+        applianceId: Long? = null,
+    ): Outcome<String?> =
+        safeCallOptional<PurchaseConfirmedDto>(TAG) {
             client.post(ApiConfig.Endpoints.companyPurchaseConfirm(id)) {
-                setBody(PurchaseConfirmDto(allowDuplicate))
+                setBody(
+                    PurchaseConfirmDto(
+                        allowDuplicate = allowDuplicate,
+                        destination = destination?.api,
+                        applianceId = if (destination == Destination.Warehouse) null else applianceId,
+                    ),
+                )
             }
-        }
+        }.map { it?.summary }
 
     suspend fun discard(id: Long): Outcome<Unit> =
         safeCallUnit(TAG) { client.post(ApiConfig.Endpoints.companyPurchaseDiscard(id)) }
