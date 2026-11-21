@@ -61,3 +61,59 @@ data class OperatorCompanyDto(
     @SerialName("revenue_month") val revenueMonth: Double? = null,
     @SerialName("profit_month") val profitMonth: Double? = null,
 )
+
+/** A visão geral do operador (PAINEL_ESTOQUE.md, D0). Os campos em R$ só vêm para o dono. */
+@Serializable
+data class OperatorInsightsDto(
+    val operator: OperatorRefDto,
+    val totals: OperatorTotalsDto = OperatorTotalsDto(),
+    val attention: List<OperatorAttentionDto> = emptyList(),
+    val companies: List<OperatorInsightCompanyDto> = emptyList(),
+    @SerialName("sales_by_hour") val salesByHour: List<OperatorHourDto> = emptyList(),
+    @SerialName("generated_at") val generatedAt: String? = null,
+)
+
+@Serializable
+data class OperatorTotalsDto(
+    val companies: Int = 0,
+    val appliances: Int = 0,
+    val offline: Int = 0,
+    val attention: Int = 0,
+    @SerialName("sold_today") val soldToday: Int = 0,
+    @SerialName("revenue_today") val revenueToday: Double? = null,
+    @SerialName("revenue_month") val revenueMonth: Double? = null,
+    @SerialName("profit_month") val profitMonth: Double? = null,
+    @SerialName("stock_value") val stockValue: Double? = null,
+)
+
+@Serializable
+data class OperatorAttentionDto(
+    val kind: String,
+    val title: String,
+    val detail: String? = null,
+    val place: String? = null,
+    val tenant: String,
+    @SerialName("tenant_id") val tenantId: String,
+    @SerialName("cost_per_day") val costPerDay: Double? = null,
+)
+
+@Serializable
+data class OperatorInsightCompanyDto(
+    val id: String,
+    val name: String,
+    val appliances: Int = 0,
+    val offline: Int = 0,
+    val attention: Int = 0,
+    val zeroed: Int = 0,
+    val expired: Int = 0,
+    @SerialName("sold_today") val soldToday: Int = 0,
+    @SerialName("revenue_today") val revenueToday: Double? = null,
+    @SerialName("stock_value") val stockValue: Double? = null,
+)
+
+@Serializable
+data class OperatorHourDto(
+    val hour: Int,
+    val today: Int = 0,
+    val average: Double = 0.0,
+)

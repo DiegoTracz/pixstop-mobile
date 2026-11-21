@@ -3,9 +3,15 @@ package com.pixstop.mobile.data.repository
 import com.pixstop.mobile.core.config.ApiConfig
 import com.pixstop.mobile.core.network.safeCall
 import com.pixstop.mobile.data.remote.dto.OperatorCompaniesDto
+import com.pixstop.mobile.data.remote.dto.OperatorInsightsDto
 import com.pixstop.mobile.data.remote.dto.OperatorRoundDto
 import com.pixstop.mobile.data.remote.dto.OperatorShoppingDto
+import com.pixstop.mobile.domain.model.HourSales
 import com.pixstop.mobile.domain.model.OperatorAlert
+import com.pixstop.mobile.domain.model.OperatorAttention
+import com.pixstop.mobile.domain.model.OperatorInsightCompany
+import com.pixstop.mobile.domain.model.OperatorInsights
+import com.pixstop.mobile.domain.model.OperatorTotals
 import com.pixstop.mobile.domain.model.OperatorCompanies
 import com.pixstop.mobile.domain.model.OperatorCompany
 import com.pixstop.mobile.domain.model.OperatorRound
@@ -91,6 +97,27 @@ class OperatorRepository(private val client: HttpClient) {
                     )
                 },
                 totalCost = dto.totalCost,
+            )
+        }
+
+    /** A visão geral, a tela inicial de quem opera (PAINEL_ESTOQUE.md, D1). */
+    suspend fun insights(): Outcome<OperatorInsights> =
+        safeCall<OperatorInsightsDto>(TAG) {
+            client.get(ApiConfig.Endpoints.OPERATOR_INSIGHTS)
+        }.map { dto ->
+            OperatorInsights(
+                operatorName = dto.operator.name,
+                seesMoney = dto.operator.seesMoney,
+                totals = with(dto.totals) {
+                    OperatorTotals(companies, appliances, offline, attention, soldToday, revenueToday, revenueMonth, profitMonth, stockValue)
+                },
+                attention = dto.attention.map {
+                    OperatorAttention(it.kind, it.title, it.detail, it.tenant, it.tenantId, it.costPerDay)
+                },
+                companies = dto.companies.map {
+                    OperatorInsightCompany(it.id, it.name, it.appliances, it.offline, it.attention, it.zeroed, it.expired, it.soldToday, it.revenueToday)
+                },
+                salesByHour = dto.salesByHour.map { HourSales(it.hour, it.today, it.average) },
             )
         }
 }

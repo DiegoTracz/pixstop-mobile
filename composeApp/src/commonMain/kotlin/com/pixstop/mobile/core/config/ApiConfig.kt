@@ -134,6 +134,9 @@ object ApiConfig {
         /** O que comprar para todas as empresas dele, numa ida só ao atacado. */
         const val OPERATOR_SHOPPING_LIST = "operator/shopping-list"
 
+        /** A visão geral: a tela inicial de quem opera (PAINEL_ESTOQUE.md, D1). */
+        const val OPERATOR_INSIGHTS = "operator/insights"
+
         // ── Notificações e push ───────────────────────────────────────────
         const val NOTIFICATIONS = "notifications"
         const val NOTIFICATIONS_READ_ALL = "notifications/read-all"

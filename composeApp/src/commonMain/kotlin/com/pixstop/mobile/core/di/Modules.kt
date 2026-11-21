@@ -43,6 +43,7 @@ import com.pixstop.mobile.ui.viewmodel.CheckoutViewModel
 import com.pixstop.mobile.ui.viewmodel.HomeFeedViewModel
 import com.pixstop.mobile.ui.viewmodel.CompanyViewModel
 import com.pixstop.mobile.ui.viewmodel.ConnectFridgeViewModel
+import com.pixstop.mobile.ui.viewmodel.OperatorHomeViewModel
 import com.pixstop.mobile.ui.viewmodel.OperatorViewModel
 import com.pixstop.mobile.ui.viewmodel.VisitViewModel
 import com.pixstop.mobile.ui.viewmodel.AssistantViewModel
@@ -163,6 +164,7 @@ val viewModelModule: Module = module {
     viewModel { CompanyViewModel(get()) }
     viewModel { ConnectFridgeViewModel(get(), get(), get()) }
     viewModel { OperatorViewModel(get()) }
+    viewModel { OperatorHomeViewModel(get()) }
     viewModel { VisitViewModel(get(), get()) }
     viewModel { ShoppingListViewModel(get()) }
     viewModel { com.pixstop.mobile.ui.viewmodel.ExpiryViewModel(get()) }

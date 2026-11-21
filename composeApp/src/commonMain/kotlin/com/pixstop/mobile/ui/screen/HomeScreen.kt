@@ -124,6 +124,8 @@ fun HomeScreen(
     onDestination: (Destination) -> Unit = {},
     onOpenCards: () -> Unit = {},
     onOpenOrder: (Long) -> Unit = {},
+    /** Quem opera toca numa empresa da visão geral: entra nela e abre as geladeiras. */
+    onOpenOperatorCompany: (String) -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
     notificationsViewModel: NotificationsViewModel = koinViewModel(),
     cartViewModel: CartViewModel = koinViewModel(),
@@ -295,7 +297,16 @@ fun HomeScreen(
                     modifier = Modifier.padding(paddingValues),
                 )
 
-                else -> HomeFeed(
+                // Quem opera geladeiras começa pela visão geral de todas as
+                // empresas (PAINEL_ESTOQUE.md, D1), e não pela vitrine.
+                else -> if (session.account?.operator?.let { !it.isPending } == true) {
+                    OperatorHomeScreen(
+                        greeting = greetingForHour(currentHourOfDay()),
+                        onOpenCompany = onOpenOperatorCompany,
+                        onOpenRound = { onDestination(Destination.Operator) },
+                        modifier = Modifier.padding(paddingValues),
+                    )
+                } else HomeFeed(
                     state = feed,
                     user = session.account?.user,
                     company = session.company,

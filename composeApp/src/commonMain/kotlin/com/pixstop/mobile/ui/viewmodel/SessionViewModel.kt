@@ -31,7 +31,12 @@ data class SessionUiState(
     val loggedOut: Boolean = false,
 ) {
     val company get() = account?.activeCompany
-    val needsCompany: Boolean get() = account != null && account.needsCompany
+    /**
+     * Quem opera e já foi liberado não precisa ser membro de empresa nenhuma:
+     * a tela inicial dele é a visão geral de todas as que opera.
+     */
+    val needsCompany: Boolean
+        get() = account != null && account.needsCompany && account.operator?.let { !it.isPending } != true
     val needsConsent: Boolean get() = account?.hasPendingConsent == true
 }
 
