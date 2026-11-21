@@ -4,6 +4,10 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.PrizeSpinResult
+import com.pixstop.mobile.domain.model.PrizeWheelRing
 import com.pixstop.mobile.domain.model.PrizeWheel
 import com.pixstop.mobile.domain.model.RewardChest
 import com.pixstop.mobile.domain.model.RewardCurrency
@@ -36,6 +41,7 @@ import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.PrizeWheelArt
 import com.pixstop.mobile.ui.components.PrizeWheelLegend
+import com.pixstop.mobile.ui.components.sliceColor
 import com.pixstop.mobile.ui.components.reward.RewardCelebration
 import com.pixstop.mobile.ui.components.restingAngle
 import com.pixstop.mobile.ui.theme.PixColors
@@ -108,16 +114,18 @@ private fun WheelContent(
     // A roda que aparece é a do giro em andamento; parada, a do próximo.
     val kind = pending?.kind ?: wheel.nextKind
     val slices = wheel.slicesOf(kind)
-    val angle = remember { Animatable(restingAngle(0, wheel.slicesOf(wheel.nextKind).size)) }
+    val angle = remember { Animatable(restingAngle(0, PrizeWheelRing.SIZE)) }
+    var showChances by remember { mutableStateOf(false) }
 
     LaunchedEffect(pending) {
         val result = pending ?: return@LaunchedEffect
-        val count = wheel.slicesOf(result.kind).size
+        // O servidor diz o prêmio; a roda para numa das fatias dele.
+        val ring = PrizeWheelRing.build(wheel.slicesOf(result.kind))
         val full = (2 * PI).toFloat()
         val base = angle.value - (angle.value % full)
         angle.animateTo(
-            targetValue = base - full * 5 + restingAngle(result.sliceIndex, count),
-            animationSpec = tween(durationMillis = 3200, easing = CubicBezierEasing(0.15f, 0.85f, 0.35f, 1f)),
+            targetValue = base - full * 5 + restingAngle(PrizeWheelRing.slotFor(ring, result.sliceIndex), ring.size.coerceAtLeast(1)),
+            animationSpec = tween(durationMillis = 3600, easing = CubicBezierEasing(0.15f, 0.85f, 0.35f, 1f)),
         )
         onStopped(result)
     }
@@ -176,11 +184,50 @@ private fun WheelContent(
 
         error?.let { Text(text = it, style = PixTypography.errorText, color = PixColors.Pink, textAlign = TextAlign.Center) }
 
-        PrizeWheelLegend(
-            slices = slices,
-            kind = kind,
-            highlight = lastResult?.takeIf { !isSpinning && it.kind == kind }?.sliceIndex,
-        )
+        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PrizeWheelLegend(
+                slices = slices,
+                kind = kind,
+                highlight = lastResult?.takeIf { !isSpinning && it.kind == kind }?.sliceIndex,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = "i",
+                style = PixTypography.buttonTextSm,
+                color = if (showChances) PixColors.Cyan else PixColors.Gray400,
+                modifier = Modifier
+                    .border(1.dp, if (showChances) PixColors.Cyan else PixColors.Gray700)
+                    .clickable { showChances = !showChances }
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+            )
+        }
+
+        if (showChances) {
+            Column(
+                modifier = Modifier.fillMaxWidth().border(1.dp, PixColors.Gray700).padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = if (kind == com.pixstop.mobile.domain.model.PrizeSpinKind.Gold) "Chance de cada prêmio no giro de ouro" else "Chance de cada prêmio no giro de compra",
+                    style = PixTypography.caption,
+                    color = PixColors.Gray100,
+                )
+                slices.forEachIndexed { index, slice ->
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(10.dp).background(sliceColor(kind, index, slice)))
+                            Text(text = slice.label, style = PixTypography.caption, color = PixColors.Gray100)
+                        }
+                        Text(text = "${formatChance(slice.chance)}%", style = PixTypography.caption, color = PixColors.Gray100)
+                    }
+                }
+                Text(
+                    text = "A roda tem 16 fatias para ficar bonita; quem decide o prêmio é o sorteio, com estas chances.",
+                    style = PixTypography.caption,
+                    color = PixColors.Gray400,
+                )
+            }
+        }
 
         Text(
             text = "As moedas da roleta pagam a compra inteira e não vencem.",
@@ -207,6 +254,11 @@ private fun sceneFor(result: PrizeSpinResult) = RewardScene(
     chest = RewardChest.Blue,
     trophy = result.isJackpot,
 )
+
+private fun formatChance(value: Double): String {
+    val tenths = kotlin.math.round(value * 10).toLong()
+    return if (tenths % 10 == 0L) "${tenths / 10}" else "${tenths / 10},${tenths % 10}"
+}
 
 private fun formatMoney(value: Double): String {
     val cents = kotlin.math.round(value * 100).toLong()

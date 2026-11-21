@@ -38,7 +38,14 @@ enum class PrizeSpinKind {
     }
 }
 
-data class PrizeWheelSlice(val label: String, val pixels: Int, val isJackpot: Boolean)
+/** Um prêmio da roda: `weight` reparte as 16 fatias desenhadas, `chance` vai no "i". */
+data class PrizeWheelSlice(
+    val label: String,
+    val pixels: Int,
+    val isJackpot: Boolean,
+    val weight: Double = 1.0,
+    val chance: Double = 0.0,
+)
 
 data class PrizeWheelRecent(val kind: PrizeSpinKind, val label: String?, val pixels: Int, val isJackpot: Boolean)
 

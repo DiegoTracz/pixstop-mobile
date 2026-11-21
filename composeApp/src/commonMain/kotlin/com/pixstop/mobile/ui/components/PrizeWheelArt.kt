@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pixstop.mobile.domain.model.PrizeSpinKind
 import com.pixstop.mobile.domain.model.PrizeWheel
+import com.pixstop.mobile.domain.model.PrizeWheelRing
 import com.pixstop.mobile.domain.model.PrizeWheelSlice
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
@@ -45,9 +48,9 @@ private val Jackpot = Color(0xFFFFC93C)
 private val Rim = Color(0xFF060A14)
 
 /**
- * A roda em pixel art, numa grade de 64×64 como a da web: cada fatia do mesmo
- * tamanho (o peso de cada uma fica no servidor), o prêmio maior em dourado e
- * o ponteiro em cima. `angle` é o giro em radianos.
+ * A roda em pixel art, numa grade de 64×64 como a da web: 16 fatias
+ * repartidas pelos prêmios ([PrizeWheelRing]), o prêmio maior em dourado e o
+ * ponteiro em cima. `angle` é o giro em radianos.
  */
 @Composable
 fun PrizeWheelArt(
@@ -58,15 +61,17 @@ fun PrizeWheelArt(
     size: Dp = 220.dp,
     showLabels: Boolean = true,
 ) {
-    val count = slices.size.coerceAtLeast(1)
+    val ring = remember(slices) { PrizeWheelRing.build(slices) }
+    val count = ring.size.coerceAtLeast(1)
     val measurer = rememberTextMeasurer()
-    val labelStyle = TextStyle(fontFamily = PixTypography.pixelFontFamily, fontSize = (size.value / 22f).sp)
+    val labelStyle = TextStyle(fontFamily = PixTypography.pixelFontFamily, fontSize = (size.value / 34f).sp)
 
     Canvas(modifier = modifier.size(size)) {
         val cell = this.size.minDimension / GRID
         val center = GRID / 2f
         val radius = GRID / 2f - 3f
         val full = (2 * PI).toFloat()
+        val width = full / count
 
         for (y in 0 until GRID) {
             for (x in 0 until GRID) {
@@ -81,8 +86,12 @@ fun PrizeWheelArt(
                     distance < 4f -> Color.White
                     else -> {
                         val turn = (((atan2(dy, dx) - angle) % full) + full) % full
-                        val index = floor(turn / full * count).toInt().coerceIn(0, count - 1)
-                        sliceColor(kind, index, slices.getOrNull(index))
+                        val slot = floor(turn / width).toInt().coerceIn(0, count - 1)
+                        val edge = minOf(turn - slot * width, (slot + 1) * width - turn) * distance
+                        val prize = ring.getOrElse(slot) { 0 }
+                        // Uma linha escura entre as fatias: duas iguais lado a
+                        // lado continuam sendo duas.
+                        if (edge < 0.55f && distance > 6f) Rim else sliceColor(kind, prize, slices.getOrNull(prize))
                     }
                 }
 
@@ -90,17 +99,21 @@ fun PrizeWheelArt(
             }
         }
 
-        // O prêmio escrito em cada fatia, girando junto com a roda.
-        val labelRadius = radius * cell * 0.6f
-        if (showLabels) slices.forEachIndexed { index, slice ->
-            // De pé, no meio da fatia: número de lado ou de cabeça para baixo
-            // não se lê com a roda girando.
-            val middle = angle + (index + 0.5f) * full / count
-            val text = measurer.measure(shortLabel(slice), labelStyle.copy(color = inkOn(sliceColor(kind, index, slice))))
+        // O prêmio escrito em cada fatia, ao longo do raio, lendo de dentro
+        // para fora; na metade esquerda ele vira, para nunca ficar de cabeça
+        // para baixo.
+        val labelRadius = radius * cell * 0.62f
+        if (showLabels) ring.forEachIndexed { slot, prize ->
+            val slice = slices.getOrNull(prize) ?: return@forEachIndexed
+            val middle = angle + (slot + 0.5f) * width
+            val upright = if (cos(middle) < 0) middle + PI.toFloat() else middle
+            val text = measurer.measure(shortLabel(slice), labelStyle.copy(color = inkOn(sliceColor(kind, prize, slice))))
             val x = center * cell + labelRadius * cos(middle)
             val y = center * cell + labelRadius * sin(middle)
 
-            drawText(textLayoutResult = text, topLeft = Offset(x - text.size.width / 2f, y - text.size.height / 2f))
+            rotate(degrees = upright * 180f / PI.toFloat(), pivot = Offset(x, y)) {
+                drawText(textLayoutResult = text, topLeft = Offset(x - text.size.width / 2f, y - text.size.height / 2f))
+            }
         }
 
         // O ponteiro, em cima.
@@ -169,7 +182,7 @@ fun PrizeWheelLegend(
     }
 }
 
-/** O ângulo em que a fatia `index` fica sob o ponteiro, que está em cima. */
+/** O ângulo em que a posição `index` da roda fica sob o ponteiro, que está em cima. */
 fun restingAngle(index: Int, count: Int): Float {
     val width = (2 * PI / count.coerceAtLeast(1)).toFloat()
     return (-PI / 2).toFloat() - (index + 0.5f) * width
@@ -194,7 +207,7 @@ fun PrizeWheelTeaser(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PrizeWheelArt(slices = wheel.slicesOf(wheel.nextKind), kind = wheel.nextKind, angle = restingAngle(0, wheel.slicesOf(wheel.nextKind).size), size = 72.dp, showLabels = false)
+        PrizeWheelArt(slices = wheel.slicesOf(wheel.nextKind), kind = wheel.nextKind, angle = restingAngle(0, PrizeWheelRing.SIZE), size = 72.dp, showLabels = false)
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(text = "ROLETA", style = PixTypography.badgeText, color = PixColors.Gray400)

@@ -44,6 +44,8 @@ data class PrizeWheelSliceDto(
     val label: String,
     val pixels: Int = 0,
     @SerialName("is_jackpot") val isJackpot: Boolean = false,
+    val weight: Double = 1.0,
+    val chance: Double = 0.0,
 )
 
 @Serializable

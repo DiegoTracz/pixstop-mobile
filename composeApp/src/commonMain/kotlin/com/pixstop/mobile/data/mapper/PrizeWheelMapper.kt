@@ -24,7 +24,7 @@ fun PrizeWheelDto.toDomain() = PrizeWheel(
     recent = recent.map { PrizeWheelRecent(PrizeSpinKind.fromApi(it.kind), it.label, it.pixels, it.isJackpot) },
 )
 
-fun PrizeWheelSliceDto.toDomain() = PrizeWheelSlice(label = label, pixels = pixels, isJackpot = isJackpot)
+fun PrizeWheelSliceDto.toDomain() = PrizeWheelSlice(label = label, pixels = pixels, isJackpot = isJackpot, weight = weight, chance = chance)
 
 fun PrizeSpinResultDto.toDomain() = PrizeSpinResult(
     kind = PrizeSpinKind.fromApi(kind),
