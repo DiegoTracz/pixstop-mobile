@@ -4,12 +4,9 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -38,6 +35,7 @@ import com.pixstop.mobile.ui.components.PixelEmptyState
 import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
 import com.pixstop.mobile.ui.components.PrizeWheelArt
+import com.pixstop.mobile.ui.components.PrizeWheelLegend
 import com.pixstop.mobile.ui.components.reward.RewardCelebration
 import com.pixstop.mobile.ui.components.restingAngle
 import com.pixstop.mobile.ui.theme.PixColors
@@ -85,9 +83,7 @@ fun PrizeWheelScreen(
                     onSpin = viewModel::spin,
                     onStopped = { result ->
                         viewModel.onSpinAnimated()
-                        if (result.isBig) {
-                            celebration = listOf(sceneFor(result))
-                        }
+                        celebration = listOf(sceneFor(result))
                     },
                 )
             }
@@ -99,7 +95,6 @@ fun PrizeWheelScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WheelContent(
     wheel: PrizeWheel,
@@ -181,18 +176,11 @@ private fun WheelContent(
 
         error?.let { Text(text = it, style = PixTypography.errorText, color = PixColors.Pink, textAlign = TextAlign.Center) }
 
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            slices.forEach { slice ->
-                Text(
-                    text = slice.label,
-                    style = PixTypography.caption,
-                    color = if (slice.isJackpot) PixColors.Yellow else PixColors.Gray100,
-                    modifier = Modifier
-                        .border(1.dp, if (slice.isJackpot) PixColors.Yellow else PixColors.Gray700)
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
-                )
-            }
-        }
+        PrizeWheelLegend(
+            slices = slices,
+            kind = kind,
+            highlight = lastResult?.takeIf { !isSpinning && it.kind == kind }?.sliceIndex,
+        )
 
         Text(
             text = "As moedas da roleta pagam a compra inteira e não vencem.",
@@ -203,16 +191,19 @@ private fun WheelContent(
     }
 }
 
-/** O baú das recompensas para um prêmio grande. A fonte pixel não leva acento. */
+/**
+ * A cena de recompensa de todo giro: sempre o baú, mudando só o valor. O
+ * prêmio maior ganha o troféu. A fonte pixel não leva acento.
+ */
 private fun sceneFor(result: PrizeSpinResult) = RewardScene(
     kind = RewardKind.Level,
     tag = if (result.kind == com.pixstop.mobile.domain.model.PrizeSpinKind.Gold) "GIRO DE OURO" else "GIRO DE COMPRA",
     title = if (result.isJackpot) "PREMIO MAIOR!" else "+${result.pixels} MOEDAS",
-    subtitle = result.label,
+    subtitle = if (result.isJackpot) result.label else "Você ganhou ${result.label} na roleta",
     prize = "+${result.pixels} MOEDAS",
     currency = RewardCurrency.Pixels,
     gain = result.pixels,
-    coins = if (result.isJackpot) 30 else 16,
+    coins = (result.pixels / 20).coerceIn(8, 30),
     chest = RewardChest.Blue,
     trophy = result.isJackpot,
 )
