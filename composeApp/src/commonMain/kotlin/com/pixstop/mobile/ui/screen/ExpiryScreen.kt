@@ -87,14 +87,14 @@ fun ExpiryScreen(onBack: () -> Unit, onSettings: () -> Unit = {}, viewModel: Exp
                         icon = AppIconType.Warning,
                         label = "Vencidas",
                         value = overview.expiredUnits.toString(),
-                        accent = if (overview.expiredUnits > 0) PixColors.Pink else PixColors.Gray600,
+                        accent = if (overview.expiredUnits > 0) PixColors.Pink else PixColors.Green,
                         modifier = Modifier.weight(1f),
                     )
                     SensorCard(
                         icon = AppIconType.Box,
                         label = "Vencendo",
                         value = overview.warningUnits.toString(),
-                        accent = if (overview.warningUnits > 0) PixColors.Yellow else PixColors.Gray600,
+                        accent = if (overview.warningUnits > 0) PixColors.Yellow else PixColors.Green,
                         modifier = Modifier.weight(1f),
                     )
                 }
