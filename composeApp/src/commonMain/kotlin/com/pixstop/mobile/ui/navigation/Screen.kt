@@ -37,6 +37,9 @@ object Routes {
     /** Progressão por XP: nível, o que falta e o histórico. */
     const val PROGRESS = "progress"
 
+    /** Roleta de prêmios (docs/plans/LANCAMENTO_LOCARMAIS.md no servidor). */
+    const val PRIZE_WHEEL = "prize-wheel"
+
     /** Cartões guardados, alcançados pelo perfil. */
     const val CARDS = "cards"
 

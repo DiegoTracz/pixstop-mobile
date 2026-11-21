@@ -40,6 +40,7 @@ import com.pixstop.mobile.ui.screen.CardsScreen
 import com.pixstop.mobile.ui.screen.PixelInviteScreen
 import com.pixstop.mobile.ui.screen.RewardsScreen
 import com.pixstop.mobile.ui.screen.StaffCheckinScreen
+import com.pixstop.mobile.ui.screen.PrizeWheelScreen
 import com.pixstop.mobile.ui.screen.ProgressScreen
 import com.pixstop.mobile.ui.screen.TeamScreen
 import com.pixstop.mobile.ui.screen.NotificationsScreen
@@ -272,6 +273,7 @@ fun AppNavigation() {
                 onOpenCards = { navController.navigate(Routes.CARDS) },
                 onOpenProduct = { navController.navigate(Routes.product(it)) },
                 onOpenOrder = { navController.navigate(Routes.order(it)) },
+                onOpenPrizeWheel = { navController.navigate(Routes.PRIZE_WHEEL) },
                 onOpenOperatorCompany = { companyId ->
                     sessionViewModel.switchCompany(companyId)
                     navController.navigate(Routes.FRIDGES)
@@ -367,6 +369,10 @@ fun AppNavigation() {
 
         composable(Routes.PROGRESS) {
             ProgressScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.PRIZE_WHEEL) {
+            PrizeWheelScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.CARDS) {

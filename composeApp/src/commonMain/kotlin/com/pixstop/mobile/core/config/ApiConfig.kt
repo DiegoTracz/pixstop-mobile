@@ -203,6 +203,10 @@ object ApiConfig {
         const val CHALLENGE_CURRENT = "challenges/current"
         fun challengeVisibility(id: Long) = "challenges/$id/visibility"
 
+        /** Roleta de prêmios (docs/plans/LANCAMENTO_LOCARMAIS.md no servidor). */
+        const val PRIZE_WHEEL = "prize-wheel"
+        const val PRIZE_WHEEL_SPIN = "prize-wheel/spin"
+
         // ── Gestor ────────────────────────────────────────────────────────
         const val TEAM = "team"
 

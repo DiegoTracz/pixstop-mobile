@@ -38,6 +38,7 @@ import com.pixstop.mobile.ui.components.PixelButtonSize
 import com.pixstop.mobile.ui.components.PixelCoin
 import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.ChallengeBoard
+import com.pixstop.mobile.ui.components.PrizeWheelTeaser
 import com.pixstop.mobile.ui.components.XpBar
 import com.pixstop.mobile.ui.components.formatMoney
 import com.pixstop.mobile.ui.components.ProductImage
@@ -65,6 +66,7 @@ fun HomeFeed(
     onOpenPixels: () -> Unit,
     onOpenProgress: () -> Unit,
     onAddToCart: (Long) -> Unit,
+    onOpenPrizeWheel: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (state.isLoading) {
@@ -98,6 +100,18 @@ fun HomeFeed(
                 XpBar(
                     progression = progression,
                     onClick = onOpenProgress,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
+            }
+        }
+
+        // A roleta de prêmios, quando há uma: os giros de ouro esperam a
+        // pessoa, e é aqui que ela descobre que os tem.
+        state.prizeWheel?.let { wheel ->
+            item {
+                PrizeWheelTeaser(
+                    wheel = wheel,
+                    onClick = onOpenPrizeWheel,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }

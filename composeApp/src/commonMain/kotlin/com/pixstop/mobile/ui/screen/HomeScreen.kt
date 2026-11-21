@@ -124,6 +124,7 @@ fun HomeScreen(
     onDestination: (Destination) -> Unit = {},
     onOpenCards: () -> Unit = {},
     onOpenOrder: (Long) -> Unit = {},
+    onOpenPrizeWheel: () -> Unit = {},
     /** Quem opera toca numa empresa da visão geral: entra nela e abre as geladeiras. */
     onOpenOperatorCompany: (String) -> Unit = {},
     sessionViewModel: SessionViewModel = koinViewModel(),
@@ -320,6 +321,7 @@ fun HomeScreen(
                     onOpenShop = { selectedTab = Destination.Shop.name },
                     onOpenPixels = { onDestination(Destination.Pixels) },
                     onOpenProgress = { onDestination(Destination.Progress) },
+                    onOpenPrizeWheel = onOpenPrizeWheel,
                     // O feed vende da mesma porta que a vitrine resolveu: são
                     // a mesma loja, e o carrinho é de uma geladeira só.
                     onAddToCart = { cartViewModel.add(it, applianceId = shopState.appliance?.id) },
