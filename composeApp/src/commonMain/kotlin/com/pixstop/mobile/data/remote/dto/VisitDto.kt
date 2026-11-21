@@ -30,6 +30,7 @@ data class CountSheetProductDto(
     val category: String? = null,
     val barcode: String? = null,
     @SerialName("image_url") val imageUrl: String? = null,
+    @SerialName("has_expired") val hasExpired: Boolean = false,
 )
 
 @Serializable
@@ -77,7 +78,30 @@ data class CountResultDto(
     @SerialName("missing_value") val missingValue: Double = 0.0,
     val alert: Boolean = false,
     val items: List<CountResultItemDto> = emptyList(),
+    val restock: List<RestockSuggestionDto> = emptyList(),
+    @SerialName("restock_client_id") val restockClientId: String? = null,
 )
+
+@Serializable
+data class RestockSuggestionDto(
+    @SerialName("product_id") val productId: Long,
+    val product: String = "",
+    val warehouse: Int = 0,
+    val suggested: Int = 0,
+)
+
+/** O abastecimento (COMPRAS_CORREDOR.md, P1): tudo ou nada, idempotente pelo `client_id`. */
+@Serializable
+data class RestockSubmitDto(
+    @SerialName("client_id") val clientId: String,
+    val items: List<RestockEntryDto>,
+)
+
+@Serializable
+data class RestockEntryDto(@SerialName("product_id") val productId: Long, val quantity: Int)
+
+@Serializable
+data class RestockResultDto(val id: Long, val at: String = "", val units: Int = 0)
 
 @Serializable
 data class CountResultItemDto(

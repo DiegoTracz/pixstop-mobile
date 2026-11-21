@@ -4,6 +4,7 @@ import com.pixstop.mobile.domain.model.CountProduct
 import com.pixstop.mobile.domain.model.CountResult
 import com.pixstop.mobile.domain.model.CountResultItem
 import com.pixstop.mobile.domain.model.LossSuggestion
+import com.pixstop.mobile.domain.model.RestockSuggestion
 import com.pixstop.mobile.domain.model.WarehouseProduct
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -125,5 +126,37 @@ class VisitUiStateTest {
 
         assertEquals(LossSuggestion.Expiry, comSugestao.items.first().suggestedReason)
         assertNull(semSugestao.items.first().suggestedReason)
+    }
+
+    @Test
+    fun `o vencido vai para o topo da contagem sem dizer quantos`() {
+        val lista = listOf(
+            CountProduct(1, "Monster", null, null, null),
+            CountProduct(2, "Pudim", null, null, null, hasExpired = true),
+            CountProduct(3, "Coca", null, null, null),
+        ).expiredFirst()
+
+        assertEquals(listOf(2L, 1L, 3L), lista.map { it.id })
+        assertEquals(1, VisitUiState(products = lista).expiredCount)
+    }
+
+    @Test
+    fun `abastecer parte da sugestao e zero tira o item do envio`() {
+        val sugestoes = listOf(
+            RestockSuggestion(1, "Monster", warehouse = 18, suggested = 8),
+            RestockSuggestion(2, "Pudim", warehouse = 4, suggested = 4),
+        )
+        val result = CountResult(12, 2, 0, 0.0, false, emptyList(), restock = sugestoes, restockClientId = "count-12")
+        val state = VisitUiState(result = result, restockQuantities = sugestoes.startingQuantities())
+
+        assertEquals(12, state.restockUnits)
+        assertTrue(state.canRestock)
+
+        val semPudim = state.copy(restockQuantities = state.restockQuantities + (2L to 0))
+
+        assertEquals(mapOf(1L to 8), semPudim.restockPayload)
+        assertFalse(semPudim.copy(restockQuantities = mapOf(1L to 0, 2L to 0)).canRestock)
+        // Sem o identificador da contagem, não há como evitar o envio duplo.
+        assertFalse(state.copy(result = result.copy(restockClientId = null)).canRestock)
     }
 }

@@ -103,4 +103,33 @@ class VisitRepositoryTest {
 
         assertTrue(outcome is Outcome.Failure)
     }
+
+    @Test
+    fun `a resposta da contagem traz o abastecimento e o envio leva so o que tem quantidade`() = runTest {
+        val resposta = """
+            {"success": true, "data": {"id": 12, "at": "2026-11-21T12:00:00+00:00", "items": [],
+             "restock": [{"product_id": 1, "product": "Monster", "warehouse": 18, "suggested": 8}],
+             "restock_client_id": "count-12"}}
+        """.trimIndent()
+
+        val result = (
+            VisitRepository(FakeApi().clientReturning(resposta)).submit(3, "01J", mapOf(1L to 2), emptyList(), null, null)
+                as Outcome.Success
+            ).value
+
+        assertEquals(8, result.restock.single().suggested)
+        assertEquals("count-12", result.restockClientId)
+
+        val api = FakeApi()
+        val outcome = VisitRepository(api.clientReturning("""{"success": true, "data": {"id": 5, "units": 8}}"""))
+            .restock(3, "count-12", mapOf(1L to 8, 2L to 0))
+
+        assertEquals(8, (outcome as Outcome.Success).value.units)
+
+        val enviado = api.lastBody.replace(" ", "")
+
+        assertTrue(enviado.contains("\"client_id\":\"count-12\""), "o client_id da contagem vai no corpo: $enviado")
+        assertTrue(enviado.contains("{\"product_id\":1,\"quantity\":8}"), "o item com quantidade vai: $enviado")
+        assertFalse(enviado.contains("\"product_id\":2"), "zero não vai para o servidor: $enviado")
+    }
 }

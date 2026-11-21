@@ -239,6 +239,9 @@ object ApiConfig {
         /** O envio da contagem. Idempotente pelo `client_id`. */
         fun companyStockCounts(applianceId: Long) = "company/appliances/$applianceId/stock-counts"
 
+        /** Abastecer na visita: depósito → geladeira. Idempotente pelo `client_id`. */
+        fun companyRestocks(applianceId: Long) = "company/appliances/$applianceId/restocks"
+
         /** A sugestão de motivo, ou o "contei errado" de uma linha. */
         fun companyStockCountItem(countId: Long, productId: Long) = "company/stock-counts/$countId/items/$productId"
 

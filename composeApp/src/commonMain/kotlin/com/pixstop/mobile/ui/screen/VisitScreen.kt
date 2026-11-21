@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.pixstop.mobile.domain.model.CountProduct
 import com.pixstop.mobile.domain.model.CountResultItem
 import com.pixstop.mobile.domain.model.LossSuggestion
+import com.pixstop.mobile.domain.model.RestockSuggestion
 import com.pixstop.mobile.ui.components.AppIcon
 import com.pixstop.mobile.ui.components.AppIconType
 import com.pixstop.mobile.ui.components.PixelButton
@@ -101,6 +102,8 @@ fun VisitScreen(
 
             state.step == VisitStep.Differences -> DifferencesStep(state, viewModel)
 
+            state.step == VisitStep.Restock -> RestockStep(state, viewModel)
+
             else -> DoneStep(state, onBack)
         }
     }
@@ -126,6 +129,13 @@ private fun CountingStep(state: com.pixstop.mobile.ui.viewmodel.VisitUiState, vi
 
         state.error?.let { Notice(it, PixColors.Pink, viewModel::dismissMessage) }
         state.message?.let { Notice(it, PixColors.Green, viewModel::dismissMessage) }
+
+        if (state.expiredCount > 0) {
+            Notice(
+                "${state.expiredCount} produto(s) com validade vencida nesta geladeira. Eles estão no topo: tire o vencido da prateleira antes de contar.",
+                PixColors.Pink,
+            ) {}
+        }
 
         if (state.draftFound) {
             Notice(
@@ -240,6 +250,9 @@ private fun CountRow(
                         style = PixTypography.caption,
                         color = PixColors.Gray400,
                     )
+                    if (product.hasExpired) {
+                        Text(text = "TEM VENCIDO · RETIRE", style = PixTypography.caption, color = PixColors.Pink)
+                    }
                 }
 
                 if (counted == null) {
@@ -332,7 +345,7 @@ private fun DifferencesStep(state: com.pixstop.mobile.ui.viewmodel.VisitUiState,
         )
 
         PixelButton(
-            text = "Concluir visita",
+            text = if (state.restockItems.isEmpty()) "Concluir visita" else "Abastecer",
             onClick = viewModel::finish,
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
@@ -392,7 +405,79 @@ private fun DifferenceRow(item: CountResultItem, onSuggest: (LossSuggestion) -> 
     }
 }
 
-/* ── 3. Fim ────────────────────────────────────────────────────────────── */
+/* ── 3. Abastecer ──────────────────────────────────────────────────────── */
+
+/**
+ * Do depósito para a prateleira (COMPRAS_CORREDOR.md, P1). Já vem com a
+ * sugestão do servidor; a pessoa ajusta ao que cabe na mão e envia tudo de
+ * uma vez. Vencido não aparece aqui: o servidor não sugere o que não presta.
+ */
+@Composable
+private fun RestockStep(state: com.pixstop.mobile.ui.viewmodel.VisitUiState, viewModel: VisitViewModel) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(text = "ABASTECER", style = PixTypography.sectionTitle, color = PixColors.Cyan, modifier = Modifier.padding(top = 12.dp))
+
+        Text(
+            text = "Leve do depósito para a prateleira. A sugestão enche até o que cabe; mude se levou outra quantidade.",
+            style = PixTypography.caption,
+            color = PixColors.Gray400,
+        )
+
+        state.error?.let { Notice(it, PixColors.Pink, viewModel::dismissMessage) }
+
+        LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(state.restockItems, key = { it.productId }) { item ->
+                RestockRow(item = item, quantity = state.restockOf(item.productId)) { viewModel.setRestock(item.productId, it) }
+            }
+        }
+
+        PixelButton(
+            text = "Abastecer ${state.restockUnits} unidade(s)",
+            onClick = viewModel::restock,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = state.canRestock,
+            isLoading = state.isWorking,
+            loadingText = "Enviando...",
+        )
+
+        PixelButton(
+            text = "Pular",
+            onClick = viewModel::skipRestock,
+            variant = PixelButtonVariant.Secondary,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            enabled = !state.isWorking,
+        )
+    }
+}
+
+@Composable
+private fun RestockRow(item: RestockSuggestion, quantity: Int, onChange: (Int) -> Unit) {
+    val accent = if (quantity > 0) PixColors.Cyan else PixColors.Gray600
+
+    Box(modifier = Modifier.fillMaxWidth().pixelShadow(color = accent, offsetX = 4.dp, offsetY = 4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().background(PixColors.Darker).border(2.dp, accent).padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = item.product, style = PixTypography.bodySecondary, color = PixColors.Gray100)
+                Text(
+                    text = "depósito ${item.warehouse} · sugerido ${item.suggested}",
+                    style = PixTypography.caption,
+                    color = PixColors.Gray400,
+                )
+            }
+
+            QuantityStepper(value = quantity, onChange = onChange, max = item.warehouse)
+        }
+    }
+}
+
+/* ── 4. Fim ────────────────────────────────────────────────────────────── */
 
 @Composable
 private fun DoneStep(state: com.pixstop.mobile.ui.viewmodel.VisitUiState, onBack: () -> Unit) {
@@ -411,6 +496,15 @@ private fun DoneStep(state: com.pixstop.mobile.ui.viewmodel.VisitUiState, onBack
             accent = PixColors.Green,
             detail = result?.skippedItems?.takeIf { it > 0 }?.let { "$it não contados" },
         )
+
+        state.restocked?.let { restocked ->
+            SensorCard(
+                icon = AppIconType.Box,
+                label = "Abastecido",
+                value = "${restocked.units} unidades",
+                accent = PixColors.Cyan,
+            )
+        }
 
         SensorCard(
             icon = AppIconType.Box,

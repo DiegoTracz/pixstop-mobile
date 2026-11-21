@@ -11,6 +11,8 @@ import com.pixstop.mobile.domain.model.CountResultItem
 import com.pixstop.mobile.domain.model.CountSheet
 import com.pixstop.mobile.domain.model.LossSuggestion
 import com.pixstop.mobile.domain.model.Outcome
+import com.pixstop.mobile.domain.model.RestockResult
+import com.pixstop.mobile.domain.model.RestockSuggestion
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Os passos da visita, na ordem em que a prateleira pede. */
-enum class VisitStep { Counting, Differences, Done }
+enum class VisitStep { Counting, Differences, Restock, Done }
 
 /**
  * O estado da visita (docs/plans/CONCILIACAO_MOBILE.md).
@@ -44,6 +46,9 @@ data class VisitUiState(
     val scannerOpen: Boolean = false,
     /** O produto que o leitor achou: a lista rola até ele e ele fica em foco. */
     val focusedProductId: Long? = null,
+    /** Produto → quanto levar do depósito. Zero tira o item do abastecimento. */
+    val restockQuantities: Map<Long, Int> = emptyMap(),
+    val restocked: RestockResult? = null,
 ) {
     val visibleProducts: List<CountProduct>
         get() = if (query.isBlank()) {
@@ -64,7 +69,30 @@ data class VisitUiState(
     val hasSkipped: Boolean get() = skipped.isNotEmpty()
 
     fun countOf(productId: Long): Int? = counts[productId]
+
+    /** Quantos produtos desta porta têm lote vencido para tirar. */
+    val expiredCount: Int get() = products.count { it.hasExpired }
+
+    val restockItems: List<RestockSuggestion> get() = result?.restock.orEmpty()
+
+    /** Só o que tem quantidade vai para o servidor. */
+    val restockPayload: Map<Long, Int> get() = restockQuantities.filterValues { it > 0 }
+
+    val restockUnits: Int get() = restockPayload.values.sum()
+
+    val canRestock: Boolean get() = restockUnits > 0 && result?.restockClientId != null && !isWorking
+
+    fun restockOf(productId: Long): Int = restockQuantities[productId] ?: 0
 }
+
+/**
+ * A lista começa pelo vencido (VALIDADE.md, V3): é o que precisa sair antes
+ * de contar e de abastecer. O resto mantém a ordem da prateleira.
+ */
+fun List<CountProduct>.expiredFirst(): List<CountProduct> = sortedBy { if (it.hasExpired) 0 else 1 }
+
+/** A sugestão do servidor vira o ponto de partida do abastecimento. */
+fun List<RestockSuggestion>.startingQuantities(): Map<Long, Int> = associate { it.productId to it.suggested }
 
 class VisitViewModel(
     private val repository: VisitRepository,
@@ -102,7 +130,7 @@ class VisitViewModel(
             it.copy(
                 isLoading = false,
                 applianceName = loaded.applianceName,
-                products = loaded.products,
+                products = loaded.products.expiredFirst(),
                 counts = draft?.counts.orEmpty().mapKeys { entry -> entry.key.toLong() },
                 draftFound = saved != null && saved.counts.isNotEmpty(),
                 lastCountLabel = loaded.lastCount?.let { last ->
@@ -219,7 +247,48 @@ class VisitViewModel(
         viewModelScope.launch { repository.recount(result.id, item.productId) }
     }
 
-    fun finish() = _uiState.update { it.copy(step = VisitStep.Done) }
+    /**
+     * Depois das diferenças vem abastecer, se o depósito tem o que levar.
+     * Contar antes de abastecer é o que faz a contagem valer.
+     */
+    fun finish() = _uiState.update {
+        val restock = it.restockItems
+
+        if (restock.isEmpty()) {
+            it.copy(step = VisitStep.Done)
+        } else {
+            it.copy(step = VisitStep.Restock, restockQuantities = restock.startingQuantities())
+        }
+    }
+
+    /** Quanto levar de um produto: entre zero e o que há de bom no depósito. */
+    fun setRestock(productId: Long, value: Int) {
+        val limit = _uiState.value.restockItems.firstOrNull { it.productId == productId }?.warehouse ?: return
+
+        _uiState.update { it.copy(restockQuantities = it.restockQuantities + (productId to value.coerceIn(0, limit))) }
+    }
+
+    /** Leva tudo de uma vez. Falhou, nada se moveu, e dá para tentar de novo. */
+    fun restock() {
+        val current = _uiState.value
+        val clientId = current.result?.restockClientId ?: return
+
+        if (!current.canRestock) return
+
+        _uiState.update { it.copy(isWorking = true, error = null) }
+
+        viewModelScope.launch {
+            when (val outcome = repository.restock(current.applianceId, clientId, current.restockPayload)) {
+                is Outcome.Success -> _uiState.update {
+                    it.copy(isWorking = false, step = VisitStep.Done, restocked = outcome.value)
+                }
+
+                is Outcome.Failure -> _uiState.update { it.copy(isWorking = false, error = outcome.error.message) }
+            }
+        }
+    }
+
+    fun skipRestock() = _uiState.update { it.copy(step = VisitStep.Done) }
 
     fun backToCounting() = _uiState.update { it.copy(step = VisitStep.Counting) }
 

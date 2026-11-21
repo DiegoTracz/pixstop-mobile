@@ -7,6 +7,9 @@ import com.pixstop.mobile.data.remote.dto.CountItemUpdateDto
 import com.pixstop.mobile.data.remote.dto.CountResultDto
 import com.pixstop.mobile.data.remote.dto.CountSheetDto
 import com.pixstop.mobile.data.remote.dto.CountSubmitDto
+import com.pixstop.mobile.data.remote.dto.RestockEntryDto
+import com.pixstop.mobile.data.remote.dto.RestockResultDto
+import com.pixstop.mobile.data.remote.dto.RestockSubmitDto
 import com.pixstop.mobile.domain.model.CountProduct
 import com.pixstop.mobile.domain.model.CountResult
 import com.pixstop.mobile.domain.model.CountResultItem
@@ -14,6 +17,8 @@ import com.pixstop.mobile.domain.model.CountSheet
 import com.pixstop.mobile.domain.model.LastCount
 import com.pixstop.mobile.domain.model.LossSuggestion
 import com.pixstop.mobile.domain.model.Outcome
+import com.pixstop.mobile.domain.model.RestockResult
+import com.pixstop.mobile.domain.model.RestockSuggestion
 import com.pixstop.mobile.domain.model.WarehouseProduct
 import com.pixstop.mobile.domain.model.map
 import io.ktor.client.HttpClient
@@ -42,7 +47,7 @@ class VisitRepository(private val client: HttpClient) {
                 applianceId = dto.appliance.id,
                 applianceName = dto.appliance.name,
                 clientId = dto.clientId,
-                products = dto.products.map { CountProduct(it.id, it.name, it.category, it.barcode, it.imageUrl) },
+                products = dto.products.map { CountProduct(it.id, it.name, it.category, it.barcode, it.imageUrl, it.hasExpired) },
                 warehouse = dto.warehouse.map {
                     WarehouseProduct(it.id, it.name, it.barcode, it.inWarehouse, it.lowStockThreshold)
                 },
@@ -95,8 +100,26 @@ class VisitRepository(private val client: HttpClient) {
                         suggestedReason = LossSuggestion.fromApi(it.suggestedReason),
                     )
                 },
+                restock = dto.restock.map { RestockSuggestion(it.productId, it.product, it.warehouse, it.suggested) },
+                restockClientId = dto.restockClientId,
             )
         }
+
+    /**
+     * Leva do depósito para a geladeira. Só o que tem quantidade vai; o
+     * servidor recusa tudo se faltar algum item, e nada se move pela metade.
+     */
+    suspend fun restock(applianceId: Long, clientId: String, quantities: Map<Long, Int>): Outcome<RestockResult> =
+        safeCall<RestockResultDto>(TAG) {
+            client.post(ApiConfig.Endpoints.companyRestocks(applianceId)) {
+                setBody(
+                    RestockSubmitDto(
+                        clientId = clientId,
+                        items = quantities.filterValues { it > 0 }.map { (productId, quantity) -> RestockEntryDto(productId, quantity) },
+                    ),
+                )
+            }
+        }.map { RestockResult(it.id, it.units) }
 
     /** O palpite de quem contou. Um toque, e o próximo toque desfaz. */
     suspend fun suggest(countId: Long, productId: Long, reason: LossSuggestion?): Outcome<CountItemUpdateDto> =
