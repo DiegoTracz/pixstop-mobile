@@ -61,6 +61,29 @@ data class RegisterUserRequest(
 )
 
 /**
+ * Cadastro de empresa: o mesmo formulário da web. O e-mail da empresa nasce
+ * igual ao de quem cadastra; o WhatsApp é por onde a equipe chama depois.
+ */
+@Serializable
+data class RegisterCompanyRequest(
+    @SerialName("company_name")
+    val companyName: String,
+    @SerialName("company_document_type")
+    val companyDocumentType: String,
+    @SerialName("company_document")
+    val companyDocument: String,
+    @SerialName("company_phone")
+    val companyPhone: String,
+    @SerialName("admin_name")
+    val adminName: String,
+    @SerialName("admin_email")
+    val adminEmail: String,
+    val password: String,
+    @SerialName("password_confirmation")
+    val passwordConfirmation: String
+)
+
+/**
  * Request de esqueci a senha
  */
 @Serializable

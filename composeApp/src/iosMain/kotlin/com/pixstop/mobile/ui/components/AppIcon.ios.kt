@@ -174,11 +174,15 @@ private fun AppIconType.toSFSymbolName(): String = when (this) {
 
     // Loja
     AppIconType.Store -> "storefront.fill"
+    AppIconType.Business -> "building.2.fill"
+    AppIconType.Phone -> "phone.fill"
+    AppIconType.Badge -> "person.text.rectangle"
     AppIconType.Cart -> "cart"
     AppIconType.CartAdd -> "cart.badge.plus"
 
     // Navigation extras
     AppIconType.ChevronDown -> "chevron.down"
     AppIconType.ChevronUp -> "chevron.up"
+    AppIconType.ChevronRight -> "chevron.right"
     AppIconType.ArrowBack -> "chevron.left"
 }

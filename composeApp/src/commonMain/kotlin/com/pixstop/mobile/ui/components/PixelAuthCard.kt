@@ -33,6 +33,9 @@ fun PixelAuthCard(
             .fillMaxSize()
             .background(PixColors.Gray900)
             .statusBarsPadding()
+            // O app é edge-to-edge: sem isto o teclado cobre o fim do
+            // formulário (a senha, no cadastro) e a rolagem não chega lá.
+            .imePadding()
     ) {
         // Terminal header bar (fixo no topo)
         TerminalHeaderBar(title = headerTitle)

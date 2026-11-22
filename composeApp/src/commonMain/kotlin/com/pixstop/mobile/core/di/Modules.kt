@@ -68,6 +68,7 @@ import com.pixstop.mobile.ui.viewmodel.ProfileViewModel
 import com.pixstop.mobile.ui.viewmodel.ShopViewModel
 import com.pixstop.mobile.ui.viewmodel.ForgotPasswordViewModel
 import com.pixstop.mobile.ui.viewmodel.LoginViewModel
+import com.pixstop.mobile.ui.viewmodel.RegisterCompanyViewModel
 import com.pixstop.mobile.ui.viewmodel.RegisterViewModel
 import com.pixstop.mobile.ui.viewmodel.SessionViewModel
 import com.russhwolf.settings.Settings
@@ -145,6 +146,7 @@ val viewModelModule: Module = module {
     viewModel { LoginViewModel(get()) }
     viewModel { ForgotPasswordViewModel(get<AuthRepository>()::forgotPassword) }
     viewModel { RegisterViewModel(get()) }
+    viewModel { RegisterCompanyViewModel(get()) }
     viewModel { SessionViewModel(get(), get(), get(), get()) }
     viewModel { LegalConsentViewModel(get()) }
     viewModel { ProfileViewModel(get(), get()) }

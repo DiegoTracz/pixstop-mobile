@@ -65,6 +65,12 @@ enum class AppIconType {
 
     // Loja
     Store,
+    /** A empresa, no cadastro. */
+    Business,
+    /** O WhatsApp da empresa. */
+    Phone,
+    /** CPF ou CNPJ. */
+    Badge,
     Cart,
     CartAdd,
 
@@ -76,6 +82,7 @@ enum class AppIconType {
 
     // Navigation extras
     ChevronDown,
+    ChevronRight,
     ChevronUp,
     ArrowBack
 }

@@ -45,6 +45,8 @@ import com.pixstop.mobile.ui.screen.ProgressScreen
 import com.pixstop.mobile.ui.screen.TeamScreen
 import com.pixstop.mobile.ui.screen.NotificationsScreen
 import com.pixstop.mobile.ui.screen.ProductDetailScreen
+import com.pixstop.mobile.ui.screen.RegisterChoiceScreen
+import com.pixstop.mobile.ui.screen.RegisterCompanyScreen
 import com.pixstop.mobile.ui.screen.RegisterScreen
 import com.pixstop.mobile.ui.screen.SplashScreen
 import com.pixstop.mobile.ui.viewmodel.CartViewModel
@@ -213,7 +215,7 @@ fun AppNavigation() {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
-                onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
+                onNavigateToRegister = { navController.navigate(Routes.REGISTER_CHOICE) },
             )
         }
 
@@ -226,7 +228,27 @@ fun AppNavigation() {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
+                onNavigateToLogin = { navController.popBackStack(Routes.LOGIN, inclusive = false) },
+            )
+        }
+
+        composable(Routes.REGISTER_CHOICE) {
+            RegisterChoiceScreen(
+                onChooseCompany = { navController.navigate(Routes.REGISTER_COMPANY) },
+                onChoosePerson = { navController.navigate(Routes.REGISTER) },
                 onNavigateToLogin = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.REGISTER_COMPANY) {
+            RegisterCompanyScreen(
+                onRegisterSuccess = {
+                    sessionViewModel.refresh()
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = { navController.popBackStack(Routes.LOGIN, inclusive = false) },
             )
         }
 

@@ -2,6 +2,7 @@ package com.pixstop.mobile.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
@@ -57,6 +58,9 @@ actual fun AppIcon(
 
         // Loja
         AppIconType.Store -> Icons.Filled.Storefront
+        AppIconType.Business -> Icons.Filled.Business
+        AppIconType.Phone -> Icons.Filled.Phone
+        AppIconType.Badge -> Icons.Filled.Badge
         AppIconType.Cart -> Icons.Filled.ShoppingCart
         AppIconType.CartAdd -> Icons.Filled.AddShoppingCart
 
@@ -69,6 +73,7 @@ actual fun AppIcon(
         // Navigation extras
         AppIconType.ChevronDown -> Icons.Filled.KeyboardArrowDown
         AppIconType.ChevronUp -> Icons.Filled.KeyboardArrowUp
+        AppIconType.ChevronRight -> Icons.AutoMirrored.Filled.KeyboardArrowRight
         AppIconType.ArrowBack -> Icons.AutoMirrored.Filled.ArrowBack
     }
 

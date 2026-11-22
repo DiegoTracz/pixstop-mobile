@@ -11,6 +11,7 @@ import com.pixstop.mobile.data.model.CachedUserData
 import com.pixstop.mobile.data.model.ForgotPasswordRequest
 import com.pixstop.mobile.data.model.LoginRequest
 import com.pixstop.mobile.data.model.ProfileData
+import com.pixstop.mobile.data.model.RegisterCompanyRequest
 import com.pixstop.mobile.data.model.RegisterUserRequest
 import com.pixstop.mobile.data.model.User
 import com.pixstop.mobile.domain.model.Outcome
@@ -19,6 +20,7 @@ import com.pixstop.mobile.domain.model.onFailure
 import com.pixstop.mobile.domain.model.onSuccess
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.auth.authProviders
+import io.ktor.client.plugins.timeout
 import io.ktor.client.plugins.auth.providers.BearerAuthProvider
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -49,6 +51,20 @@ class AuthRepository(
     suspend fun registerUser(request: RegisterUserRequest): Outcome<User> =
         safeCall<AuthResponseData>(TAG) {
             client.post(ApiConfig.Endpoints.REGISTER_USER) { setBody(request) }
+        }.onSuccess(::persist).map { it.user }
+
+    suspend fun registerCompany(request: RegisterCompanyRequest): Outcome<User> =
+        safeCall<AuthResponseData>(TAG) {
+            client.post(ApiConfig.Endpoints.REGISTER_COMPANY) {
+                // Criar a empresa cria o banco dela e roda as migrações: passa
+                // fácil dos 30 s padrão, e o app diria "sem conexão" para uma
+                // empresa que nasceu.
+                timeout {
+                    requestTimeoutMillis = 120_000
+                    socketTimeoutMillis = 120_000
+                }
+                setBody(request)
+            }
         }.onSuccess(::persist).map { it.user }
 
     suspend fun forgotPassword(email: String): Outcome<Unit> =

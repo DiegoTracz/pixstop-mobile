@@ -10,6 +10,7 @@ import com.pixstop.mobile.core.config.CompanyCodeParser
 import com.pixstop.mobile.data.model.RegisterUserRequest
 import com.pixstop.mobile.data.model.User
 import com.pixstop.mobile.data.repository.AuthRepository
+import com.pixstop.mobile.domain.auth.PasswordRule
 import com.pixstop.mobile.domain.model.DomainError
 import com.pixstop.mobile.domain.model.Outcome
 
@@ -132,16 +133,12 @@ class RegisterViewModel(
             errors["email"] = "E-mail inválido"
         }
 
-        if (state.password.isBlank()) {
-            errors["password"] = "Senha é obrigatória"
-        } else if (state.password.length < 8) {
-            errors["password"] = "Senha deve ter no mínimo 8 caracteres"
-        }
+        PasswordRule.firstFailure(state.password)?.let { errors["password"] = it.error }
 
         if (state.passwordConfirmation.isBlank()) {
             errors["password_confirmation"] = "Confirmação é obrigatória"
         } else if (state.password != state.passwordConfirmation) {
-            errors["password_confirmation"] = "Senhas não coincidem"
+            errors["password_confirmation"] = "As senhas não conferem."
         }
 
         if (errors.isNotEmpty()) {

@@ -7,6 +7,10 @@ object Routes {
     const val SPLASH = "splash"
     const val LOGIN = "login"
     const val REGISTER = "register"
+
+    /** Escolha entre cadastrar uma empresa ou uma pessoa, como na web. */
+    const val REGISTER_CHOICE = "register/choice"
+    const val REGISTER_COMPANY = "register/company"
     const val HOME = "home"
 
     /** Detalhe do produto, alcançado pela vitrine. */

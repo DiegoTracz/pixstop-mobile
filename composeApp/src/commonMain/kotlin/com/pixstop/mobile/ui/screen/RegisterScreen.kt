@@ -151,6 +151,11 @@ fun RegisterScreen(
             )
         )
 
+        if (uiState.password.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(10.dp))
+            PixelPasswordStrength(password = uiState.password)
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         // ── Confirmar Senha ──

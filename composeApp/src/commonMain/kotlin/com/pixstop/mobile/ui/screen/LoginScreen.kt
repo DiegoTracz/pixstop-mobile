@@ -52,7 +52,7 @@ fun LoginScreen(
 
         // Auth header
         PixelAuthHeader(
-            icon = AppIconType.Lock,
+            icon = AppIconType.Person,
             title = "LOGIN",
             subtitle = "Acesse sua conta",
             themeColor = PixColors.Cyan
