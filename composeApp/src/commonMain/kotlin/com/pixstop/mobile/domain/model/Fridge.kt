@@ -89,7 +89,7 @@ data class FridgeDevice(
         "picamera" -> "Módulo oficial"
         "usb" -> "Webcam USB"
         "fake" -> "Simulada"
-        "esp32" -> "Câmera ESP32"
+        "esp32" -> "Câmera Pixel"
         else -> "Sem câmera"
     }
 }

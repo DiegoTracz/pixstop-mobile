@@ -204,6 +204,6 @@ class ConnectFridgeUiStateTest {
             FridgeStock(applianceName = null, inAppliance = 0, inCompany = 8).nextStepFor(camera),
         )
         assertEquals(stock.nextStep, stock.nextStepFor(geladeira()))
-        assertEquals("Câmera ESP32", camera.copy(cameraKind = "esp32").cameraLabel)
+        assertEquals("Câmera Pixel", camera.copy(cameraKind = "esp32").cameraLabel)
     }
 }
