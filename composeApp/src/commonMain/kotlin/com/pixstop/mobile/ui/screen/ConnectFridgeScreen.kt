@@ -135,12 +135,12 @@ fun ConnectFridgeScreen(
                         ConnectStep.Code -> CodeStep(state, viewModel)
                         ConnectStep.Network -> NetworkStep(state, viewModel)
                         ConnectStep.Configuring -> WaitingStep(
-                            title = "Configurando a geladeira…",
+                            title = "Configurando a ${state.chosen?.noun ?: "geladeira"}…",
                             detail = state.portalMessage ?: "Ela está entrando no WiFi e trocando o código pelas credenciais.",
                         )
 
                         ConnectStep.WaitingOnline -> WaitingStep(
-                            title = "Esperando a geladeira aparecer online…",
+                            title = "Esperando a ${state.chosen?.noun ?: "geladeira"} aparecer online…",
                             detail = state.portalMessage ?: "O primeiro sinal chega segundos depois de ela entrar no WiFi.",
                         )
 
@@ -224,7 +224,7 @@ private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
                 label = device.formattedCode?.let { "Código $it" } ?: "Aguardando ativação",
                 value = device.name,
                 accent = PixColors.Yellow,
-                detail = "Toque para conectar: ligue a geladeira e entre na rede dela",
+                detail = "Toque para conectar: ligue a ${device.noun} e entre na rede dela",
                 onClick = { viewModel.choose(device) },
             )
         }
@@ -291,7 +291,7 @@ private fun CodeStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
 
     Spacer(Modifier.height(4.dp))
     Text("Como conectar", style = PixTypography.sectionTitle, color = PixColors.Gray100)
-    Step(1, "Ligue a geladeira na tomada e espere cerca de um minuto.")
+    Step(1, "Ligue a ${device.noun} na tomada e espere cerca de um minuto.")
     Step(2, "Ela cria a rede WiFi ${state.hotspotSsid}.")
 
     if (state.canAutoJoin) {
@@ -303,7 +303,7 @@ private fun CodeStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
     Step(4, "Escolha o WiFi da empresa e digite a senha. O código já vai preenchido.")
 
     PixelButton(
-        text = if (state.canAutoJoin) "Conectar à geladeira" else "Já estou na rede da geladeira",
+        text = if (state.canAutoJoin) "Conectar à ${device.noun}" else "Já estou na rede da ${device.noun}",
         onClick = viewModel::joinHotspot,
         enabled = device.hasCode && !state.isWorking,
         isLoading = state.isWorking,
@@ -330,7 +330,7 @@ private fun CodeStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
         PixelInput(
             value = state.portalHost,
             onValueChange = viewModel::updatePortalHost,
-            label = "Endereço do portal da geladeira",
+            label = "Endereço do portal da ${device.noun}",
             placeholder = "10.42.0.1",
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
@@ -346,9 +346,11 @@ private fun CodeStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
 
 @Composable
 private fun NetworkStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
+    val noun = state.chosen?.noun ?: "geladeira"
+
     Text("WiFi da empresa", style = PixTypography.sectionTitle, color = PixColors.Cyan)
     Text(
-        "A geladeira vê estas redes. Só as de 2,4 GHz aparecem: ela não fala em 5 GHz.",
+        "A $noun vê estas redes. Só as de 2,4 GHz aparecem: ela não fala em 5 GHz.",
         style = PixTypography.caption,
         color = PixColors.Gray300,
     )
@@ -416,7 +418,7 @@ private fun NetworkStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
     state.code?.let { Text("Código: ${state.chosen?.formattedCode}", style = PixTypography.caption, color = PixColors.Gray300) }
 
     PixelButton(
-        text = "Conectar a geladeira",
+        text = "Conectar a $noun",
         onClick = viewModel::configure,
         enabled = state.canConfigure,
         isLoading = state.isWorking,
@@ -437,7 +439,7 @@ private fun WaitingStep(title: String, detail: String) {
 private fun DoneStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
     val device = state.chosen
 
-    Text("Geladeira conectada!", style = PixTypography.sectionTitle, color = PixColors.Green)
+    Text(if (device?.isCamera == true) "Câmera conectada!" else "Geladeira conectada!", style = PixTypography.sectionTitle, color = PixColors.Green)
 
     device?.let {
         Text(it.name, style = PixTypography.bodySecondary, color = PixColors.Gray100)
@@ -449,19 +451,26 @@ private fun DoneStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
     // A geladeira online ainda não vende nada: o que interessa agora é o
     // que falta para a vitrine encher, e isso muda de empresa para empresa.
     Text(
-        device?.stock?.nextStep
-            ?: "Pedidos pagos já abrem a trava, e toda abertura da porta fica gravada.",
+        device?.stock?.nextStepFor(device)
+            ?: if (device?.isCamera == true) {
+                "Toda abertura da porta fica gravada."
+            } else {
+                "Pedidos pagos já abrem a trava, e toda abertura da porta fica gravada."
+            },
         style = PixTypography.caption,
         color = PixColors.Gray300,
     )
 
     // A fita é a última coisa da instalação, e a única que se faz de pé na
     // frente da geladeira: a cor tem de acender ali para valer a escolha.
-    PixelButton(
-        text = if (state.led.profileId != null) "Mudar a cor da fita" else "Escolher a cor da fita",
-        onClick = viewModel::openColorStep,
-        modifier = Modifier.fillMaxWidth(),
-    )
+    // A câmera não tem fita: quem acende a cor é o controlador da geladeira.
+    if (device?.isCamera != true) {
+        PixelButton(
+            text = if (state.led.profileId != null) "Mudar a cor da fita" else "Escolher a cor da fita",
+            onClick = viewModel::openColorStep,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 
     PixelButton(text = "Voltar às geladeiras", onClick = viewModel::restart, modifier = Modifier.fillMaxWidth())
 }
@@ -494,8 +503,9 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
     )
 
     // A porta é o mostrador que mais importa de longe: cadeado aberto é o
-    // que faz alguém levantar e ir olhar.
-    SensorCard(
+    // que faz alguém levantar e ir olhar. A câmera não tem porta: quem sente
+    // a porta é o controlador da geladeira.
+    if (!device.isCamera) SensorCard(
         icon = if (device.doorOpen == true) AppIconType.LockOpen else AppIconType.Lock,
         label = "Porta",
         value = device.doorLabel,
@@ -527,7 +537,7 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
 
     // A fita é a única carta que leva a algum lugar: bater nela abre o
     // controle, sem tirar a pessoa desta tela.
-    SensorCard(
+    if (!device.isCamera) SensorCard(
         icon = AppIconType.Bulb,
         label = "Fita LED",
         value = if (state.led.profileId != null) state.led.colorLabel else "Sem controle escolhido",
@@ -543,7 +553,7 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
 
     // Abrir é a conferência da trava, não uma compra: não cobra ninguém e
     // fica registrada com o nome de quem apertou.
-    SensorCard(
+    if (!device.isCamera) SensorCard(
         icon = AppIconType.LockOpen,
         label = "Trava",
         value = if (state.unlocking) "Abrindo…" else "Abrir a geladeira",
@@ -574,7 +584,7 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
         onClick = viewModel::openSessions,
     )
 
-    device.stock?.let { stock ->
+    device.stock?.takeIf { !device.isCamera }?.let { stock ->
         SensorCard(
             icon = AppIconType.Store,
             label = "Dentro dela",
@@ -587,7 +597,7 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
     // A visita à prateleira: contar o que está lá antes de abastecer. É a
     // única conciliação que existe, porque o razão só enxerga venda —
     // quem levou sem pagar não deixou lançamento nenhum nele.
-    device.applianceId?.let { applianceId ->
+    device.applianceId?.takeIf { !device.isCamera }?.let { applianceId ->
         SensorCard(
             icon = AppIconType.Check,
             label = "Visita",
@@ -624,7 +634,7 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
         label = "Estado",
         value = "Atualizar agora",
         accent = PixColors.Gray500,
-        detail = "Pergunta de novo à geladeira o que ela está sentindo",
+        detail = "Pergunta de novo à ${device.noun} o que ela está sentindo",
         onClick = viewModel::refreshDetail,
     )
 
@@ -633,7 +643,7 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
         label = "Instalação",
         value = "Reinstalar",
         accent = PixColors.Yellow,
-        detail = "Gera um código novo e refaz a conexão com o WiFi. A geladeira sai do ar até terminar",
+        detail = "Gera um código novo e refaz a conexão com o WiFi. A ${device.noun} sai do ar até terminar",
         onClick = { viewModel.choose(device) },
     )
 

@@ -43,13 +43,19 @@ data class FridgeDevice(
     val applianceId: Long? = null,
     /** O endereço dela na rede da empresa: serve ao suporte, não ao app. */
     val localIp: String? = null,
-    /** `picamera`, `usb`, `none` — o que ela tem de olho. */
+    /** `picamera`, `usb`, `esp32`, `none` — o que ela tem de olho. */
     val cameraKind: String? = null,
     /** "Ativa", "Aguardando ativação", "Revogada": o texto do servidor. */
     val provisioningLabel: String? = null,
     val stock: FridgeStock? = null,
 ) {
     val isOnline: Boolean get() = presence == FridgePresence.Online
+
+    /** A câmera vendida à parte se instala pelo mesmo caminho da geladeira (CAMERA_ADDON.md). */
+    val isCamera: Boolean get() = type == "camera"
+
+    /** O que a tela chama de "ela": "câmera" ou "geladeira". */
+    val noun: String get() = if (isCamera) "câmera" else "geladeira"
 
     /** O código só serve enquanto o servidor ainda o mostra. */
     val hasCode: Boolean get() = !activationCode.isNullOrBlank()
@@ -83,6 +89,7 @@ data class FridgeDevice(
         "picamera" -> "Módulo oficial"
         "usb" -> "Webcam USB"
         "fake" -> "Simulada"
+        "esp32" -> "Câmera ESP32"
         else -> "Sem câmera"
     }
 }
@@ -99,6 +106,18 @@ data class FridgeStock(
     val inAppliance: Int,
     val inCompany: Int,
 ) {
+    /**
+     * Para a câmera não há estoque a encher nem trava a abrir: ela grava as
+     * aberturas da geladeira em que está.
+     */
+    fun nextStepFor(device: FridgeDevice): String =
+        if (device.isCamera) {
+            applianceName?.let { "Toda abertura de $it fica gravada, e o ao vivo já aparece no painel." }
+                ?: "Falta ligar esta câmera a uma geladeira no painel para ela gravar as aberturas."
+        } else {
+            nextStep
+        }
+
     /** O que dizer, na ordem em que os problemas aparecem. */
     val nextStep: String
         get() = when {

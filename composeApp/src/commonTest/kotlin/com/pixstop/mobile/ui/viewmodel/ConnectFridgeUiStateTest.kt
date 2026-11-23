@@ -189,4 +189,21 @@ class ConnectFridgeUiStateTest {
             FridgeStock(applianceName = "Copa", inAppliance = 6, inCompany = 8).nextStep,
         )
     }
+
+    @Test
+    fun aCameraSpeaksOfItselfAndPromisesRecordingsNotATrava() {
+        val camera = geladeira().copy(name = "Câmera da copa", type = "camera")
+        val stock = FridgeStock(applianceName = "Copa", inAppliance = 6, inCompany = 8)
+
+        assertTrue(camera.isCamera)
+        assertEquals("câmera", camera.noun)
+        assertEquals("geladeira", geladeira().noun)
+        assertEquals("Toda abertura de Copa fica gravada, e o ao vivo já aparece no painel.", stock.nextStepFor(camera))
+        assertEquals(
+            "Falta ligar esta câmera a uma geladeira no painel para ela gravar as aberturas.",
+            FridgeStock(applianceName = null, inAppliance = 0, inCompany = 8).nextStepFor(camera),
+        )
+        assertEquals(stock.nextStep, stock.nextStepFor(geladeira()))
+        assertEquals("Câmera ESP32", camera.copy(cameraKind = "esp32").cameraLabel)
+    }
 }
