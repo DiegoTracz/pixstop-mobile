@@ -42,3 +42,7 @@ node_modules/
 *.log
 *.tmp
 .kotlin/
+
+# Firebase: a configuração de cada projeto fica fora do Git
+androidApp/google-services.json
+iosApp/iosApp/GoogleService-Info.plist

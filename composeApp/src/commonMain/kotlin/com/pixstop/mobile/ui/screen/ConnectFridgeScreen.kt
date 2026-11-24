@@ -295,7 +295,7 @@ private fun CodeStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
     Step(2, "Ela cria a rede WiFi ${state.hotspotSsid}.")
 
     if (state.canAutoJoin) {
-        Step(3, "Toque em Conectar: o celular entra nessa rede sozinho, sem perder a internet do resto.")
+        Step(3, "Toque em Conectar: o celular entra nessa rede sozinho, sem perder a internet do resto. Se ele perguntar se pode entrar na rede, toque em Entrar.")
     } else {
         Step(3, "Entre na rede ${state.hotspotSsid} pelas configurações de WiFi do celular (senha: ${state.hotspotPassword}) e volte aqui.")
     }

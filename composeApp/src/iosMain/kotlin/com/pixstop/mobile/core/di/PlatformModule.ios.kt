@@ -2,7 +2,7 @@ package com.pixstop.mobile.core.di
 
 import com.pixstop.mobile.domain.access.FridgeNetworkConnector
 import com.pixstop.mobile.domain.access.FridgeUnlockConnector
-import com.pixstop.mobile.domain.access.ManualFridgeNetworkConnector
+import com.pixstop.mobile.domain.access.IosFridgeNetworkConnector
 import com.pixstop.mobile.domain.access.UnavailableFridgeUnlockConnector
 import com.russhwolf.settings.ExperimentalSettingsImplementation
 import com.russhwolf.settings.KeychainSettings
@@ -16,8 +16,7 @@ import org.koin.dsl.module
  */
 @OptIn(ExperimentalSettingsImplementation::class)
 actual val platformModule: Module = module {
-    // No iOS a troca de rede exige NEHotspotConfiguration; até lá a pessoa entra à mão.
-    single<FridgeNetworkConnector> { ManualFridgeNetworkConnector() }
+    single<FridgeNetworkConnector> { IosFridgeNetworkConnector() }
 
     // A abertura por Bluetooth ainda não existe no iOS (B3).
     single<FridgeUnlockConnector> { UnavailableFridgeUnlockConnector() }
