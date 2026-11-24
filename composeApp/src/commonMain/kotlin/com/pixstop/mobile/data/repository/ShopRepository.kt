@@ -46,10 +46,14 @@ class ShopRepository(private val client: HttpClient) {
         categoryId: Long? = null,
         perPage: Int = 20,
         onlyDiscounted: Boolean = false,
+        applianceId: Long? = null,
     ): Outcome<Page<Product>> =
         safeCallPaged<ProductDto>(TAG) {
             client.get(ApiConfig.Endpoints.SHOP_PRODUCTS) {
                 parameter("page", page)
+                // A porta de onde a pessoa compra: o disponível é dela, e o
+                // servidor guarda a escolha para o carrinho e o checkout.
+                applianceId?.let { parameter("appliance_id", it) }
                 parameter("per_page", perPage)
                 query?.takeIf { it.isNotBlank() }?.let { parameter("q", it.trim()) }
                 categoryId?.let { parameter("category", it) }

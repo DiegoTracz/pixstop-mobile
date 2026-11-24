@@ -149,7 +149,7 @@ class ShopViewModel(private val shop: ShopRepository) : ViewModel() {
         viewModelScope.launch {
             _uiState.value = state.copy(isLoadingMore = true)
 
-            when (val result = shop.products(state.page + 1, state.query, state.selectedCategory)) {
+            when (val result = shop.products(state.page + 1, state.query, state.selectedCategory, applianceId = state.appliances.currentId)) {
                 is Outcome.Success -> _uiState.value = _uiState.value.copy(
                     isLoadingMore = false,
                     products = _uiState.value.products + result.value.items,
@@ -170,7 +170,7 @@ class ShopViewModel(private val shop: ShopRepository) : ViewModel() {
             val state = _uiState.value
             _uiState.value = state.copy(isLoading = true, error = null)
 
-            when (val result = shop.products(page = 1, query = state.query, categoryId = state.selectedCategory)) {
+            when (val result = shop.products(page = 1, query = state.query, categoryId = state.selectedCategory, applianceId = state.appliances.currentId)) {
                 is Outcome.Success -> _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     products = result.value.items,
