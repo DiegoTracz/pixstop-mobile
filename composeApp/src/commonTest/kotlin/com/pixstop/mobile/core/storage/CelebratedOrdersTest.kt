@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 class CelebratedOrdersTest {
 
     @Test
-    fun `o mesmo pedido so e comemorado uma vez, mesmo depois de reabrir o app`() {
+    fun `o mesmo pedido so e comemorado uma vez mesmo depois de reabrir o app`() {
         val settings = InMemorySettings()
 
         assertTrue(CelebratedOrders(settings).claim(20))

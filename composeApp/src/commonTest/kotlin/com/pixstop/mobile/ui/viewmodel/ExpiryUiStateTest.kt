@@ -19,7 +19,7 @@ class ExpiryUiStateTest {
     private val copa = ExpiryPlace(1, "Copa", 2, listOf(vencido, vencendo, longe), listOf(UndatedLot(2, "Brownie", 1)))
 
     @Test
-    fun `so o que pede atencao aparece, a menos que peca todos`() {
+    fun `so o que pede atencao aparece a menos que peca todos`() {
         val state = ExpiryUiState(overview = ExpiryOverview(listOf(copa), 2, 3, 1))
 
         assertEquals(listOf(vencido, vencendo), state.visibleLots(copa))
@@ -39,7 +39,7 @@ class ExpiryUiStateTest {
     }
 
     @Test
-    fun `controla segue a categoria ate a pessoa escolher, e quem controla vem primeiro`() {
+    fun `controla segue a categoria ate a pessoa escolher e quem controla vem primeiro`() {
         val coca = ProductExpiry(1, "Coca", "Bebidas", categoryTracks = false, tracksExpiry = null, tracks = false, shelfLifeDays = null, warningDays = null)
         val pudim = ProductExpiry(2, "Pudim", "Lanches", categoryTracks = true, tracksExpiry = null, tracks = true, shelfLifeDays = 30, warningDays = null)
 

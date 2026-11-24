@@ -35,7 +35,7 @@ class RewardEngineTest {
     }
 
     @Test
-    fun `o toque carrega, estoura e todas as moedas chegam com o valor exato`() {
+    fun `o toque carrega estoura e todas as moedas chegam com o valor exato`() {
         val engine = RewardEngine(level, Random(1))
 
         engine.open()

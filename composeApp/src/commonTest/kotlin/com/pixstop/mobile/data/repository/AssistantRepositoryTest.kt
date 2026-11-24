@@ -30,7 +30,7 @@ class AssistantRepositoryTest {
     """.trimIndent()
 
     @Test
-    fun `a mensagem vai com a conversa e as fotos, e volta o turno`() = runTest {
+    fun `a mensagem vai com a conversa e as fotos e volta o turno`() = runTest {
         val api = FakeApi()
         val outcome = AssistantRepository(api.clientReturning(turnoJson)).send(7, "Cadastre este produto.", listOf(4))
 

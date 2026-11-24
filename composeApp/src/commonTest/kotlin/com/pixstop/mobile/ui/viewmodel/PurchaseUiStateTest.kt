@@ -122,7 +122,7 @@ class PurchaseUiStateTest {
     }
 
     @Test
-    fun `somar dias atravessa mes, ano e fevereiro`() {
+    fun `somar dias atravessa mes ano e fevereiro`() {
         assertEquals("2026-12-20", addDays("2026-11-20", 30))
         assertEquals("2027-01-19", addDays("2026-11-20", 60))
         assertEquals("2028-02-29", addDays("2028-02-28", 1))
@@ -132,7 +132,7 @@ class PurchaseUiStateTest {
     }
 
     @Test
-    fun `a validade sugerida e a data da nota mais o prazo, so para quem controla`() {
+    fun `a validade sugerida e a data da nota mais o prazo so para quem controla`() {
         val pudim = CatalogProduct(7, "Pudim", null, 4.0, 0, tracksExpiry = true, shelfLifeDays = 30)
         val linha = PurchaseLine(productId = 7, quantityUnits = 6, unitCost = 4.0)
 

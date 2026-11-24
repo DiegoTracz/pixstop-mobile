@@ -15,7 +15,7 @@ class AssistantMapperTest {
     private fun json(text: String): JsonObject = Json.parseToJsonElement(text).jsonObject
 
     @Test
-    fun `o resumo de cadastro mostra campos, avisos e espera o sim`() {
+    fun `o resumo de cadastro mostra campos avisos e espera o sim`() {
         val card = AssistantMapper.card(
             "create_product",
             json(
@@ -46,7 +46,7 @@ class AssistantMapperTest {
     }
 
     @Test
-    fun `parecidos e catalogo aparecem juntos, e as geladeiras com a empresa`() {
+    fun `parecidos e catalogo aparecem juntos e as geladeiras com a empresa`() {
         val lookalikes = AssistantMapper.card(
             "create_product_from_photo",
             json(

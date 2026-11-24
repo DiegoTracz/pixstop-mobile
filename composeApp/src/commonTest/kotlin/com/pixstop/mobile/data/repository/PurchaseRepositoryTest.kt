@@ -154,7 +154,7 @@ class PurchaseRepositoryTest {
     }
 
     @Test
-    fun `guardar no deposito nao manda geladeira, e servidor antigo sem dados ainda e sucesso`() = runTest {
+    fun `guardar no deposito nao manda geladeira e servidor antigo sem dados ainda e sucesso`() = runTest {
         val api = FakeApi()
         val outcome = PurchaseRepository(api.clientReturning("""{"success": true, "data": null, "message": "ok"}"""))
             .confirm(3, destination = Destination.Warehouse, applianceId = 1)

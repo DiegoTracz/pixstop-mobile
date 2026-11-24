@@ -25,7 +25,7 @@ class OrderRewardsTest {
     }
 
     @Test
-    fun `cashback, cota, medalhas e nivel tocam nessa ordem`() {
+    fun `cashback cota medalhas e nivel tocam nessa ordem`() {
         val rewards = OrderRewards(
             cashbackPixels = 60,
             level = LevelReward(3, "Frequentador", 350),
@@ -57,7 +57,7 @@ class OrderRewardsTest {
     }
 
     @Test
-    fun `o pedido do servidor traz as recompensas, e o servidor antigo traz nenhuma`() {
+    fun `o pedido do servidor traz as recompensas e o servidor antigo traz nenhuma`() {
         val json = """
             {"id":20,"status":"paid","paid_at":"2026-11-15T15:14:20+00:00",
              "rewards":{"cashback_pixels":60,"level":{"level":2,"title":"Explorador","pixels":300},

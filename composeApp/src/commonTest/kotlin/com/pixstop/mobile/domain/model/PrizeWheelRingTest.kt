@@ -24,7 +24,7 @@ class PrizeWheelRingTest {
     }
 
     @Test
-    fun `as repeticoes ficam espalhadas, sem tres iguais seguidas`() {
+    fun `as repeticoes ficam espalhadas sem tres iguais seguidas`() {
         val ring = PrizeWheelRing.build(gold)
 
         assertTrue(ring.indices.none { ring[it] == ring[(it + 1) % 16] && ring[it] == ring[(it + 2) % 16] })
