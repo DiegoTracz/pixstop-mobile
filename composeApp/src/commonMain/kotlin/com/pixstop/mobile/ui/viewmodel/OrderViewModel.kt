@@ -75,8 +75,16 @@ data class OrderUiState(
             return ((until - now) / 1_000L).coerceAtLeast(0)
         }
 
+    /**
+     * A geladeira está sem internet e este celular tem como levar o bilhete:
+     * o rádio é o único caminho que abre agora. O pulso pela internet ficaria
+     * pendente até a rede voltar, e oferecer os dois botões só confunde.
+     */
+    val opensOnlyByBluetooth: Boolean
+        get() = pickup.reason == PickupReason.Offline && ticket != null && bluetoothSupported && !pickup.isDone
+
     /** O botão de abrir aparece, e nenhuma tentativa está em curso. */
-    val canUnlock: Boolean get() = pickup.canUnlock && !isUnlocking && !isTalkingToFridge
+    val canUnlock: Boolean get() = pickup.canUnlock && !isUnlocking && !isTalkingToFridge && !opensOnlyByBluetooth
 
     /**
      * O Bluetooth só é oferecido quando resolve alguma coisa: há bilhete, o
@@ -97,6 +105,14 @@ data class OrderUiState(
      * cada estado — e é o que se confere sem celular nenhum.
      */
     val pickupMessage: String
+        get() = when {
+            opensOnlyByBluetooth && (pickup.status == PickupStatus.Awaiting || pickup.status == PickupStatus.Unlocking) ->
+                "A geladeira está sem internet. Abra por Bluetooth, aqui do lado dela."
+
+            else -> messageByStatus
+        }
+
+    private val messageByStatus: String
         get() = when (pickup.status) {
             PickupStatus.PickedUp -> "Produto retirado."
             PickupStatus.Opened -> "A porta abriu. Pode retirar o produto."

@@ -115,4 +115,34 @@ class OrderPickupUiStateTest {
 
         assertTrue(state(unlocking, now = 10_000, ticket = ticket, bluetooth = true).canUnlockByBluetooth)
     }
+    @Test
+    fun `sem internet e com bilhete so o Bluetooth abre`() {
+        val offline = pickup(PickupStatus.Awaiting, canUnlock = true, reason = PickupReason.Offline, hasTicket = true)
+        val state = state(offline, ticket = ticket, bluetooth = true)
+
+        assertTrue(state.opensOnlyByBluetooth)
+        assertFalse(state.canUnlock)
+        assertTrue(state.canUnlockByBluetooth)
+        assertEquals("A geladeira está sem internet. Abra por Bluetooth, aqui do lado dela.", state.pickupMessage)
+    }
+
+    @Test
+    fun `o pulso que saiu com a geladeira fora do ar nao promete a porta abrindo`() {
+        // Pago com a geladeira sem internet: o servidor manda o pulso (fica pendente) e diz offline.
+        val unlocking = pickup(PickupStatus.Unlocking, canUnlock = true, reason = PickupReason.Offline, windowUntil = 40_000, hasTicket = true)
+        val state = state(unlocking, now = 10_000, ticket = ticket, bluetooth = true)
+
+        assertFalse(state.canUnlock)
+        assertTrue(state.canUnlockByBluetooth)
+        assertEquals("A geladeira está sem internet. Abra por Bluetooth, aqui do lado dela.", state.pickupMessage)
+    }
+
+    @Test
+    fun `sem radio no celular o botao da internet continua`() {
+        val offline = pickup(PickupStatus.Awaiting, canUnlock = true, reason = PickupReason.Offline, hasTicket = true)
+
+        assertFalse(state(offline, ticket = ticket, bluetooth = false).opensOnlyByBluetooth)
+        assertTrue(state(offline, ticket = ticket, bluetooth = false).canUnlock)
+        assertFalse(state(offline, ticket = null, bluetooth = true).opensOnlyByBluetooth)
+    }
 }

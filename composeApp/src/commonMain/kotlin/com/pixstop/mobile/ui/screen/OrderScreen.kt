@@ -367,7 +367,8 @@ private fun PickupBlock(
                 text = "Abrir por Bluetooth",
                 onClick = onUnlockByBluetooth,
                 modifier = Modifier.fillMaxWidth(),
-                variant = PixelButtonVariant.Secondary,
+                // Sem internet ele é o único botão: vira o principal.
+                variant = if (state.opensOnlyByBluetooth) PixelButtonVariant.Primary else PixelButtonVariant.Secondary,
                 isLoading = state.isTalkingToFridge,
                 loadingText = "Procurando a geladeira...",
             )

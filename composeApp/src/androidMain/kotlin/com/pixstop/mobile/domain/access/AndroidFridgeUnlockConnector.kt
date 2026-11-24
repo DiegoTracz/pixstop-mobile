@@ -176,13 +176,26 @@ class AndroidFridgeUnlockConnector(private val context: Context) : FridgeUnlockC
         // operação por vez: mandar todos de uma vez faz o sistema descartar
         // tudo depois do primeiro, e a geladeira fica esperando um bilhete
         // que nunca chega inteiro. Cada pedaço sai quando o anterior é
-        // confirmado.
-        val packets = ArrayDeque(fragmentsOf(ticket.raw))
+        // confirmado. Os pedaços saem do tamanho que o MTU combinado deixa:
+        // com 18 bytes o bilhete leva ~20 idas e voltas (2,4 s medidos na
+        // ESP32-S3); com o MTU maior, uma ou duas.
+        val packets = ArrayDeque<ByteArray>()
+        var chunkBytes = CHUNK_BYTES
+        var discovering = false
+
+        fun discover(client: BluetoothGatt) {
+            if (!discovering) {
+                discovering = true
+                client.discoverServices()
+            }
+        }
 
         val callback = object : BluetoothGattCallback() {
             override fun onConnectionStateChange(client: BluetoothGatt, status: Int, newState: Int) {
                 when (newState) {
-                    BluetoothProfile.STATE_CONNECTED -> client.discoverServices()
+                    // Pede MTU maior antes de descobrir os serviços; se o pedido
+                    // nem sai, segue com os pedaços pequenos de sempre.
+                    BluetoothProfile.STATE_CONNECTED -> if (!client.requestMtu(REQUESTED_MTU)) discover(client)
 
                     BluetoothProfile.STATE_DISCONNECTED -> if (!answer.isCompleted) {
                         answer.complete(Outcome.Failure(DomainError.Offline("A geladeira encerrou a conexão antes de responder.")))
@@ -190,7 +203,19 @@ class AndroidFridgeUnlockConnector(private val context: Context) : FridgeUnlockC
                 }
             }
 
+            override fun onMtuChanged(client: BluetoothGatt, mtu: Int, status: Int) {
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    // 3 bytes do cabeçalho do ATT e 2 do nosso (sequência e total).
+                    chunkBytes = (mtu - 5).coerceIn(CHUNK_BYTES, MAX_CHUNK_BYTES)
+                }
+
+                discover(client)
+            }
+
             override fun onServicesDiscovered(client: BluetoothGatt, status: Int) {
+                packets.clear()
+                packets.addAll(fragmentsOf(ticket.raw, chunkBytes))
+
                 val service = client.getService(SERVICE_UUID)
                 val result = service?.getCharacteristic(RESULT_UUID)
 
@@ -287,12 +312,12 @@ class AndroidFridgeUnlockConnector(private val context: Context) : FridgeUnlockC
     /**
      * O bilhete em pedaços de `[sequência, total, bytes…]`.
      *
-     * Fragmentar sempre é mais simples do que depender do MTU negociado: os
-     * 23 bytes do padrão não levam nem um sexto de um bilhete, e um celular
-     * que negocia mal viraria um "não abriu" sem explicação.
+     * Fragmentar sempre continua: o pedaço só cresce até o MTU combinado, e
+     * um celular que negocia mal cai nos 18 bytes que cabem no padrão de 23
+     * em vez de virar um "não abriu" sem explicação.
      */
-    private fun fragmentsOf(ticket: String): List<ByteArray> {
-        val chunks = ticket.encodeToByteArray().toList().chunked(CHUNK_BYTES)
+    private fun fragmentsOf(ticket: String, chunkBytes: Int): List<ByteArray> {
+        val chunks = ticket.encodeToByteArray().toList().chunked(chunkBytes)
 
         return chunks.mapIndexed { index, chunk ->
             byteArrayOf(index.toByte(), chunks.size.toByte()) + chunk.toByteArray()
@@ -338,6 +363,12 @@ class AndroidFridgeUnlockConnector(private val context: Context) : FridgeUnlockC
 
         /** Cabe no MTU padrão de 23 bytes, com os dois do cabeçalho. */
         const val CHUNK_BYTES = 18
+
+        /** O MTU que o app pede; a geladeira aceita até 256. */
+        const val REQUESTED_MTU = 247
+
+        /** Um pedaço cabe num byte de tamanho no lado da geladeira. */
+        const val MAX_CHUNK_BYTES = 240
 
         /** Achar a geladeira: perto da porta, é quase imediato. */
         const val SCAN_TIMEOUT_MS = 12_000L
