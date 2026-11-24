@@ -17,6 +17,7 @@ import com.pixstop.mobile.domain.access.Destination
 import com.pixstop.mobile.domain.access.RoleHelper
 import com.pixstop.mobile.domain.notification.NotificationTarget
 import com.pixstop.mobile.data.repository.AuthRepository
+import com.pixstop.mobile.core.platform.sellsPixelsInApp
 import com.pixstop.mobile.ui.screen.BuyPixelsScreen
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
@@ -376,7 +377,8 @@ fun AppNavigation() {
                 onBack = { navController.popBackStack() },
                 // O código do balcão só existe onde há visita registrada.
                 memberCode = session.account?.user?.memberCode?.takeIf { session.company?.hasModule("checkin") == true },
-                onBuyPixels = { navController.navigate(Routes.BUY_PIXELS) },
+                // No iPhone a compra de pixels fica no site (regra 3.1.1 da App Store).
+                onBuyPixels = if (sellsPixelsInApp) ({ navController.navigate(Routes.BUY_PIXELS) }) else null,
                 walletVersion = walletVersion,
             )
         }
