@@ -21,7 +21,7 @@ class ShoppingListUiStateTest {
     )
 
     @Test
-    fun `a quantidade editada muda o total, e sem edicao vale a sugerida`() {
+    fun `a quantidade editada muda o total e sem edicao vale a sugerida`() {
         val state = ShoppingListUiState(list = list)
 
         assertEquals(24, state.totalUnits)
@@ -38,7 +38,7 @@ class ShoppingListUiStateTest {
     }
 
     @Test
-    fun `o texto e o mesmo da web, e zero sai do texto`() {
+    fun `o texto e o mesmo da web e zero sai do texto`() {
         val text = ShoppingListUiState(list = list, quantities = mapOf(8L to 0)).messageText
 
         assertTrue(text.startsWith("🛒 *Compras da semana – Locarmais*"))

@@ -48,7 +48,7 @@ class ShoppingListRepositoryTest {
     }
 
     @Test
-    fun `nao avisar vai como nulo explicito, nao como ausente`() = runTest {
+    fun `nao avisar vai como nulo explicito nao como ausente`() = runTest {
         val api = FakeApi()
         ShoppingListRepository(api.clientReturning("""{"success": true, "data": null}""")).saveSettings(14, 10, null)
 
@@ -57,7 +57,7 @@ class ShoppingListRepositoryTest {
     }
 
     @Test
-    fun `vou comprar leva so o que tem quantidade, com a esperada`() = runTest {
+    fun `vou comprar leva so o que tem quantidade com a esperada`() = runTest {
         val api = FakeApi()
         val repository = ShoppingListRepository(api.clientReturning(listaJson))
         val list = (repository.list() as Outcome.Success).value

@@ -61,7 +61,7 @@ class PurchaseRepositoryTest {
     }
 
     @Test
-    fun `a folha traz o que a ia leu, a nota e os avisos`() = runTest {
+    fun `a folha traz o que a ia leu a nota e os avisos`() = runTest {
         val sheet = (PurchaseRepository(FakeApi().clientReturning(folhaJson)).show(3) as Outcome.Success).value
 
         assertEquals(PurchaseStatus.Draft, sheet.status)

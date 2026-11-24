@@ -146,7 +146,7 @@ class CheckoutUiStateTest {
     /* ── O pagamento lembra da última vez (CHECKOUT_RAPIDO.md) ───────────── */
 
     @Test
-    fun `parte da forma da ultima vez, com as opcoes recolhidas`() {
+    fun `parte da forma da ultima vez com as opcoes recolhidas`() {
         val state = CheckoutUiState(
             checkout = checkout(cards = listOf(padrao), lastPayment = LastPayment(PaymentMethod.Card, 0)),
             savedCardId = padrao.id,
@@ -160,7 +160,7 @@ class CheckoutUiStateTest {
     }
 
     @Test
-    fun `forma lembrada que a empresa nao aceita mais nao e escolhida, e as opcoes abrem`() {
+    fun `forma lembrada que a empresa nao aceita mais nao e escolhida e as opcoes abrem`() {
         val state = CheckoutUiState(
             checkout = checkout(cards = emptyList(), publicKey = false, lastPayment = LastPayment(PaymentMethod.Card, 0)),
         ).withRememberedPayment()
