@@ -191,6 +191,18 @@ class CheckoutUiStateTest {
     }
 
     @Test
+    fun `so pixels lembrado parte do maximo de hoje e nao da compra anterior`() {
+        // Da última vez foram 300 pixels; hoje a compra é de R$ 10,00 e a carteira cobre tudo.
+        val base = checkout(lastPayment = LastPayment(PaymentMethod.Pixels, 300))
+            .copy(walletPixels = 5000, walletPixelsAsMoney = 5000, maxPixels = 1000, maxDiscountPercentage = 100.0)
+        val state = CheckoutUiState(checkout = base).withRememberedPayment()
+
+        assertEquals(PaymentMethod.Pixels, state.method)
+        assertEquals(1000, state.pixels)
+        assertEquals("Concluir pedido", state.payButtonLabel)
+    }
+
+    @Test
     fun `nada a cobrar vira concluir pedido`() {
         // Sem teto de desconto e com pixels para a compra inteira, não sobra nada a cobrar.
         val base = checkout(lastPayment = LastPayment(PaymentMethod.Pixels, 1000))

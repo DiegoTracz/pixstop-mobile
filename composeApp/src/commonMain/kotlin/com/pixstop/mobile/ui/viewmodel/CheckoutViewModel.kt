@@ -61,9 +61,17 @@ data class CheckoutUiState(
         }
 
         val remembered = copy(method = method, installments = 1, methodsExpanded = false)
-        val usesPixels = last.method == PaymentMethod.Pixels || last.method == PaymentMethod.Mixed
 
-        return remembered.copy(pixels = if (usesPixels) min(last.pixels, remembered.maxPixels).coerceAtLeast(0) else 0)
+        // "Só pixels" quer dizer a compra inteira em pixels: parte do máximo de
+        // hoje, como o servidor faz, e não da quantia da compra anterior — que
+        // numa compra maior deixaria um resto e a tela diria que não cobre.
+        val pixels = when (last.method) {
+            PaymentMethod.Pixels -> remembered.maxPixels
+            PaymentMethod.Mixed -> min(last.pixels, remembered.maxPixels)
+            else -> 0
+        }
+
+        return remembered.copy(pixels = pixels.coerceAtLeast(0))
     }
 
     /** "Pagar R$ 12,00 com PIX": o botão diz como, para ninguém pagar com o cartão errado sem ver. */
