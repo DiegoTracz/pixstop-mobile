@@ -250,6 +250,7 @@ object ApiConfig {
         const val COMPANY_PRODUCTS = "company/products"
         const val COMPANY_PRODUCT_PHOTO = "company/products/analyze-photo"
         const val COMPANY_PRODUCT_SUGGESTIONS = "company/products/suggestions"
+        const val COMPANY_PRODUCT_BATCH = "company/products/analyze-batch"
         const val COMPANY_PRODUCT_ENHANCE = "company/products/enhance-photo"
 
         /** Os produtos de uma geladeira, com o saldo (G2). */

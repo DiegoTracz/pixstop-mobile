@@ -85,6 +85,9 @@ object Routes {
     /** Cadastrar produto pelo celular (APP_OPERADOR_PRODUTOS.md, G4). */
     const val PRODUCT_NEW = "products/new"
 
+    /** Vários produtos numa foto (G4.1). */
+    const val PRODUCT_BATCH = "products/batch"
+
     /** Os produtos de uma geladeira: ver, pôr e cadastrar (G2). */
     const val FRIDGE_PRODUCTS = "fridge-products"
 

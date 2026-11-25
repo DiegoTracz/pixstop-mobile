@@ -120,6 +120,10 @@ class ProductFormUiStateTest {
         // Catálogo escolhido sem melhoria: o servidor copia a foto de lá.
         assertNull(ProductFormUiState(photo = original, catalogChoice = item).photoToSend)
         assertTrue(ProductFormUiState(catalogChoice = item, enhanced = ia, useEnhanced = true).photoToSend.contentEquals(ia))
+        // A original vai junto só quando a da IA foi aprovada e havia foto do celular.
+        assertTrue(ProductFormUiState(photo = original, enhanced = ia, useEnhanced = true).originalToSend.contentEquals(original))
+        assertNull(ProductFormUiState(photo = original, enhanced = ia).originalToSend)
+        assertNull(ProductFormUiState(catalogChoice = item, enhanced = ia, useEnhanced = true).originalToSend)
     }
 
     @Test

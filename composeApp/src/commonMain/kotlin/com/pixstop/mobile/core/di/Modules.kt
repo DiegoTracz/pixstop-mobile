@@ -179,6 +179,7 @@ val viewModelModule: Module = module {
     viewModel { PurchasesViewModel(get()) }
     viewModel { PurchaseViewModel(get(), products = get()) }
     viewModel { com.pixstop.mobile.ui.viewmodel.ProductFormViewModel(get()) }
+    viewModel { com.pixstop.mobile.ui.viewmodel.BatchProductsViewModel(get()) }
     viewModel { com.pixstop.mobile.ui.viewmodel.FridgeProductsViewModel(get(), get()) }
     viewModel { AssistantViewModel(get()) }
     viewModel { PixelAvatarViewModel(get()) }

@@ -21,6 +21,7 @@ import com.pixstop.mobile.core.platform.sellsPixelsInApp
 import com.pixstop.mobile.ui.screen.BuyPixelsScreen
 import com.pixstop.mobile.ui.screen.HomeScreen
 import com.pixstop.mobile.ui.screen.ProductFormScreen
+import com.pixstop.mobile.ui.screen.BatchProductsScreen
 import com.pixstop.mobile.ui.screen.FridgeProductsScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
 import com.pixstop.mobile.ui.screen.VisitScreen
@@ -444,6 +445,7 @@ fun AppNavigation() {
                 onPurchases = { navController.navigate(Routes.PURCHASES) },
                 onExpiry = { navController.navigate(Routes.EXPIRY) },
                 onNewProduct = { navController.navigate(Routes.PRODUCT_NEW) },
+                onBatchProducts = { navController.navigate(Routes.PRODUCT_BATCH) },
                 onFridgeProducts = { applianceId -> navController.navigate(Routes.fridgeProducts(applianceId)) },
             )
         }
@@ -459,6 +461,10 @@ fun AppNavigation() {
         // Cadastrar produto pelo celular (APP_OPERADOR_PRODUTOS.md, G4).
         composable(Routes.PRODUCT_NEW) {
             ProductFormScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.PRODUCT_BATCH) {
+            BatchProductsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.EXPIRY) {

@@ -94,3 +94,18 @@ data class CreatedProduct(
     val inWarehouse: Int,
     val cost: Double = 0.0,
 )
+
+/** Vários produtos numa foto (G4.1): o que a foto mostrou de cada um. */
+data class BatchReading(val items: List<BatchItem>, val truncated: Boolean, val limit: Int)
+
+data class BatchItem(
+    val name: String,
+    val description: String?,
+    val category: ProductCategory?,
+    val estimatedPrice: Double?,
+    /** Quantas unidades iguais apareceram: só informa, não vira estoque. */
+    val quantity: Int,
+    /** O recorte do produto na foto, em JPEG. */
+    val photo: ByteArray?,
+    val similar: List<SimilarProduct>,
+)

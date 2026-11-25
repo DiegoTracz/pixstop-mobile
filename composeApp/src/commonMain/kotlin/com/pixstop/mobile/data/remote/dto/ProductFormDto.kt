@@ -63,3 +63,23 @@ data class CreatedProductDto(
     val cost: Double = 0.0,
     @SerialName("in_warehouse") val inWarehouse: Int = 0,
 )
+
+/** Vários produtos numa foto (G4.1): a lista para revisar. */
+@Serializable
+data class BatchReadingDto(
+    val products: List<BatchItemDto> = emptyList(),
+    val truncated: Boolean = false,
+    val limit: Int = 12,
+)
+
+@Serializable
+data class BatchItemDto(
+    val name: String,
+    val description: String? = null,
+    val category: ProductCategoryDto? = null,
+    @SerialName("estimated_price") val estimatedPrice: Double? = null,
+    val quantity: Int = 1,
+    /** O recorte do produto na foto, como data URI. */
+    val photo: String? = null,
+    @SerialName("similar_products") val similarProducts: List<SimilarProductDto> = emptyList(),
+)

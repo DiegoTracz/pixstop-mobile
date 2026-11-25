@@ -9,6 +9,8 @@ import com.pixstop.mobile.domain.model.FridgeProduct
 import com.pixstop.mobile.domain.model.FridgeProducts
 import com.pixstop.mobile.data.remote.dto.PhotoReadingDto
 import com.pixstop.mobile.data.remote.dto.ProductCategoryDto
+import com.pixstop.mobile.domain.model.BatchItem
+import com.pixstop.mobile.domain.model.BatchReading
 import com.pixstop.mobile.domain.model.CatalogSuggestion
 import com.pixstop.mobile.domain.model.CreatedProduct
 import com.pixstop.mobile.domain.model.NewProduct
@@ -17,6 +19,7 @@ import com.pixstop.mobile.domain.model.PhotoReading
 import com.pixstop.mobile.domain.model.ProductCategory
 import com.pixstop.mobile.domain.model.SimilarProduct
 import com.pixstop.mobile.domain.model.map
+import com.pixstop.mobile.data.remote.dto.BatchReadingDto
 import com.pixstop.mobile.data.remote.dto.CatalogMatchDto
 import com.pixstop.mobile.data.remote.dto.EnhancedPhotoDto
 import com.pixstop.mobile.data.remote.dto.ProductSuggestionsDto
@@ -83,6 +86,34 @@ class ProductRepository(private val client: HttpClient) {
             )
         }
 
+    /**
+     * Vários produtos numa foto (G4.1). A IA olha a foto em alta resolução:
+     * leva mais que a foto de um produto só.
+     */
+    suspend fun analyzeBatch(jpeg: ByteArray): Outcome<BatchReading> =
+        safeCall<BatchReadingDto>(TAG) {
+            client.post(ApiConfig.Endpoints.COMPANY_PRODUCT_BATCH) {
+                timeout { requestTimeoutMillis = 120_000; socketTimeoutMillis = 120_000 }
+                setBody(MultiPartFormDataContent(formData { appendPhoto(jpeg) }))
+            }
+        }.map { dto ->
+            BatchReading(
+                items = dto.products.map { item ->
+                    BatchItem(
+                        name = item.name,
+                        description = item.description,
+                        category = item.category?.let { ProductCategory(it.id, it.name) },
+                        estimatedPrice = item.estimatedPrice,
+                        quantity = item.quantity,
+                        photo = item.photo?.let { runCatching { decodeDataUri(it) }.getOrNull() },
+                        similar = item.similarProducts.map { SimilarProduct(it.productId, it.name, it.price, it.totalStock) },
+                    )
+                },
+                truncated = dto.truncated,
+                limit = dto.limit,
+            )
+        }
+
     /** O que já existe para o nome do item da nota: parecidos e catálogo com foto. */
     suspend fun suggestions(name: String, barcode: String?): Outcome<ProductSuggestions> =
         safeCall<ProductSuggestionsDto>(TAG) {
@@ -121,7 +152,7 @@ class ProductRepository(private val client: HttpClient) {
             }
         }.map { decodeDataUri(it.preview) }
 
-    suspend fun create(product: NewProduct, photo: ByteArray?): Outcome<CreatedProduct> =
+    suspend fun create(product: NewProduct, photo: ByteArray?, originalPhoto: ByteArray? = null): Outcome<CreatedProduct> =
         safeCall<CreatedProductDto>(TAG) {
             client.post(ApiConfig.Endpoints.COMPANY_PRODUCTS) {
                 setBody(
@@ -138,6 +169,8 @@ class ProductRepository(private val client: HttpClient) {
                             // Quem decide qual foto vai é a tela: a do celular, a
                             // melhorada pela IA ou nenhuma, e aí vale a do catálogo.
                             photo?.let { appendPhoto(it) }
+                            // A melhorada vai para a vitrine e a do celular fica guardada.
+                            originalPhoto?.let { appendPhoto(it, field = "image_original") }
                         },
                     ),
                 )
@@ -168,8 +201,8 @@ internal fun isPng(bytes: ByteArray): Boolean =
     bytes.size > 4 && bytes[0] == 0x89.toByte() && bytes[1] == 'P'.code.toByte() && bytes[2] == 'N'.code.toByte() && bytes[3] == 'G'.code.toByte()
 
 /** O Laravel valida pela extensão: sem nome de arquivo, recusa antes de olhar. */
-private fun FormBuilder.appendPhoto(bytes: ByteArray) = append(
-    key = "image",
+private fun FormBuilder.appendPhoto(bytes: ByteArray, field: String = "image") = append(
+    key = field,
     value = bytes,
     headers = Headers.build {
         val png = isPng(bytes)

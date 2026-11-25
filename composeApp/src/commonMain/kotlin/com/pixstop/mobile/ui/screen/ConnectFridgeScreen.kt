@@ -74,6 +74,8 @@ fun ConnectFridgeScreen(
     onExpiry: () -> Unit = {},
     /** Cadastrar produto pelo celular (APP_OPERADOR_PRODUTOS.md, G4). */
     onNewProduct: () -> Unit = {},
+    /** Vários produtos numa foto (G4.1). */
+    onBatchProducts: () -> Unit = {},
     /** Os produtos de uma geladeira: ver, pôr e cadastrar (G2). */
     onFridgeProducts: (Long) -> Unit = {},
     viewModel: ConnectFridgeViewModel = koinViewModel(),
@@ -116,7 +118,7 @@ fun ConnectFridgeScreen(
                         // estoque da empresa fica embaixo, num bloco próprio.
                         ConnectStep.Devices -> {
                             DevicesStep(state, viewModel)
-                            StockSection(onNewProduct = onNewProduct, onShoppingList = onShoppingList, onPurchases = onPurchases, onExpiry = onExpiry)
+                            StockSection(onNewProduct = onNewProduct, onBatchProducts = onBatchProducts, onShoppingList = onShoppingList, onPurchases = onPurchases, onExpiry = onExpiry)
                         }
                         ConnectStep.Code -> CodeStep(state, viewModel)
                         ConnectStep.Network -> NetworkStep(state, viewModel)
@@ -284,7 +286,7 @@ private fun NewFridgeForm(state: ConnectFridgeUiState, viewModel: ConnectFridgeV
  * cartas delas, num bloco embaixo.
  */
 @Composable
-private fun StockSection(onNewProduct: () -> Unit, onShoppingList: () -> Unit, onPurchases: () -> Unit, onExpiry: () -> Unit) {
+private fun StockSection(onNewProduct: () -> Unit, onBatchProducts: () -> Unit, onShoppingList: () -> Unit, onPurchases: () -> Unit, onExpiry: () -> Unit) {
     Spacer(Modifier.height(8.dp))
     Text("Estoque", style = PixTypography.sectionTitle, color = PixColors.Gray300)
 
@@ -294,6 +296,13 @@ private fun StockSection(onNewProduct: () -> Unit, onShoppingList: () -> Unit, o
         value = "Cadastrar produto",
         detail = "Fotografe: a IA preenche nome, categoria e preço",
         onClick = onNewProduct,
+    )
+    SensorCard(
+        icon = AppIconType.Camera,
+        label = "A compra toda na mesa",
+        value = "Vários produtos numa foto",
+        detail = "A IA separa cada um; você só diz o custo",
+        onClick = onBatchProducts,
     )
 
     SensorCard(

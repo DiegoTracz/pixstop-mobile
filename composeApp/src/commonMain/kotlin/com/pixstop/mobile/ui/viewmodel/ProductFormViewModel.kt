@@ -81,6 +81,10 @@ data class ProductFormUiState(
             else -> photo
         }
 
+    /** A foto do celular, guardada ao lado quando a vitrine usa a da IA. */
+    val originalToSend: ByteArray?
+        get() = if (useEnhanced && enhanced != null) photo else null
+
     val priceValue: Double? get() = parseMoney(price)
     val costValue: Double? get() = parseMoney(cost)
     val stockValue: Int get() = initialStock.trim().toIntOrNull()?.coerceAtLeast(0) ?: 0
@@ -282,7 +286,7 @@ class ProductFormViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null) }
 
-            when (val outcome = repository.create(current.toNewProduct(), current.photoToSend)) {
+            when (val outcome = repository.create(current.toNewProduct(), current.photoToSend, current.originalToSend)) {
                 is Outcome.Success -> _uiState.update { it.copy(isSaving = false, created = outcome.value) }
                 is Outcome.Failure -> _uiState.update { it.copy(isSaving = false, error = outcome.error.message) }
             }
