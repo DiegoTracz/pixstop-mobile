@@ -41,7 +41,7 @@ class PixelAvatarViewModel(private val avatars: AvatarRepository) : ViewModel() 
 
     fun dismissMessage() = _uiState.update { it.copy(message = null, error = null) }
 
-    /** A câmera devolveu o JPEG: a partir daqui quem trabalha é o servidor. */
+    /** A câmera ou a galeria devolveu a foto: a partir daqui quem trabalha é o servidor. */
     fun onPhoto(photo: ByteArray) {
         _uiState.update { it.copy(isCameraOpen = false, isWorking = true, error = null, message = null) }
 
@@ -49,29 +49,6 @@ class PixelAvatarViewModel(private val avatars: AvatarRepository) : ViewModel() 
             when (val result = avatars.generatePixel(photo)) {
                 is Outcome.Success -> _uiState.update {
                     it.copy(isWorking = false, preview = result.value)
-                }
-
-                is Outcome.Failure -> _uiState.update {
-                    it.copy(isWorking = false, error = result.error.message)
-                }
-            }
-        }
-    }
-
-    /**
-     * A foto escolhida na galeria vai direto: quem já tem a foto de que gosta
-     * não precisa passar pela IA nem aprovar prévia nenhuma.
-     *
-     * @param onApplied a conta precisa recarregar: o avatar mudou em toda a tela.
-     */
-    fun uploadPhoto(photo: ByteArray, onApplied: () -> Unit = {}) {
-        _uiState.update { it.copy(isWorking = true, preview = null, error = null, message = null) }
-
-        viewModelScope.launch {
-            when (val result = avatars.upload(photo)) {
-                is Outcome.Success -> {
-                    _uiState.update { it.copy(isWorking = false, message = "Foto atualizada.") }
-                    onApplied()
                 }
 
                 is Outcome.Failure -> _uiState.update {

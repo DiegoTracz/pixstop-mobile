@@ -32,6 +32,7 @@ import coil3.compose.AsyncImage
 import com.pixstop.mobile.core.storage.ThemeStore
 import com.pixstop.mobile.domain.model.AccountUser
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.pixstop.mobile.ui.components.PixelButton
 import com.pixstop.mobile.ui.components.PixelButtonVariant
 import com.pixstop.mobile.ui.components.PixelDivider
@@ -68,7 +69,9 @@ fun ProfileScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val avatar by avatarViewModel.uiState.collectAsState()
-    val pickPhoto = rememberPhotoPicker { avatarViewModel.uploadPhoto(it, onProfileSaved) }
+    // A foto da galeria também vira pixel art: é a mesma prévia da câmera,
+    // esperando o "usar este".
+    val pickPhoto = rememberPhotoPicker { avatarViewModel.onPhoto(it) }
     val themeStore: ThemeStore = koinInject()
     val themeMode by themeStore.mode.collectAsState()
 
@@ -84,12 +87,19 @@ fun ProfileScreen(
     }
 
     // A câmera toma a tela inteira: mirar o próprio rosto num quadradinho
-    // dentro de um formulário não funciona.
+    // dentro de um formulário não funciona. Vai numa janela própria porque o
+    // perfil mora dentro do Scaffold da Home, e as barras de cima e de baixo
+    // ficariam por cima do disparo.
     if (avatar.isCameraOpen) {
-        PixelCameraScreen(
-            onPhoto = avatarViewModel::onPhoto,
-            onDismiss = avatarViewModel::closeCamera,
-        )
+        Dialog(
+            onDismissRequest = avatarViewModel::closeCamera,
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            PixelCameraScreen(
+                onPhoto = avatarViewModel::onPhoto,
+                onDismiss = avatarViewModel::closeCamera,
+            )
+        }
 
         return
     }
@@ -303,7 +313,7 @@ private fun AvatarSection(
                     text = if (state.hasPreview) {
                         "Use este ou tire outra foto."
                     } else {
-                        "Tire uma foto e a transformamos em pixel art."
+                        "Tire ou escolha uma foto e a transformamos em pixel art."
                     },
                     style = PixTypography.bodyMuted,
                 )

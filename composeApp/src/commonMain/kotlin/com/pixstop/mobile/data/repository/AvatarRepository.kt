@@ -51,17 +51,6 @@ class AvatarRepository(private val client: HttpClient) {
         },
     )
 
-    /**
-     * A foto escolhida na galeria vira a foto do perfil, sem passar pela IA.
-     * É o caminho de quem já tem a foto de que gosta.
-     */
-    suspend fun upload(photo: ByteArray): Outcome<String> =
-        safeCall<ApplyPixelAvatarDto>(TAG) {
-            client.post(ApiConfig.Endpoints.UPDATE_AVATAR) {
-                setBody(multipart("avatar", photo))
-            }
-        }.map { it.avatarUrl }
-
     /** "Gostei deste": a prévia vira a foto do perfil. */
     suspend fun applyPixel(): Outcome<String> =
         safeCall<ApplyPixelAvatarDto>(TAG) {

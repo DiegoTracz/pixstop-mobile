@@ -95,7 +95,6 @@ object ApiConfig {
         const val DELETE_ACCOUNT = "account"
         const val UPDATE_PROFILE = "me"
         const val UPDATE_PASSWORD = "me/password"
-        const val UPDATE_AVATAR = "me/avatar"
 
         /** A foto vira retrato 8-bit e espera aprovação. */
         const val GENERATE_PIXEL_AVATAR = "me/avatar/pixel"
