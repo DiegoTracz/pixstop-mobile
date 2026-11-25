@@ -122,13 +122,25 @@ class VisitRepository(private val client: HttpClient) {
      * Leva do depósito para a geladeira. Só o que tem quantidade vai; o
      * servidor recusa tudo se faltar algum item, e nada se move pela metade.
      */
-    suspend fun restock(applianceId: Long, clientId: String, quantities: Map<Long, Int>): Outcome<RestockResult> =
+    suspend fun restock(
+        applianceId: Long,
+        clientId: String,
+        quantities: Map<Long, Int>,
+        /** O que entra sem passar pelo depósito, como acerto: a primeira carga. */
+        adjustments: Map<Long, Int> = emptyMap(),
+    ): Outcome<RestockResult> =
         safeCall<RestockResultDto>(TAG) {
             client.post(ApiConfig.Endpoints.companyRestocks(applianceId)) {
                 setBody(
                     RestockSubmitDto(
                         clientId = clientId,
-                        items = quantities.filterValues { it > 0 }.map { (productId, quantity) -> RestockEntryDto(productId, quantity) },
+                        items = (quantities.filterValues { it > 0 }.keys + adjustments.filterValues { it > 0 }.keys).map { productId ->
+                            RestockEntryDto(
+                                productId = productId,
+                                quantity = quantities[productId]?.coerceAtLeast(0) ?: 0,
+                                adjustment = adjustments[productId]?.takeIf { it > 0 },
+                            )
+                        },
                     ),
                 )
             }

@@ -49,6 +49,48 @@ class ConnectFridgeUiStateTest {
     }
 
     @Test
+    fun `as instaladas sao as que ja passaram da ativacao`() {
+        val state = ConnectFridgeUiState(
+            devices = listOf(geladeira(1), geladeira(2, FridgePresence.Online, code = null), geladeira(3, FridgePresence.Offline, code = null)),
+            isLoading = false,
+        )
+
+        assertEquals(listOf(2L, 3L), state.installedDevices.map { it.id })
+    }
+
+    @Test
+    fun `o formulario de nova geladeira so abre ao tocar no botao`() {
+        val comGeladeira = ConnectFridgeUiState(devices = listOf(geladeira(2, FridgePresence.Online, code = null)), isLoading = false)
+
+        assertFalse(comGeladeira.showsNewForm)
+        assertTrue(comGeladeira.copy(creatingNew = true).showsNewForm)
+    }
+
+    @Test
+    fun `sem nenhuma geladeira o formulario ja vem aberto`() {
+        assertTrue(ConnectFridgeUiState(isLoading = false).showsNewForm)
+    }
+
+    @Test
+    fun `os primeiros passos seguem a ordem em que se fazem`() {
+        val nada = FridgeStock(applianceName = "Copa", inAppliance = 0, inCompany = 0).firstSteps(ledChosen = false)
+        assertEquals(listOf(false, false, false), nada.map { it.done })
+
+        val cadastrados = FridgeStock(applianceName = "Copa", inAppliance = 0, inCompany = 5).firstSteps(ledChosen = false)
+        assertEquals(listOf(true, false, false), cadastrados.map { it.done })
+
+        val pronta = FridgeStock(applianceName = "Copa", inAppliance = 3, inCompany = 5).firstSteps(ledChosen = true)
+        assertTrue(pronta.all { it.done })
+    }
+
+    @Test
+    fun `a carta diz quantos produtos ha dentro`() {
+        assertEquals("sem produtos", FridgeStock(applianceName = "Copa", inAppliance = 0, inCompany = 8).productsLabel)
+        assertEquals("1 produto", FridgeStock(applianceName = "Copa", inAppliance = 1, inCompany = 8).productsLabel)
+        assertEquals("6 produtos", FridgeStock(applianceName = "Copa", inAppliance = 6, inCompany = 8).productsLabel)
+    }
+
+    @Test
     fun `o codigo aparece como se dita em dois blocos`() {
         assertEquals("483 921", geladeira().formattedCode)
         assertNull(geladeira(code = null).formattedCode)

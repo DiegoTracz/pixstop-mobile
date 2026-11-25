@@ -245,6 +245,16 @@ object ApiConfig {
         /** O envio da contagem. Idempotente pelo `client_id`. */
         fun companyStockCounts(applianceId: Long) = "company/appliances/$applianceId/stock-counts"
 
+        /** Cadastrar produto pelo app (APP_OPERADOR_PRODUTOS.md, G4). */
+        const val COMPANY_CATEGORIES = "company/categories"
+        const val COMPANY_PRODUCTS = "company/products"
+        const val COMPANY_PRODUCT_PHOTO = "company/products/analyze-photo"
+        const val COMPANY_PRODUCT_SUGGESTIONS = "company/products/suggestions"
+        const val COMPANY_PRODUCT_ENHANCE = "company/products/enhance-photo"
+
+        /** Os produtos de uma geladeira, com o saldo (G2). */
+        fun companyApplianceProducts(applianceId: Long) = "company/appliances/$applianceId/products"
+
         /** A validade de cada produto (V5 d): ler a lista e gravar um. */
         const val COMPANY_PRODUCTS_EXPIRY = "company/products/expiry"
         fun companyProductExpiry(productId: Long) = "company/products/$productId/expiry"

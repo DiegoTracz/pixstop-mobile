@@ -57,6 +57,8 @@ data class ConnectFridgeUiState(
     val chosen: FridgeDevice? = null,
     val step: ConnectStep = ConnectStep.Devices,
     val newName: String = "",
+    /** A pessoa tocou em "Nova geladeira": o formulário abre (APP_OPERADOR_PRODUTOS.md, G0). */
+    val creatingNew: Boolean = false,
     val hotspotSsid: String = HOTSPOT_SSID,
     val hotspotPassword: String = HOTSPOT_PASSWORD,
     val portalHost: String = PORTAL_HOST,
@@ -99,6 +101,19 @@ data class ConnectFridgeUiState(
 ) {
     /** Só quem ainda espera o código aparece para conectar. */
     val pendingDevices: List<FridgeDevice> get() = devices.filter { it.presence == FridgePresence.Pending }
+
+    /**
+     * As que já passaram da ativação: é o que quem abre "Geladeiras" quer ver
+     * primeiro, para escolher uma.
+     */
+    val installedDevices: List<FridgeDevice> get() = devices.filter { it.presence != FridgePresence.Pending }
+
+    /**
+     * O formulário de nova geladeira fica atrás de um botão, para não empurrar
+     * as instaladas para o fim da tela. A empresa que ainda não tem nenhuma
+     * não tem o que escolher: para ela, ele já vem aberto.
+     */
+    val showsNewForm: Boolean get() = creatingNew || devices.isEmpty()
 
     val code: String? get() = chosen?.activationCode
 
@@ -193,6 +208,10 @@ class ConnectFridgeViewModel(
 
     fun updateName(value: String) = _uiState.update { it.copy(newName = value) }
 
+    fun openNewForm() = _uiState.update { it.copy(creatingNew = true) }
+
+    fun closeNewForm() = _uiState.update { it.copy(creatingNew = false, newName = "") }
+
     fun updateHotspotPassword(value: String) = _uiState.update { it.copy(hotspotPassword = value) }
 
     /** Para a bancada: o agente simulado num PC não está em 10.42.0.1. */
@@ -215,7 +234,7 @@ class ConnectFridgeViewModel(
 
             when (val result = fridges.create(name)) {
                 is Outcome.Success -> _uiState.update {
-                    it.copy(devices = it.devices + result.value, chosen = result.value, newName = "", step = ConnectStep.Code, isWorking = false)
+                    it.copy(devices = it.devices + result.value, chosen = result.value, newName = "", creatingNew = false, step = ConnectStep.Code, isWorking = false)
                 }
 
                 is Outcome.Failure -> _uiState.update { it.copy(isWorking = false, error = result.error.message) }

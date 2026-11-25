@@ -20,6 +20,8 @@ import com.pixstop.mobile.data.repository.AuthRepository
 import com.pixstop.mobile.core.platform.sellsPixelsInApp
 import com.pixstop.mobile.ui.screen.BuyPixelsScreen
 import com.pixstop.mobile.ui.screen.HomeScreen
+import com.pixstop.mobile.ui.screen.ProductFormScreen
+import com.pixstop.mobile.ui.screen.FridgeProductsScreen
 import com.pixstop.mobile.ui.screen.JoinCompanyScreen
 import com.pixstop.mobile.ui.screen.VisitScreen
 import com.pixstop.mobile.ui.screen.PurchaseScreen
@@ -441,7 +443,22 @@ fun AppNavigation() {
                 onShoppingList = { navController.navigate(Routes.SHOPPING_LIST) },
                 onPurchases = { navController.navigate(Routes.PURCHASES) },
                 onExpiry = { navController.navigate(Routes.EXPIRY) },
+                onNewProduct = { navController.navigate(Routes.PRODUCT_NEW) },
+                onFridgeProducts = { applianceId -> navController.navigate(Routes.fridgeProducts(applianceId)) },
             )
+        }
+
+        composable("${Routes.FRIDGE_PRODUCTS}/{applianceId}") { entry ->
+            FridgeProductsScreen(
+                applianceId = entry.arguments?.read { getStringOrNull("applianceId") }?.toLongOrNull() ?: 0L,
+                onBack = { navController.popBackStack() },
+                onNewProduct = { navController.navigate(Routes.PRODUCT_NEW) },
+            )
+        }
+
+        // Cadastrar produto pelo celular (APP_OPERADOR_PRODUTOS.md, G4).
+        composable(Routes.PRODUCT_NEW) {
+            ProductFormScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.EXPIRY) {

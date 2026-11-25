@@ -100,6 +100,8 @@ data class CatalogProduct(
     val stock: Int,
     val tracksExpiry: Boolean = false,
     val shelfLifeDays: Int? = null,
+    /** A foto, para reconhecer o produto ao conferir a nota. */
+    val imageUrl: String? = null,
 )
 
 data class PurchaseSummary(

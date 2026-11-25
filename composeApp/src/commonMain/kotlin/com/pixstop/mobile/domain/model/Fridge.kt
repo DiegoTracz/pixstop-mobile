@@ -118,6 +118,25 @@ data class FridgeStock(
             nextStep
         }
 
+    /**
+     * Os primeiros passos de uma geladeira que acabou de entrar no ar
+     * (APP_OPERADOR_PRODUTOS.md, G3), na ordem em que se fazem. O próximo a
+     * fazer é o primeiro que não está feito.
+     */
+    fun firstSteps(ledChosen: Boolean): List<FirstStep> = listOf(
+        FirstStep(FirstStepKind.Products, "Cadastrar os produtos", done = inCompany > 0),
+        FirstStep(FirstStepKind.Load, "Pôr produtos na geladeira", done = inAppliance > 0),
+        FirstStep(FirstStepKind.Light, "Escolher a cor da fita", done = ledChosen),
+    )
+
+    /** Quantos produtos há dentro, para a carta da lista (APP_OPERADOR_PRODUTOS.md, G0). */
+    val productsLabel: String
+        get() = when (inAppliance) {
+            0 -> "sem produtos"
+            1 -> "1 produto"
+            else -> "$inAppliance produtos"
+        }
+
     /** O que dizer, na ordem em que os problemas aparecem. */
     val nextStep: String
         get() = when {
@@ -137,6 +156,10 @@ data class FridgeStock(
                 "$inAppliance produtos já estão em $applianceName. Pedidos pagos abrem a trava, e toda abertura fica gravada."
         }
 }
+
+enum class FirstStepKind { Products, Load, Light }
+
+data class FirstStep(val kind: FirstStepKind, val label: String, val done: Boolean)
 
 /** Uma rede WiFi vista pela geladeira, no modo de configuração. */
 data class WifiNetwork(val ssid: String, val signal: Int, val secured: Boolean)

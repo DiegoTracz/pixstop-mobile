@@ -65,9 +65,79 @@ data class PurchaseUiState(
     val destinationApplianceId: Long? = null,
     /** O que o servidor disse que entrou e onde. */
     val confirmSummary: String? = null,
+    /** "Cadastrar como produto novo?" à espera do sim (APP_OPERADOR_PRODUTOS.md, G4). */
+    val confirmingCreate: Boolean = false,
+    /** A linha da nota cujo produto está sendo cadastrado agora. */
+    val creatingFor: Int? = null,
+    /** Os produtos cadastrados a partir desta nota, que a folha ainda não conhece. */
+    val createdProducts: List<CatalogProduct> = emptyList(),
+    /**
+     * Conferindo a nota item por item (pedido do Diego em 25/11): o app abre
+     * um item sem produto atrás do outro, sem voltar à folha.
+     */
+    val walking: Boolean = false,
+    /** Os itens que a pessoa pulou nesta conferência, para não voltarem já. */
+    val skipped: Set<Int> = emptySet(),
+    /**
+     * O que o catálogo da plataforma tem para o item aberto, pelo nome da
+     * nota: a foto aparece antes de a pessoa decidir cadastrar.
+     */
+    val lineCatalog: List<com.pixstop.mobile.domain.model.CatalogSuggestion> = emptyList(),
+    /** O item do catálogo que a pessoa escolheu para o cadastro deste item. */
+    val createFromCatalog: com.pixstop.mobile.domain.model.CatalogSuggestion? = null,
 ) {
+    /**
+     * O catálogo da plataforma para o item aberto, sem os de outro tamanho:
+     * a lata de 350 ml não pode virar a foto da garrafa de 1 litro.
+     */
+    fun catalogFor(line: PurchaseLine): List<com.pixstop.mobile.domain.model.CatalogSuggestion> =
+        lineCatalog.filter { sameSize(line.rawDescription.orEmpty(), it.name) != false }
+
+    /** Quantos do catálogo ficaram de fora por serem de outro tamanho. */
+    fun otherSizes(line: PurchaseLine): Int = lineCatalog.size - catalogFor(line).size
+
+    /** Os itens que ainda pedem produto, na ordem da nota. */
+    val pendingIndices: List<Int> get() = lines.indices.filter { !lines[it].ignored && lines[it].productId == null }
+
+    /**
+     * O próximo item a conferir depois de `after`: o primeiro adiante que não
+     * foi pulado; se adiante não houver, o primeiro de antes que sobrou.
+     */
+    fun nextPending(after: Int?): Int? {
+        val open = pendingIndices.filter { it != after && it !in skipped }
+        return open.firstOrNull { after == null || it > after } ?: open.firstOrNull()
+    }
+
+    /**
+     * Os produtos que parecem o item da nota: os que dividem com ela alguma
+     * palavra de verdade (marca, sabor), não só o tamanho. "REFRIG COCA COLA
+     * LT 350ML" acha "Coca-Cola Lata"; "350ML" sozinho não acha nada.
+     */
+    fun likelyMatches(line: PurchaseLine): List<CatalogProduct> {
+        val words = significantWords(line.rawDescription.orEmpty())
+        if (words.none { word -> word.any(Char::isLetter) }) return emptyList()
+
+        return products
+            .map { product ->
+                val other = significantWords(product.name)
+                val shared = words.count { word -> other.any { it.startsWith(word) || word.startsWith(it) } }
+                val sharesName = words.any { word -> word.any(Char::isLetter) && other.any { it.startsWith(word) || word.startsWith(it) } }
+                product to if (sharesName) shared else 0
+            }
+            .filter { it.second > 0 }
+            .sortedByDescending { it.second }
+            .take(3)
+            .map { it.first }
+    }
+
+    /** "Item 2 de 5": a posição do item aberto entre os que estavam sem produto. */
+    fun walkPosition(index: Int): Pair<Int, Int> {
+        val all = (pendingIndices + skipped + index).distinct().sorted()
+        return (all.indexOf(index) + 1) to all.size
+    }
+
     val editable: Boolean get() = sheet?.editable == true
-    val products: List<CatalogProduct> get() = sheet?.products.orEmpty()
+    val products: List<CatalogProduct> get() = sheet?.products.orEmpty() + createdProducts.filter { created -> sheet?.products.orEmpty().none { it.id == created.id } }
     val total: Double? get() = parseMoney(totalText)
 
     /** Linhas que ainda pedem uma decisão: sem produto e não marcadas como "não é estoque". */
@@ -203,6 +273,76 @@ fun PurchaseLine.withProduct(product: CatalogProduct): PurchaseLine = copy(
     unitCost = unitCost?.takeIf { it > 0 } ?: product.priceCost,
 )
 
+/**
+ * O que a linha da nota já diz do produto novo: o nome como está na nota e o
+ * custo de cada unidade. O resto a foto ou a pessoa completam.
+ */
+fun PurchaseLine.newProductDraft(): ProductDraft = ProductDraft(
+    name = rawDescription?.trim().orEmpty(),
+    cost = unitCost?.takeIf { it > 0 } ?: rawUnitPrice?.takeIf { it > 0 }?.let { it / packSize.coerceAtLeast(1) },
+    barcode = rawCode?.trim()?.takeIf { code -> code.length in 8..14 && code.all(Char::isDigit) },
+)
+
+data class ProductDraft(
+    val name: String,
+    val cost: Double?,
+    val barcode: String?,
+    /** O item do catálogo da plataforma escolhido no item da nota: foto e descrição de lá. */
+    val catalog: com.pixstop.mobile.domain.model.CatalogSuggestion? = null,
+)
+
+/**
+ * O tamanho da embalagem escrito no nome, em ml ou g: "COCA COLA 1LT" é
+ * 1000 ml, "Coca-Cola Lata 350ml" é 350 ml, "BISC OREO 4X36G" é 36 g. Sem
+ * tamanho no nome, nulo.
+ */
+internal fun packageSize(text: String): Pair<Double, String>? {
+    val match = Regex("""(\d+(?:[.,]\d+)?)\s*(ml|lts?|litros?|l|kg|gr?)(?![a-z])""", RegexOption.IGNORE_CASE)
+        .findAll(text.lowercase())
+        .lastOrNull() ?: return null
+    val number = match.groupValues[1].replace(',', '.').toDoubleOrNull() ?: return null
+
+    return when (match.groupValues[2]) {
+        "ml" -> number to "ml"
+        "l", "lt", "lts", "litro", "litros" -> number * 1000 to "ml"
+        "kg" -> number * 1000 to "g"
+        else -> number to "g"
+    }
+}
+
+/**
+ * O item do catálogo é do mesmo tamanho do item da nota? Nulo quando um dos
+ * dois não diz o tamanho: aí só quem tem a embalagem na mão sabe.
+ */
+internal fun sameSize(a: String, b: String): Boolean? {
+    val first = packageSize(a) ?: return null
+    val second = packageSize(b) ?: return null
+    if (first.second != second.second) return false
+    return kotlin.math.abs(first.first - second.first) <= first.first * 0.02
+}
+
+/** Palavras que aparecem em quase toda nota e não distinguem produto nenhum. */
+private val NOTE_NOISE = setOf("lt", "lata", "refrig", "refri", "beb", "un", "und", "cx", "pct", "sabor", "com", "sem", "garr", "pet", "unid", "orig", "original", "tradicional", "trad")
+
+/** As palavras de um nome que dizem qual produto é, sem acento e em minúscula. */
+internal fun significantWords(text: String): List<String> =
+    text.lowercase()
+        .map { char ->
+            when (char) {
+                'á', 'à', 'â', 'ã' -> 'a'
+                'é', 'ê' -> 'e'
+                'í' -> 'i'
+                'ó', 'ô', 'õ' -> 'o'
+                'ú' -> 'u'
+                'ç' -> 'c'
+                else -> char
+            }
+        }
+        .joinToString("")
+        .split(Regex("[^a-z0-9]+"))
+        .filter { it.length >= 3 && it !in NOTE_NOISE }
+        .distinct()
+
 /** O custo médio que a linha vai deixar: é o número que o lucro vai usar. */
 fun PurchaseLine.averageAfter(product: CatalogProduct?): Double? {
     product ?: return null
@@ -223,6 +363,8 @@ fun parseMoney(text: String): Double? {
 
 class PurchaseViewModel(
     private val repository: PurchaseRepository,
+    /** O catálogo da plataforma, para mostrar a foto no item da nota sem produto. */
+    private val products: com.pixstop.mobile.data.repository.ProductRepository? = null,
     private val shrink: (ByteArray) -> ByteArray = { downscaleJpeg(it) },
     private val pollMillis: Long = 3_000,
 ) : ViewModel() {
@@ -334,15 +476,100 @@ class PurchaseViewModel(
     fun addLine() = _uiState.update { it.copy(lines = it.lines + PurchaseLine(), pickingLine = it.lines.size) }
     fun removeLine(index: Int) = _uiState.update { state -> state.copy(lines = state.lines.filterIndexed { i, _ -> i != index }) }
 
-    fun openPicker(index: Int) = _uiState.update { it.copy(pickingLine = index, pickerQuery = "") }
-    fun closePicker() = _uiState.update { it.copy(pickingLine = null, pickerQuery = "", scannerOpen = false) }
+    fun openPicker(index: Int) {
+        _uiState.update { it.copy(pickingLine = index, pickerQuery = "") }
+        loadLineCatalog(index)
+    }
+
+    /** Busca no catálogo da plataforma pelo nome do item da nota, só se ele ainda não tem produto. */
+    private fun loadLineCatalog(index: Int) {
+        _uiState.update { it.copy(lineCatalog = emptyList(), createFromCatalog = null) }
+        val line = _uiState.value.lines.getOrNull(index) ?: return
+        val draft = line.takeIf { it.productId == null }?.newProductDraft() ?: return
+        val repository = products ?: return
+        if (draft.name.length < 3) return
+
+        viewModelScope.launch {
+            (repository.suggestions(draft.name, draft.barcode) as? Outcome.Success)?.let { result ->
+                // A resposta pode chegar depois de a pessoa ir para outro item.
+                if (_uiState.value.pickingLine == index) {
+                    _uiState.update { it.copy(lineCatalog = result.value.catalog) }
+                }
+            }
+        }
+    }
+
+    /** "Cadastrar com esta foto": o cadastro já abre com o item do catálogo escolhido. */
+    fun startCreateFromCatalog(item: com.pixstop.mobile.domain.model.CatalogSuggestion) =
+        _uiState.update { it.copy(confirmingCreate = false, creatingFor = it.pickingLine, createFromCatalog = item) }
+    fun closePicker() = _uiState.update { it.copy(pickingLine = null, pickerQuery = "", scannerOpen = false, confirmingCreate = false, walking = false) }
     fun onPickerQuery(value: String) = _uiState.update { it.copy(pickerQuery = value) }
 
     fun choose(product: CatalogProduct) {
         val index = _uiState.value.pickingLine ?: return
         val issuedAt = _uiState.value.issuedAt
         updateLine(index) { it.withProduct(product).copy(expiresOn = null).withSuggestedExpiry(product, issuedAt) }
+        if (_uiState.value.walking) advance(index) else closePicker()
+    }
+
+    /** Começa a conferência pelo primeiro item sem produto. */
+    fun startWalk() {
+        val first = _uiState.value.copy(skipped = emptySet()).nextPending(null) ?: return
+        _uiState.update { it.copy(walking = true, skipped = emptySet(), pickingLine = first, pickerQuery = "", confirmingCreate = false, message = null) }
+        loadLineCatalog(first)
+    }
+
+    /** "Não é estoque" (sacola, frete, taxa): marca e segue. */
+    fun ignoreCurrent() {
+        val index = _uiState.value.pickingLine ?: return
+        setIgnored(index, true)
+        advance(index)
+    }
+
+    /** "Pular": fica para depois, e a conferência segue. */
+    fun skipCurrent() {
+        val index = _uiState.value.pickingLine ?: return
+        _uiState.update { it.copy(skipped = it.skipped + index) }
+        advance(index)
+    }
+
+    /** Abre o próximo item; sem próximo, volta à folha dizendo o que sobrou. */
+    private fun advance(from: Int) {
+        val next = _uiState.value.nextPending(from)
+
+        if (next != null) {
+            _uiState.update { it.copy(pickingLine = next, pickerQuery = "", confirmingCreate = false, scannerOpen = false) }
+            loadLineCatalog(next)
+            return
+        }
+
+        val left = _uiState.value.pendingIndices.size
         closePicker()
+        _uiState.update {
+            it.copy(
+                walking = false,
+                skipped = emptySet(),
+                message = if (left == 0) "Todos os itens da nota têm produto. Confira as quantidades e confirme." else "$left item(ns) pulado(s) ficaram sem produto.",
+            )
+        }
+    }
+
+    /** Nenhum produto serve: pergunta antes de abrir o cadastro. */
+    fun askCreate() = _uiState.update { it.copy(confirmingCreate = true) }
+
+    fun cancelCreate() = _uiState.update { it.copy(confirmingCreate = false) }
+
+    fun startCreate() = _uiState.update { it.copy(confirmingCreate = false, creatingFor = it.pickingLine) }
+
+    fun closeCreate() = _uiState.update { it.copy(creatingFor = null) }
+
+    /** O produto nasceu: entra na lista desta nota e já fica escolhido na linha. */
+    fun onProductCreated(created: com.pixstop.mobile.domain.model.CreatedProduct) {
+        val index = _uiState.value.creatingFor ?: return
+        val product = CatalogProduct(id = created.id, name = created.name, barcode = null, priceCost = created.cost, stock = created.inWarehouse, imageUrl = created.imageUrl)
+
+        _uiState.update { it.copy(createdProducts = it.createdProducts + product, creatingFor = null, pickingLine = index) }
+        choose(product)
     }
 
     fun openScanner() = _uiState.update { it.copy(scannerOpen = true) }

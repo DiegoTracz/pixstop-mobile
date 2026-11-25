@@ -99,7 +99,12 @@ data class RestockSubmitDto(
 )
 
 @Serializable
-data class RestockEntryDto(@SerialName("product_id") val productId: Long, val quantity: Int)
+data class RestockEntryDto(
+    @SerialName("product_id") val productId: Long,
+    val quantity: Int,
+    /** A primeira carga, que entra como acerto sem sair do depósito (APP_OPERADOR_PRODUTOS.md, G2). */
+    val adjustment: Int? = null,
+)
 
 @Serializable
 data class RestockResultDto(val id: Long, val at: String = "", val units: Int = 0)

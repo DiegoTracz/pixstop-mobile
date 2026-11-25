@@ -119,6 +119,7 @@ data class CatalogProductDto(
     val stock: Int = 0,
     @SerialName("tracks_expiry") val tracksExpiry: Boolean = false,
     @SerialName("shelf_life_days") val shelfLifeDays: Int? = null,
+    @SerialName("image_url") val imageUrl: String? = null,
 )
 
 @Serializable

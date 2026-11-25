@@ -127,7 +127,7 @@ class PurchaseRepository(private val client: HttpClient) {
                     )
                 },
                 products = dto.products.map {
-                    CatalogProduct(it.id, it.name, it.barcode, it.priceCost, it.stock, it.tracksExpiry, it.shelfLifeDays)
+                    CatalogProduct(it.id, it.name, it.barcode, it.priceCost, it.stock, it.tracksExpiry, it.shelfLifeDays, it.imageUrl)
                 },
                 appliances = dto.appliances.map { Named(it.id, it.name) },
                 duplicate = dto.duplicate?.let { Named(it.id, it.label) },

@@ -53,6 +53,7 @@ import com.pixstop.mobile.ui.components.PixelEmptyState
 import com.pixstop.mobile.ui.components.PixelInput
 import com.pixstop.mobile.ui.components.PixelLoader
 import com.pixstop.mobile.ui.components.PixelScreenTopBar
+import com.pixstop.mobile.ui.components.ProductImage
 import com.pixstop.mobile.ui.components.QrCodeScannerScreen
 import com.pixstop.mobile.ui.components.SensorCard
 import com.pixstop.mobile.ui.components.formatMoney
@@ -61,6 +62,7 @@ import com.pixstop.mobile.ui.components.rememberPhotoPicker
 import com.pixstop.mobile.ui.theme.PixColors
 import com.pixstop.mobile.ui.theme.PixTypography
 import com.pixstop.mobile.ui.viewmodel.CONFIDENT_MATCH
+import com.pixstop.mobile.ui.viewmodel.newProductDraft
 import com.pixstop.mobile.ui.viewmodel.PurchaseStep
 import com.pixstop.mobile.ui.viewmodel.PurchaseUiState
 import com.pixstop.mobile.ui.viewmodel.PurchaseViewModel
@@ -122,6 +124,19 @@ fun PurchaseScreen(
 
     if (state.receiptOpen) {
         ReceiptViewer(state.receipt, onClose = viewModel::closeReceipt)
+
+        return
+    }
+
+    // O item da nota que virou produto novo (APP_OPERADOR_PRODUTOS.md, G4):
+    // o formulário nasce com o que a nota já diz, e o produto volta ligado à linha.
+    state.creatingFor?.let { index ->
+        ProductFormScreen(
+            onBack = viewModel::closeCreate,
+            prefill = state.lines.getOrNull(index)?.newProductDraft()?.copy(catalog = state.createFromCatalog),
+            onCreated = viewModel::onProductCreated,
+            viewModel = koinViewModel(key = "purchase-${purchaseId ?: "new"}-line-$index-${state.createdProducts.size}"),
+        )
 
         return
     }
@@ -308,6 +323,18 @@ private fun ReviewStep(state: PurchaseUiState, viewModel: PurchaseViewModel, onB
                 style = PixTypography.inputLabel,
                 color = if (state.pending > 0) PixColors.Yellow else PixColors.Cyan,
             )
+        }
+
+        // Conferir a nota item por item (pedido do Diego em 25/11): um item
+        // sem produto atrás do outro, cadastrando o que ainda não existe.
+        if (state.editable && state.pending > 0) {
+            item {
+                PixelButton(
+                    text = "Conferir ${state.pending} ${if (state.pending == 1) "item" else "itens"} sem produto",
+                    onClick = viewModel::startWalk,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
 
         itemsIndexed(state.lines) { index, line ->
@@ -606,6 +633,7 @@ private fun statusLabel(status: String): String = when (status) {
 private fun ProductPicker(state: PurchaseUiState, viewModel: PurchaseViewModel) {
     val line = state.pickingLine?.let { state.lines.getOrNull(it) }
     val suggested = line?.productId?.let { id -> state.products.firstOrNull { it.id == id } }
+    var showAll by remember(state.pickingLine) { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -614,17 +642,26 @@ private fun ProductPicker(state: PurchaseUiState, viewModel: PurchaseViewModel) 
             .navigationBarsPadding()
             .imePadding(),
     ) {
-        PixelScreenTopBar(title = "Escolher produto", onBack = viewModel::closePicker)
+        val position = state.pickingLine?.takeIf { state.walking }?.let(state::walkPosition)
+
+        PixelScreenTopBar(
+            title = position?.let { (current, total) -> "Item $current de $total" } ?: "Escolher produto",
+            onBack = viewModel::closePicker,
+        )
 
         Column(modifier = Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            line?.rawDescription?.let { Text(text = "Na nota: $it", style = PixTypography.caption, color = PixColors.Gray400) }
+            if (position != null && line != null) {
+                WalkHeader(line, viewModel)
+            } else {
+                line?.rawDescription?.let { Text(text = "Na nota: $it", style = PixTypography.caption, color = PixColors.Gray400) }
+            }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 PixelInput(
                     value = state.pickerQuery,
                     onValueChange = viewModel::onPickerQuery,
                     label = "Buscar produto",
-                    placeholder = "nome do produto",
+                    placeholder = "buscar outro produto",
                     modifier = Modifier.weight(1f),
                     leadingIcon = { AppIcon(icon = AppIconType.Search, contentDescription = null, tint = PixColors.Gray400) },
                 )
@@ -648,6 +685,47 @@ private fun ProductPicker(state: PurchaseUiState, viewModel: PurchaseViewModel) 
             contentPadding = PaddingValues(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // "Parece ser": produtos que dividem palavras com o item da nota.
+            val likely = line?.takeIf { it.productId == null && state.pickerQuery.isBlank() }?.let(state::likelyMatches).orEmpty()
+
+            if (likely.isNotEmpty()) {
+                item { Text("PARECE SER", style = PixTypography.inputLabel, color = PixColors.Cyan) }
+                items(likely, key = { "likely-${it.id}" }) { product ->
+                    PhotoRow(
+                        name = product.name,
+                        imageUrl = product.imageUrl,
+                        label = "Tem ${product.stock} · custo médio ${formatMoney(product.priceCost)}",
+                        detail = "Toque se for este",
+                        accent = PixColors.Cyan,
+                        onClick = { viewModel.choose(product) },
+                    )
+                }
+            }
+
+            // Nenhum dos parecidos serve: cadastrar vem logo aqui, antes da
+            // lista inteira, e pergunta antes de abrir o formulário.
+            if (line != null && line.productId == null && state.pickerQuery.isBlank()) {
+                item { CreateFromLine(line, state.confirmingCreate, state.catalogFor(line), state.otherSizes(line), viewModel) }
+            }
+
+            // A lista inteira da empresa só aparece quando a pessoa busca ou
+            // pede: na conferência, ela empurrava o que importa para baixo.
+            val listHidden = state.pickerQuery.isBlank() && !showAll && line?.productId == null
+
+            if (listHidden) {
+                item {
+                    PixelButton(
+                        text = "Ver todos os produtos (${state.products.size})",
+                        onClick = { showAll = true },
+                        variant = PixelButtonVariant.Secondary,
+                        buttonSize = PixelButtonSize.Small,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            } else if (likely.isNotEmpty()) {
+                item { Text("TODOS OS PRODUTOS", style = PixTypography.inputLabel, color = PixColors.Gray400) }
+            }
+
             if (suggested != null && state.pickerQuery.isBlank()) {
                 item {
                     SensorCard(
@@ -661,23 +739,166 @@ private fun ProductPicker(state: PurchaseUiState, viewModel: PurchaseViewModel) 
                 }
             }
 
-            items(state.pickerResults, key = { it.id }) { product ->
-                SensorCard(
-                    icon = AppIconType.Box,
+            items(if (listHidden) emptyList() else state.pickerResults, key = { it.id }) { product ->
+                PhotoRow(
+                    name = product.name,
+                    imageUrl = product.imageUrl,
                     label = "Tem ${product.stock} · custo médio ${formatMoney(product.priceCost)}",
-                    value = product.name,
+                    detail = null,
+                    accent = PixColors.Gray600,
                     onClick = { viewModel.choose(product) },
                 )
             }
 
-            if (state.pickerResults.isEmpty()) {
+            if (!listHidden && state.pickerResults.isEmpty()) {
                 item {
-                    PixelEmptyState(
-                        message = "Nenhum produto com esse nome. Produto novo se cadastra no painel.",
-                        face = MascotFace.Normal,
-                    )
+                    PixelEmptyState(message = "Nenhum produto com esse nome.", face = MascotFace.Normal)
                 }
             }
+
+            if (line != null && line.productId == null && state.pickerQuery.isNotBlank()) {
+                item { CreateFromLine(line, state.confirmingCreate, state.catalogFor(line), state.otherSizes(line), viewModel) }
+            }
+
+        }
+
+        if (state.walking) WalkFooter(viewModel)
+    }
+}
+
+/** Um produto com a foto à esquerda: reconhecer a embalagem é mais rápido que ler o nome. */
+@Composable
+private fun PhotoRow(name: String, imageUrl: String?, label: String, detail: String?, accent: Color, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PixColors.Darker)
+            .border(2.dp, accent)
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(64.dp).background(PixColors.Dark)) {
+            ProductImage(name = name, imageUrl = imageUrl, initialStyle = PixTypography.caption, modifier = Modifier.fillMaxSize())
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(label, style = PixTypography.caption, color = PixColors.Gray400)
+            Text(name, style = PixTypography.bodySecondary, color = PixColors.Gray100)
+            detail?.let { Text(it, style = PixTypography.caption, color = accent) }
+        }
+    }
+}
+
+/**
+ * O item da nota aberto na conferência: o que a nota diz e as duas saídas que
+ * não pedem produto — não é estoque, ou fica para depois.
+ */
+@Composable
+private fun WalkHeader(line: PurchaseLine, viewModel: PurchaseViewModel) {
+    Column(
+        modifier = Modifier.fillMaxWidth().background(PixColors.Darker).border(2.dp, PixColors.Yellow).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text("NA NOTA", style = PixTypography.inputLabel, color = PixColors.Yellow)
+        Text(line.rawDescription ?: "Item sem descrição", style = PixTypography.bodySecondary, color = PixColors.Gray100)
+        Text(
+            listOfNotNull(
+                line.rawQuantity?.let { "${it.toString().removeSuffix(".0")} ${line.rawUnit ?: "un"}" },
+                line.rawUnitPrice?.let { "${formatMoney(it)} cada" },
+                line.rawTotal?.let { "total ${formatMoney(it)}" },
+            ).joinToString(" · "),
+            style = PixTypography.caption,
+            color = PixColors.Gray400,
+        )
+    }
+}
+
+/**
+ * As duas saídas que não pedem produto, no rodapé: são raras, e não podem
+ * disputar o topo com a escolha do produto.
+ */
+@Composable
+private fun WalkFooter(viewModel: PurchaseViewModel) {
+    Row(
+        modifier = Modifier.fillMaxWidth().background(PixColors.Darker).padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        PixelButton(text = "Não é estoque", onClick = viewModel::ignoreCurrent, variant = PixelButtonVariant.Secondary, buttonSize = PixelButtonSize.Small, modifier = Modifier.weight(1f))
+        PixelButton(text = "Pular", onClick = viewModel::skipCurrent, variant = PixelButtonVariant.Secondary, buttonSize = PixelButtonSize.Small, modifier = Modifier.weight(1f))
+    }
+}
+
+/**
+ * "Não é nenhum destes": cadastrar o item da nota como produto novo. O toque
+ * só pergunta; o formulário abre no "sim", com nome e custo da nota.
+ */
+@Composable
+private fun CreateFromLine(
+    line: PurchaseLine,
+    confirming: Boolean,
+    catalog: List<com.pixstop.mobile.domain.model.CatalogSuggestion>,
+    otherSizes: Int,
+    viewModel: PurchaseViewModel,
+) {
+    val draft = line.newProductDraft()
+    val name = draft.name.ifBlank { "este item" }
+
+    // O catálogo da plataforma já tem este produto com foto: é o caminho
+    // mais curto, e a foto aparece antes de qualquer pergunta.
+    if (catalog.isNotEmpty()) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
+            Text("NO CATÁLOGO DA PLATAFORMA", style = PixTypography.inputLabel, color = PixColors.Green)
+            catalog.forEach { item ->
+                PhotoRow(
+                    name = item.name,
+                    imageUrl = item.imageUrl,
+                    label = item.category ?: "Catálogo",
+                    detail = if (item.hasPhoto) "Cadastrar com esta foto" else "Cadastrar com estes dados",
+                    accent = PixColors.Green,
+                    onClick = { viewModel.startCreateFromCatalog(item) },
+                )
+            }
+        }
+    }
+
+    if (otherSizes > 0) {
+        Text(
+            if (otherSizes == 1) "1 item do catálogo é de outro tamanho e ficou de fora." else "$otherSizes itens do catálogo são de outro tamanho e ficaram de fora.",
+            style = PixTypography.caption,
+            color = PixColors.Gray500,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+    }
+
+    if (!confirming) {
+        SensorCard(
+            icon = AppIconType.Add,
+            label = "Não é nenhum destes?",
+            value = "Cadastrar como produto novo",
+            detail = draft.name.takeIf { it.isNotBlank() }?.let { "\"$it\"" },
+            onClick = viewModel::askCreate,
+        )
+        return
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth().background(PixColors.Darker).border(2.dp, PixColors.Cyan).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text("Quer cadastrar \"$name\" como produto novo?", style = PixTypography.bodySecondary, color = PixColors.Gray100)
+        Text(
+            buildString {
+                append("O nome")
+                if (draft.cost != null) append(" e o custo de ${formatMoney(draft.cost)}")
+                append(" vêm da nota. Você confere, diz o preço de venda e ele já fica nesta linha.")
+            },
+            style = PixTypography.caption,
+            color = PixColors.Gray300,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            PixelButton(text = "Sim, cadastrar", onClick = viewModel::startCreate, modifier = Modifier.weight(1f))
+            PixelButton(text = "Não", onClick = viewModel::cancelCreate, variant = PixelButtonVariant.Secondary, modifier = Modifier.weight(1f))
         }
     }
 }

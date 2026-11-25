@@ -127,6 +127,7 @@ val dataModule: Module = module {
     single { ShoppingListRepository(get()) }
     single { com.pixstop.mobile.data.repository.ExpiryRepository(get()) }
     single { PurchaseRepository(get()) }
+    single { com.pixstop.mobile.data.repository.ProductRepository(get()) }
     single { AssistantRepository(get()) }
     // O rascunho da contagem vive no armazenamento comum: é conveniência, não
     // credencial, e perdê-lo custa trinta linhas digitadas, não segurança.
@@ -176,7 +177,9 @@ val viewModelModule: Module = module {
     viewModel { com.pixstop.mobile.ui.viewmodel.ExpiryViewModel(get()) }
     viewModel { com.pixstop.mobile.ui.viewmodel.ExpirySettingsViewModel(get()) }
     viewModel { PurchasesViewModel(get()) }
-    viewModel { PurchaseViewModel(get()) }
+    viewModel { PurchaseViewModel(get(), products = get()) }
+    viewModel { com.pixstop.mobile.ui.viewmodel.ProductFormViewModel(get()) }
+    viewModel { com.pixstop.mobile.ui.viewmodel.FridgeProductsViewModel(get(), get()) }
     viewModel { AssistantViewModel(get()) }
     viewModel { PixelAvatarViewModel(get()) }
 }

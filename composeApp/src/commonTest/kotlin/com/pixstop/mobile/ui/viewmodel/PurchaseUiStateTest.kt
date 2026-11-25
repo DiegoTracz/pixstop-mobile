@@ -41,6 +41,77 @@ class PurchaseUiStateTest {
         PurchaseUiState(step = PurchaseStep.Review, sheet = sheet(duplicate), lines = lines.toList(), totalText = total)
 
     @Test
+    fun `a conferencia anda de item sem produto em item sem produto`() {
+        val agua = PurchaseLine(rawDescription = "AGUA MIN 500ML", quantityUnits = 12)
+        val current = state(kitkatLine, unknown, bag, agua)
+
+        assertEquals(listOf(1, 3), current.pendingIndices)
+        assertEquals(1, current.nextPending(null))
+        assertEquals(3, current.nextPending(1))
+        // Do último volta para o que sobrou atrás.
+        assertEquals(1, current.nextPending(3))
+        // O pulado não volta nesta conferência.
+        assertNull(current.copy(skipped = setOf(1)).nextPending(3))
+        assertEquals(2 to 2, current.walkPosition(3))
+    }
+
+    @Test
+    fun `o tamanho da embalagem sai do nome da nota e do catalogo`() {
+        assertEquals(1000.0 to "ml", packageSize("COCA COLA 1LT"))
+        assertEquals(350.0 to "ml", packageSize("Coca-Cola Lata 350ml"))
+        assertEquals(2000.0 to "ml", packageSize("Coca-Cola Zero Açúcar 2L"))
+        assertEquals(36.0 to "g", packageSize("BISC OREO 4X36G ORIG"))
+        assertEquals(41.5 to "g", packageSize("CH KIT KAT 41,5G"))
+        assertNull(packageSize("SAC ASS VD OXI 58X70"))
+    }
+
+    @Test
+    fun `o catalogo de outro tamanho nao vira foto do item da nota`() {
+        val lata = com.pixstop.mobile.domain.model.CatalogSuggestion(1, "Coca-Cola Lata 350ml", "Bebidas", hasPhoto = true)
+        val dois = com.pixstop.mobile.domain.model.CatalogSuggestion(2, "Coca-Cola Zero Açúcar 2L", "Bebidas", hasPhoto = true)
+        val umLitro = com.pixstop.mobile.domain.model.CatalogSuggestion(3, "Coca-Cola Garrafa 1 Litro", "Bebidas", hasPhoto = true)
+        val semTamanho = com.pixstop.mobile.domain.model.CatalogSuggestion(4, "Coca-Cola", "Bebidas", hasPhoto = true)
+        val line = PurchaseLine(rawDescription = "COCA COLA 1LT")
+        val current = state(line).copy(lineCatalog = listOf(lata, dois, umLitro, semTamanho))
+
+        assertEquals(listOf(3L, 4L), current.catalogFor(line).map { it.id })
+        assertEquals(2, current.otherSizes(line))
+    }
+
+    @Test
+    fun `parece ser acha pelo nome e nao so pelo tamanho`() {
+        val current = state(unknown)
+
+        assertEquals(listOf(10L), current.likelyMatches(unknown).map { it.id })
+        assertTrue(current.likelyMatches(PurchaseLine(rawDescription = "REFRIG LT 350ML")).isEmpty())
+        assertEquals(listOf(58L), current.likelyMatches(PurchaseLine(rawDescription = "CH KIT KAT 41,5G")).map { it.id })
+        // "ORIG" da nota não é nome de produto: o Oreo não vira Coca-Cola Original.
+        val cocaOriginal = CatalogProduct(13, "Coca-Cola Sabor Original 200ml", null, 2.5, 24)
+        assertTrue(state(unknown).copy(createdProducts = listOf(cocaOriginal)).likelyMatches(PurchaseLine(rawDescription = "BISC OREO 4X36G ORIG")).isEmpty())
+    }
+
+    @Test
+    fun `o item da nota sem produto ja traz nome e custo para o cadastro`() {
+        val draft = unknown.copy(rawCode = "7898938890397").newProductDraft()
+
+        assertEquals("BEB MONSTER 473ML MG", draft.name)
+        assertEquals(8.99, draft.cost)
+        assertEquals("7898938890397", draft.barcode)
+        // Código interno do mercado não é código de barras.
+        assertNull(unknown.copy(rawCode = "1234").newProductDraft().barcode)
+        // Sem custo da linha, sai do preço da nota dividido pelo fardo.
+        assertEquals(2.0, PurchaseLine(rawDescription = "AGUA 6X", rawUnitPrice = 12.0, packSize = 6).newProductDraft().cost)
+    }
+
+    @Test
+    fun `o produto cadastrado pela nota entra na lista sem duplicar o da folha`() {
+        val novo = CatalogProduct(99, "Monster Mango", null, 8.99, 0)
+        val current = state(unknown).copy(createdProducts = listOf(novo, kitkat))
+
+        assertEquals(listOf(58L, 10L, 99L), current.products.map { it.id })
+    }
+
+    @Test
     fun `pendente e so a linha sem produto que nao foi marcada como nao e estoque`() {
         val current = state(kitkatLine, bag, unknown)
 

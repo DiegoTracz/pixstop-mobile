@@ -82,6 +82,14 @@ object Routes {
     /** A lista de compras da semana (docs/plans/COMPRAS_MOBILE.md). */
     const val SHOPPING_LIST = "shopping-list"
 
+    /** Cadastrar produto pelo celular (APP_OPERADOR_PRODUTOS.md, G4). */
+    const val PRODUCT_NEW = "products/new"
+
+    /** Os produtos de uma geladeira: ver, pôr e cadastrar (G2). */
+    const val FRIDGE_PRODUCTS = "fridge-products"
+
+    fun fridgeProducts(applianceId: Long) = "fridge-products/$applianceId"
+
     /** A validade por lugar (VALIDADE.md, V5 c). */
     const val EXPIRY = "expiry"
 

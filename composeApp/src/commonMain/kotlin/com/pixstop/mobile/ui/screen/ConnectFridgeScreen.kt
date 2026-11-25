@@ -72,6 +72,10 @@ fun ConnectFridgeScreen(
     onShoppingList: () -> Unit = {},
     onPurchases: () -> Unit = {},
     onExpiry: () -> Unit = {},
+    /** Cadastrar produto pelo celular (APP_OPERADOR_PRODUTOS.md, G4). */
+    onNewProduct: () -> Unit = {},
+    /** Os produtos de uma geladeira: ver, pôr e cadastrar (G2). */
+    onFridgeProducts: (Long) -> Unit = {},
     viewModel: ConnectFridgeViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -107,30 +111,12 @@ fun ConnectFridgeScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     when (state.step) {
+                        // As geladeiras vêm primeiro: é para escolher uma que
+                        // se abre esta tela (APP_OPERADOR_PRODUTOS.md, G0). O
+                        // estoque da empresa fica embaixo, num bloco próprio.
                         ConnectStep.Devices -> {
-                            // O estoque começa aqui: o que comprar e o que já chegou.
-                            SensorCard(
-                                icon = AppIconType.Cart,
-                                label = "O que falta para a semana",
-                                value = "Lista de compras",
-                                detail = "Compartilhe com quem compra",
-                                onClick = onShoppingList,
-                            )
-                            SensorCard(
-                                icon = AppIconType.Camera,
-                                label = "Na volta do mercado",
-                                value = "Compras",
-                                detail = "Fotografe a nota: a IA lê e você confere",
-                                onClick = onPurchases,
-                            )
-                            SensorCard(
-                                icon = AppIconType.Warning,
-                                label = "O que vence",
-                                value = "Validade",
-                                detail = "Vencidos para retirar e o que vence logo",
-                                onClick = onExpiry,
-                            )
                             DevicesStep(state, viewModel)
+                            StockSection(onNewProduct = onNewProduct, onShoppingList = onShoppingList, onPurchases = onPurchases, onExpiry = onExpiry)
                         }
                         ConnectStep.Code -> CodeStep(state, viewModel)
                         ConnectStep.Network -> NetworkStep(state, viewModel)
@@ -144,8 +130,8 @@ fun ConnectFridgeScreen(
                             detail = state.portalMessage ?: "O primeiro sinal chega segundos depois de ela entrar no WiFi.",
                         )
 
-                        ConnectStep.Done -> DoneStep(state, viewModel)
-                        ConnectStep.Detail -> DetailStep(state, viewModel, onVisit)
+                        ConnectStep.Done -> DoneStep(state, viewModel, onNewProduct, onFridgeProducts)
+                        ConnectStep.Detail -> DetailStep(state, viewModel, onVisit, onFridgeProducts, onNewProduct)
                     }
                 }
             }
@@ -190,6 +176,73 @@ private const val VISIBLE_NETWORKS = 5
 
 @Composable
 private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
+    val installed = state.installedDevices
+
+    if (installed.isNotEmpty()) {
+        Text("Suas geladeiras", style = PixTypography.sectionTitle, color = PixColors.Cyan)
+        Text("Toque numa para ver como ela está e o que tem dentro.", style = PixTypography.caption, color = PixColors.Gray300)
+
+        installed.forEach { device ->
+            // Uma geladeira instalada abre o que ela está sentindo. Reinstalar
+            // apaga as credenciais e recomeça do código: é coisa de dentro,
+            // nas configurações dela, não de um botão ao lado do nome.
+            SensorCard(
+                icon = if (device.isOnline) AppIconType.Wifi else AppIconType.WifiOff,
+                // O nome do equipamento só entra quando diz algo novo: em
+                // geral ele é igual ao da geladeira, e repetir o mesmo nome
+                // duas vezes na mesma carta não informa nada.
+                label = device.applianceName?.takeIf { it != device.name } ?: "Instalada",
+                value = device.name,
+                accent = when (device.presence) {
+                    FridgePresence.Online -> PixColors.Green
+                    FridgePresence.Pending -> PixColors.Yellow
+                    FridgePresence.Offline -> PixColors.Gray500
+                    FridgePresence.Revoked -> PixColors.Pink
+                },
+                detail = buildString {
+                    append(device.presence.label)
+                    if (device.doorOpen == true) append(" · porta aberta")
+                    // Quantos produtos há dentro diz, de longe, se ela já vende.
+                    device.stock?.takeIf { !device.isCamera }?.let { append(" · ").append(it.productsLabel) }
+                    device.signalStrength?.takeIf { device.isOnline }?.let { append(" · ").append(it).append(" dBm") }
+                },
+                onClick = { viewModel.openDetail(device) },
+            )
+        }
+    }
+
+    if (state.pendingDevices.isNotEmpty()) {
+        Spacer(Modifier.height(8.dp))
+        Text("Aguardando ativação", style = PixTypography.sectionTitle, color = PixColors.Yellow)
+
+        state.pendingDevices.forEach { device ->
+            SensorCard(
+                icon = AppIconType.Lock,
+                label = device.formattedCode?.let { "Código $it" } ?: "Aguardando ativação",
+                value = device.name,
+                accent = PixColors.Yellow,
+                detail = "Toque para conectar: ligue a ${device.noun} e entre na rede dela",
+                onClick = { viewModel.choose(device) },
+            )
+        }
+    }
+
+    Spacer(Modifier.height(8.dp))
+
+    if (state.showsNewForm) {
+        NewFridgeForm(state, viewModel)
+    } else {
+        PixelButton(
+            text = "Nova geladeira",
+            onClick = viewModel::openNewForm,
+            variant = PixelButtonVariant.Secondary,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun NewFridgeForm(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
     Text("Nova geladeira", style = PixTypography.sectionTitle, color = PixColors.Cyan)
     Text(
         "O sistema gera o código de ativação. Sem nome, ela nasce como Pixelstop 01. Depois é só ligar a geladeira na tomada.",
@@ -214,54 +267,56 @@ private fun DevicesStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeVie
         modifier = Modifier.fillMaxWidth(),
     )
 
-    if (state.pendingDevices.isNotEmpty()) {
-        Spacer(Modifier.height(8.dp))
-        Text("Aguardando ativação", style = PixTypography.sectionTitle, color = PixColors.Yellow)
-
-        state.pendingDevices.forEach { device ->
-            SensorCard(
-                icon = AppIconType.Lock,
-                label = device.formattedCode?.let { "Código $it" } ?: "Aguardando ativação",
-                value = device.name,
-                accent = PixColors.Yellow,
-                detail = "Toque para conectar: ligue a ${device.noun} e entre na rede dela",
-                onClick = { viewModel.choose(device) },
-            )
-        }
+    // Quem não tem nenhuma geladeira não tem para onde voltar.
+    if (state.devices.isNotEmpty()) {
+        PixelButton(
+            text = "Cancelar",
+            onClick = viewModel::closeNewForm,
+            variant = PixelButtonVariant.Secondary,
+            enabled = !state.isWorking,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
+}
 
-    val others = state.devices - state.pendingDevices.toSet()
+/**
+ * O estoque da empresa: não é de uma geladeira só, por isso fica fora das
+ * cartas delas, num bloco embaixo.
+ */
+@Composable
+private fun StockSection(onNewProduct: () -> Unit, onShoppingList: () -> Unit, onPurchases: () -> Unit, onExpiry: () -> Unit) {
+    Spacer(Modifier.height(8.dp))
+    Text("Estoque", style = PixTypography.sectionTitle, color = PixColors.Gray300)
 
-    if (others.isNotEmpty()) {
-        Spacer(Modifier.height(8.dp))
-        Text("Instaladas", style = PixTypography.sectionTitle, color = PixColors.Gray300)
+    SensorCard(
+        icon = AppIconType.Add,
+        label = "Produto que ainda não existe",
+        value = "Cadastrar produto",
+        detail = "Fotografe: a IA preenche nome, categoria e preço",
+        onClick = onNewProduct,
+    )
 
-        others.forEach { device ->
-            // Uma geladeira instalada abre o que ela está sentindo. Reinstalar
-            // apaga as credenciais e recomeça do código: é coisa de dentro,
-            // nas configurações dela, não de um botão ao lado do nome.
-            SensorCard(
-                icon = if (device.isOnline) AppIconType.Wifi else AppIconType.WifiOff,
-                // O nome do equipamento só entra quando diz algo novo: em
-                // geral ele é igual ao da geladeira, e repetir o mesmo nome
-                // duas vezes na mesma carta não informa nada.
-                label = device.applianceName?.takeIf { it != device.name } ?: "Instalada",
-                value = device.name,
-                accent = when (device.presence) {
-                    FridgePresence.Online -> PixColors.Green
-                    FridgePresence.Pending -> PixColors.Yellow
-                    FridgePresence.Offline -> PixColors.Gray500
-                    FridgePresence.Revoked -> PixColors.Pink
-                },
-                detail = buildString {
-                    append(device.presence.label)
-                    if (device.doorOpen == true) append(" · porta aberta")
-                    device.signalStrength?.takeIf { device.isOnline }?.let { append(" · ").append(it).append(" dBm") }
-                },
-                onClick = { viewModel.openDetail(device) },
-            )
-        }
-    }
+    SensorCard(
+        icon = AppIconType.Cart,
+        label = "O que falta para a semana",
+        value = "Lista de compras",
+        detail = "Compartilhe com quem compra",
+        onClick = onShoppingList,
+    )
+    SensorCard(
+        icon = AppIconType.Camera,
+        label = "Na volta do mercado",
+        value = "Compras",
+        detail = "Fotografe a nota: a IA lê e você confere",
+        onClick = onPurchases,
+    )
+    SensorCard(
+        icon = AppIconType.Warning,
+        label = "O que vence",
+        value = "Validade",
+        detail = "Vencidos para retirar e o que vence logo",
+        onClick = onExpiry,
+    )
 }
 
 @Composable
@@ -436,7 +491,12 @@ private fun WaitingStep(title: String, detail: String) {
 }
 
 @Composable
-private fun DoneStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel) {
+private fun DoneStep(
+    state: ConnectFridgeUiState,
+    viewModel: ConnectFridgeViewModel,
+    onNewProduct: () -> Unit,
+    onFridgeProducts: (Long) -> Unit,
+) {
     val device = state.chosen
 
     Text(if (device?.isCamera == true) "Câmera conectada!" else "Geladeira conectada!", style = PixTypography.sectionTitle, color = PixColors.Green)
@@ -448,31 +508,87 @@ private fun DoneStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
         }
     }
 
-    // A geladeira online ainda não vende nada: o que interessa agora é o
-    // que falta para a vitrine encher, e isso muda de empresa para empresa.
+    val stock = device?.stock
+
+    // A geladeira online ainda não vende nada: o que falta para a vitrine
+    // encher vira passos com botão (APP_OPERADOR_PRODUTOS.md, G3). A câmera
+    // não tem estoque nem fita: para ela basta dizer o que acontece agora.
+    if (device != null && !device.isCamera && stock != null) {
+        FirstSteps(
+            stock = stock,
+            ledChosen = state.led.profileId != null,
+            onProducts = onNewProduct,
+            onLoad = device.applianceId?.let { id -> { onFridgeProducts(id) } },
+            onLight = viewModel::openColorStep,
+        )
+    } else {
+        Text(
+            stock?.let { device?.let(it::nextStepFor) }
+                ?: if (device?.isCamera == true) {
+                    "Toda abertura da porta fica gravada."
+                } else {
+                    "Pedidos pagos já abrem a trava, e toda abertura da porta fica gravada."
+                },
+            style = PixTypography.caption,
+            color = PixColors.Gray300,
+        )
+
+        // A fita é a última coisa da instalação, e a única que se faz de pé na
+        // frente da geladeira: a cor tem de acender ali para valer a escolha.
+        if (device?.isCamera != true) {
+            PixelButton(
+                text = if (state.led.profileId != null) "Mudar a cor da fita" else "Escolher a cor da fita",
+                onClick = viewModel::openColorStep,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+
+    PixelButton(text = "Voltar às geladeiras", onClick = viewModel::restart, variant = PixelButtonVariant.Secondary, modifier = Modifier.fillMaxWidth())
+}
+
+/**
+ * Cadastrar → pôr na geladeira → cor da fita, cada um com o seu botão. O
+ * próximo a fazer fica em destaque; o que já está feito aparece riscado de
+ * verde, e ainda dá para tocar nele para refazer.
+ */
+@Composable
+private fun FirstSteps(
+    stock: com.pixstop.mobile.domain.model.FridgeStock,
+    ledChosen: Boolean,
+    onProducts: () -> Unit,
+    onLoad: (() -> Unit)?,
+    onLight: () -> Unit,
+) {
+    val steps = stock.firstSteps(ledChosen)
+    val next = steps.firstOrNull { !it.done }
+
     Text(
-        device?.stock?.nextStepFor(device)
-            ?: if (device?.isCamera == true) {
-                "Toda abertura da porta fica gravada."
-            } else {
-                "Pedidos pagos já abrem a trava, e toda abertura da porta fica gravada."
-            },
+        if (next == null) "Pronta para vender." else "Falta pouco para ela vender:",
         style = PixTypography.caption,
         color = PixColors.Gray300,
     )
 
-    // A fita é a última coisa da instalação, e a única que se faz de pé na
-    // frente da geladeira: a cor tem de acender ali para valer a escolha.
-    // A câmera não tem fita: quem acende a cor é o controlador da geladeira.
-    if (device?.isCamera != true) {
-        PixelButton(
-            text = if (state.led.profileId != null) "Mudar a cor da fita" else "Escolher a cor da fita",
-            onClick = viewModel::openColorStep,
-            modifier = Modifier.fillMaxWidth(),
+    steps.forEachIndexed { index, step ->
+        val onClick = when (step.kind) {
+            com.pixstop.mobile.domain.model.FirstStepKind.Products -> onProducts
+            com.pixstop.mobile.domain.model.FirstStepKind.Load -> onLoad
+            com.pixstop.mobile.domain.model.FirstStepKind.Light -> onLight
+        }
+
+        SensorCard(
+            icon = if (step.done) AppIconType.Check else AppIconType.Info,
+            label = "Passo ${index + 1}",
+            value = step.label,
+            accent = when {
+                step.done -> PixColors.Green
+                step == next -> PixColors.Cyan
+                else -> PixColors.Gray500
+            },
+            detail = if (step.done) "Feito" else null,
+            onClick = onClick,
         )
     }
-
-    PixelButton(text = "Voltar às geladeiras", onClick = viewModel::restart, modifier = Modifier.fillMaxWidth())
 }
 
 /**
@@ -483,13 +599,31 @@ private fun DoneStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewMo
  * nenhuma delas cabe numa lista.
  */
 @Composable
-private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeViewModel, onVisit: (Long) -> Unit = {}) {
+private fun DetailStep(
+    state: ConnectFridgeUiState,
+    viewModel: ConnectFridgeViewModel,
+    onVisit: (Long) -> Unit = {},
+    onFridgeProducts: (Long) -> Unit = {},
+    onNewProduct: () -> Unit = {},
+) {
     val device = state.chosen ?: return
 
     Text(device.name, style = PixTypography.sectionTitle, color = PixColors.Cyan)
 
     device.applianceName?.let {
         Text(it, style = PixTypography.caption, color = PixColors.Gray300)
+    }
+
+    // Vazia, o que interessa é encher: os passos vêm antes dos mostradores.
+    device.stock?.takeIf { !device.isCamera && it.inAppliance == 0 }?.let { stock ->
+        FirstSteps(
+            stock = stock,
+            ledChosen = state.led.profileId != null,
+            onProducts = onNewProduct,
+            onLoad = device.applianceId?.let { id -> { onFridgeProducts(id) } },
+            onLight = { viewModel.openColorStep(device) },
+        )
+        Spacer(Modifier.height(8.dp))
     }
 
     // O primeiro mostrador responde "ela está viva?", que é o que decide se
@@ -590,7 +724,8 @@ private fun DetailStep(state: ConnectFridgeUiState, viewModel: ConnectFridgeView
             label = "Dentro dela",
             value = if (stock.inAppliance == 1) "1 produto" else "${stock.inAppliance} produtos",
             accent = if (stock.inAppliance == 0) PixColors.Yellow else PixColors.Green,
-            detail = stock.nextStep,
+            detail = if (device.applianceId != null) "Toque para ver, pôr produtos e cadastrar novos" else stock.nextStep,
+            onClick = device.applianceId?.let { id -> { onFridgeProducts(id) } },
         )
     }
 
