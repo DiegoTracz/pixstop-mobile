@@ -106,7 +106,12 @@ digitada à mão no App Store Connect, nunca neste arquivo.
 >
 > XP AND LEVELS
 > XP is earned on fixed, announced rules (one purchase per day, three days a
-> week, Friday bonus). There is no randomness tied to purchases.
+> week, Friday bonus).
+>
+> PRIZE WHEEL (optional, off in the demo company)
+> A company may run a prize-wheel campaign: employees who buy get free spins,
+> and a spin awards pixels. Spins are never sold, nothing is wagered, and the
+> app shows the odds of every prize before spinning.
 >
 > ACCOUNT DELETION
 > Profile › "Excluir a conta", or https://pixelstop.com.br/exclusao-de-conta
@@ -115,7 +120,7 @@ digitada à mão no App Store Connect, nunca neste arquivo.
 
 ## Privacidade (rótulos da App Store / Segurança dos dados do Play)
 
-Nada é usado para rastrear a pessoa entre apps de outras empresas. Nenhum dado
+Publicado no App Store Connect em 26/11/2026. Nada é usado para rastrear a pessoa entre apps de outras empresas. Nenhum dado
 vai para publicidade. Todos abaixo são **vinculados à identidade** e usados só
 para **funcionalidade do app**.
 
@@ -126,6 +131,7 @@ para **funcionalidade do app**.
 | Informações financeiras › Informações de pagamento | cartão enviado ao Mercado Pago para gerar o token (o app não guarda o número) |
 | Compras › Histórico de compras | pedidos na geladeira |
 | Conteúdo do usuário › Fotos ou vídeos | foto do avatar; foto da nota fiscal, para quem abastece |
+| Conteúdo do usuário › Outros conteúdos | mensagens e fotos enviadas ao assistente de IA |
 | Identificadores › ID do usuário | id da conta no servidor |
 | Identificadores › ID do dispositivo | token de push (Firebase) |
 
@@ -134,10 +140,17 @@ diagnóstico e de uso para análise.
 
 ## Classificação etária
 
-Todas as perguntas de conteúdo: **Nenhum**. Sem acesso irrestrito à web, sem
-conteúdo gerado por usuários entre desconhecidos, sem apostas nem jogos de azar
-(o XP segue regras fixas). Resultado esperado: **4+** na App Store e **Livre**
-no Play.
+Todas as perguntas de conteúdo: **Nenhum**, com uma exceção: **Competições:
+pouco frequente** (ranking do time e medalhas dos desafios). Sem acesso
+irrestrito à web, sem conteúdo gerado por usuários entre desconhecidos, sem
+apostas, jogos de azar nem caixas de itens (a roleta dá giros grátis e mostra
+as chances). Resultado na App Store: **4+** (Brasil: Livre), publicado em
+26/11/2026.
+
+Direitos de conteúdo: "não contém conteúdo de terceiros". As fotos que as
+empresas cadastram nos produtos podem ser de terceiros; se a Apple questionar,
+trocar para "sim, e detenho os direitos" (os termos de uso cobrem o que a
+empresa envia).
 
 ## Antes de enviar para revisão
 
